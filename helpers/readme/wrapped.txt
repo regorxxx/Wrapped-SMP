@@ -1,0 +1,90 @@
+﻿Creates a report of user listening habits during the selected year
+as a PDF and outputs some playlists recommendations.
+	- Computes statistics from the library by:
+		* Listening behavior
+		* Listens
+			+ Total (minutes/days)
+			+ Day with most listens
+		* Genres/styles
+			+ Total
+			+ Top 5
+			+ Suggested genres
+		* Musical categories
+		* Tracks
+			+ Total
+			+ Most played track
+			+ Top 5
+		* Artists
+			+ Total
+			+ Top 5
+			+ Months reels
+			+ Most played artist (and track)
+		* Regions
+			+ Top 5
+			+ Artist/Country with more listens
+		* Sound town
+			+ Top 3 artists from that city
+	- Downloads artist and city images.
+	  (Offline mode may be set to skip image downloading)
+	- Retrieves album covers.
+	- Generates random backgrounds (which can be customized by user).
+	- Outputs a report in Latex format. Compilation in PDF.
+	- Playlists recommendations:
+		* Top Favourite Songs
+		* Discovered Songs (during the year)
+		* Top Artists
+		* Top Genres
+		* Top Countries
+		* Suggested Genres (you may like) (ListenBrainz)
+		* Suggested Artists (you make like) (ListenBrainz)
+		  (0ffline mode may be set to use only queries)
+
+Requirements:
+-------------
+	- Playback Statistics:
+	https://www.foobar2000.org/components/view/foo_playcount
+
+	- Enhanced Playback Statistics:
+	https://www.foobar2000.org/components/view/foo_enhanced_playcount
+	
+	- LaTeX: Recommended LuaLaTeX via MiKTeX. Any version works.
+		* Win 10+: any version
+		https://miktex.org
+		* Win 7: 22.7 version (or lower)
+		https://www.npackd.org/p/org.miktex.MiKTeX64/22.7
+
+Optional:
+---------
+	- World-Map-SMP: To get country stats.
+	https://github.com/regorxxx/World-Map-SMP
+
+	- ListenBrainz token: It's not a requisite to get
+	playlists suggestions, since it will use the public API,
+	but it will be less probably to reach rate limits with it.
+	https://listenbrainz.org/settings/import/
+
+	- TeXstudio: To compile manually (if desired), can also be 
+	configured to use LuaLaTeX engine, giving identical results 
+	to the automated CMD build.
+	https://github.com/texstudio-org/texstudio
+		* Win 10+: any version
+		* Win 7: 4.3.0 (or lower)
+
+LaTeX compilation:
+------------------
+The default installation uses LuaLaTeX via CMD:
+lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1
+
+This command may be changed at the settings menu, in case other
+other engine or format is preferred (any layout problems is your
+responsibility though).
+
+The CMD expression allows these numbered arguments which
+are replaced at execution:
+	- %1: input .tex file path
+	- %2: output .pdf file path
+	- %3: output directory path
+	- %4: year
+
+Ex:
+lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_2023 --output-directory="B:\foobar2000\profile\js_data\temp\wrapped" "B:\foobar2000\profile\js_data\temp\wrapped\Wrapped_2023.tex"

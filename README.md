@@ -7,7 +7,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Animation4](https://user-images.githubusercontent.com/83307074/116752367-002d9100-a9f5-11eb-8a03-0ee323634742.gif)
 
-# Features
+## Features
 
 ![Animation5](https://user-images.githubusercontent.com/83307074/116752374-01f75480-a9f5-11eb-9d30-a9958079b1ee.gif)
 
@@ -52,7 +52,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Animation6](https://user-images.githubusercontent.com/83307074/116752378-03c11800-a9f5-11eb-9971-b3eff6e8d0fa.gif)
 
-### Compatible with (toolbar)
+## Compatible with (toolbar)
 1. [Search-by-Distance-SMP](https://github.com/regorxxx/Search-by-Distance-SMP): creates intelligent "spotify-like" playlist using high-level data from tracks and computing their similarity using genres/styles.
 2. [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Offers different pre-defefined examples for intelligent playlist creation.
 3. [ListenBrainz-SMP](https://github.com/regorxxx/ListenBrainz-SMP): Integrates Listenbrainz's feedback and recommendations.
@@ -62,7 +62,18 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Auto-device2](https://user-images.githubusercontent.com/83307074/125861102-9253716b-ded6-41d5-83b5-84664edeb17f.gif)
 
-# Installation
+## Requirements
+1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
+2. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
+3. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
+4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7, use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7)
+
+## Optional
+1. [World-Map-SMP](https://github.com/regorxxx/World-Map-SMP): Script required if region related statistics/playlists are desired.
+2. [ExifTool](https://exiftool.org): Binary used to clean all metadata from images used on report.
+2. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
+
+##  Installation
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
