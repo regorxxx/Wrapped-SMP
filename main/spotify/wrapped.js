@@ -6,7 +6,7 @@
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globQuery:readable, globTags:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, isArrayEqual:readable */
+/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, isArrayEqual:readable, isPromise:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global sanitizePath:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -1521,12 +1521,18 @@ const wrapped = {
 		if (this.playlists.topCountries.Count) {
 			sendToPlaylist(this.playlists.topCountries, 'Top Countries ' + year);
 		}
-		this.playlists.suggestions.genres.then((pls) => {
+		(isPromise(this.playlists.suggestions.genres)
+			? this.playlists.suggestions.genres
+			: Promise.resolve(this.playlists.suggestions.genres)
+		).then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
 				sendToPlaylist(pls, 'Suggested Genres ' + year);
 			}
 		});
-		this.playlists.suggestions.artists.then((pls) => {
+		(isPromise(this.playlists.suggestions.artists)
+			? this.playlists.suggestions.artists
+			: Promise.resolve(this.playlists.suggestions.artists)
+		).then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
 				sendToPlaylist(pls, 'Suggested Artists ' + year);
 			}
