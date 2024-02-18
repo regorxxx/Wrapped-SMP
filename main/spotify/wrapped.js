@@ -1,10 +1,10 @@
 'use strict';
-//14/02/24
+//16/02/24
 
 /* exported wrapped */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global folders:readable, globQuery:readable, globTags:readable */
+/* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, isArrayEqual:readable, isPromise:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -1221,7 +1221,8 @@ const wrapped = {
 		).then(() => {
 			if (bFormat) {
 				console.log('Wrapped: processing track images with nconvert.exe');
-				_runCmd('CMD /C ' + folders.xxx + 'helpers-external\\nconvert\\nconvert.exe -out jpeg -dpi 300 -resize 800 800 -overwrite -keepfiledate -ignore_errors "' + path + '*.jpg"', false);
+				const nconvert = folders.xxx + 'helpers-external\\nconvert\\nconvert' + (soFeat.x64 ? '' : '_32') + '.exe';
+				_runCmd('CMD /C ' + nconvert + ' -out jpeg -dpi 300 -resize 800 800 -overwrite -keepfiledate -ignore_errors "' + path + '*.jpg"', false);
 			}
 			return tracksData;
 		});
@@ -1588,7 +1589,7 @@ const wrapped = {
 			});
 		}
 		// Helpers
-		const topDay = this.stats.time.most.date 
+		const topDay = this.stats.time.most.date
 			? this.stats.time.most.date.toLocaleDateString('en-us', { month: 'long', day: 'numeric' })
 			: '- no date -';
 		const getUniqueLabel = (() => {
@@ -1970,13 +1971,21 @@ const wrapped = {
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\cutpic{10px}{400px}{' + getImage(wrappedData.cities[0].img) + '}\n';
-			['l', 'c', 'r'].forEach((align, i) => {
-				report += '\t\\llap{\\makebox[430px][' + align + ']{\\raisebox{-50px}{\\cutpic{10px}{100px}{' + getImage(wrappedData.cities[0].artists[i].artistImg) + '}}}}\n';
-			});
+			const artistsCity = wrappedData.cities[0].artists.length;
+			if (artistsCity > 0) {
+				const layout = artistsCity === 3 ? ['l', 'c', 'r'] : artistsCity === 2 ? ['l', 'r'] : ['c'];
+				layout.forEach((align, i) => {
+					report += '\t\\llap{\\makebox[425px][' + align + ']{\\raisebox{-50px}{\\cutpic{10px}{100px}{' + getImage(wrappedData.cities[0].artists[i].artistImg) + '}}}}\n';
+				});
+			}
 			report += '\\end{figure}\n';
 			report += '\\vspace{7mm}\n';
-			const topArtistCity = wrappedData.cities[0].artists.slice(0, 3).map((data) => '\\textbf{\\textit{' + data.artist + '}}');
-			report += '{\\Large Some of your favourite artists, like ' + topArtistCity[0] + ', ' + topArtistCity[1] + ' or ' + topArtistCity[2] + ', were born here.}\n';
+			if (artistsCity > 0) {
+				const topArtistCity = wrappedData.cities[0].artists.slice(0, 3)
+					.map((data) => '\\textbf{\\textit{' + data.artist + '}}')
+					.joinLast(', ', ' or ');
+				report += '{\\Large Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
+			}
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 		}
