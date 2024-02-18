@@ -46,12 +46,14 @@ Requirements:
 
 	- Enhanced Playback Statistics:
 	https://www.foobar2000.org/components/view/foo_enhanced_playcount
-	
+
 	- LaTeX: Recommended LuaLaTeX via MiKTeX. Any version works.
 		* Win 10+: any version
 		https://miktex.org
-		* Win 7: 22.7 version (or lower)
+		* Win 7 / Wine (64 bit): 22.7 version
 		https://www.npackd.org/p/org.miktex.MiKTeX64/22.7
+		* Win 7 / Wine (32 bit): 21.6 version
+		https://www.npackd.org/p/org.miktex.MiKTeX/21.6
 
 Optional:
 ---------
@@ -63,12 +65,22 @@ Optional:
 	but it will be less probably to reach rate limits with it.
 	https://listenbrainz.org/settings/import/
 
-	- TeXstudio: To compile manually (if desired), can also be 
-	configured to use LuaLaTeX engine, giving identical results 
+	- TeXstudio: To compile manually (if desired), can also be
+	configured to use LuaLaTeX engine, giving identical results
 	to the automated CMD build.
 	https://github.com/texstudio-org/texstudio
 		* Win 10+: any version
 		* Win 7: 4.3.0 (or lower)
+
+	- ExifTool: To clean all metadata from images used on report.
+	Binaries must be put at: .\helpers_external\exiftool\exiftool.exe
+		* 64 bit: https://exiftool.org/
+		* 32 bit: https://oliverbetz.de/pages/Artikel/ExifTool-for-Windows
+
+	- Pingo: To optimize images used on report (will greatly reduce file size).
+	Binaries must be put at: .\helpers_external\pingo\pingo.exe
+		* 64 bit: https://css-ig.net/pingo
+		* 32 bit: not available
 
 LaTeX compilation:
 ------------------
