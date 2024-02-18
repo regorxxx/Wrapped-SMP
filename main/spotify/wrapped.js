@@ -1,5 +1,5 @@
 'use strict';
-//16/02/24
+//18/02/24
 
 /* exported wrapped */
 
@@ -41,6 +41,10 @@ const wrapped = {
 	tokens: { listenBrainz: '' },
 	isWorking: [],
 	basePath: folders.temp + 'wrapped\\',
+	tags: {
+		artist: 'ALBUM ARTIST',
+		genre: 'GENRE'
+	},
 	bOffline: false,
 	bDebug: false,
 	backgroundImgs: [],
@@ -167,13 +171,13 @@ const wrapped = {
 	getArtistsData: function (year, query) {
 		return getDataAsync({
 			option: 'playcount', optionArg: [year,],
-			x: 'ALBUM ARTIST',
+			x: this.tags.artist,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
 			.then((/** @type [array] */ data) => {
-				data = data[0]; // There is only a single serie
+				data = data[0];
 				// Process
 				data.forEach((artist) => {
 					artist.artistImg = this.basePath + 'img\\untitled.jpg';
@@ -203,7 +207,7 @@ const wrapped = {
 	getGenresData: function (year, query) {
 		return getDataAsync({
 			option: 'playcount', optionArg: [year,],
-			x: 'GENRE',
+			x: this.tags.genre,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
@@ -247,7 +251,7 @@ const wrapped = {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((track) => {
-					track.artist = fb.TitleFormat(_bt('ALBUM ARTIST')).EvalWithMetadbs(new FbMetadbHandleList(track.handle))
+					track.artist = fb.TitleFormat(_bt(this.tags.artist)).EvalWithMetadbs(new FbMetadbHandleList(track.handle))
 						.flat(Infinity).join(', ');
 					track.title = track.x;
 					track.listens = track.y;
@@ -308,7 +312,7 @@ const wrapped = {
 	getCountriesData: function (year, query) {
 		return getDataAsync({
 			option: 'playcount wordlmap', optionArg: [year,],
-			x: 'ALBUM ARTIST',
+			x: this.tags.artist,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
@@ -342,7 +346,7 @@ const wrapped = {
 	getCitiesData: function (year, query) {
 		return getDataAsync({
 			option: 'playcount wordlmap city', optionArg: [year,],
-			x: 'ALBUM ARTIST',
+			x: this.tags.artist,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
@@ -736,7 +740,7 @@ const wrapped = {
 		const artists = artistsData.slice(0, 100).map((artist) => artist.artist).filter(Boolean);
 		const query = queryJoin([
 			'%RATING% MISSING OR %RATING% GREATER 2',
-			queryCombinations(artists, '%ALBUM ARTIST%', 'OR')
+			queryCombinations(artists, _t(this.tags.artist), 'OR')
 		], 'AND');
 		if (this.bDebug) { console.log('computeTopArtistsPlaylist: ' + query); }
 		/** @type {FbMetadbHandleList} */
@@ -836,7 +840,7 @@ const wrapped = {
 		if (this.bOffline) {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
-					queryCombinations(genres, 'GENRE', 'OR'),
+					queryCombinations(genres, this.tags.genre, 'OR'),
 					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -967,7 +971,7 @@ const wrapped = {
 		if (this.bOffline) {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([
-					queryCombinations(artists, '%ALBUM ARTIST%', 'OR'),
+					queryCombinations(artists, _t(this.tags.artist), 'OR'),
 					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);

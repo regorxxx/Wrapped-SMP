@@ -1,5 +1,5 @@
 'use strict';
-//14/02/24
+//18/02/24
 
 /* exported wrappedMenu */
 
@@ -23,6 +23,9 @@ function wrappedMenu({ bSimulate = false } = {}) {
 		wrapped.tokens.listenBrainz = listenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
 	}
 	wrapped.bOffline = this.buttonsProperties.bOffline[1];
+	Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
+		if (pair[1]) {wrapped.tags[pair[0]] = pair[1];}
+	});
 	const runWrapped = (year, query = '', latexCmd = null) => {
 		this.switchAnimation('Wrapped stats retrieval', true);
 		(

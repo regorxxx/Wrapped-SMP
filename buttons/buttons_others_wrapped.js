@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/02/24
+//18/02/24
 
 /*
 	Wrapped
@@ -11,10 +11,12 @@ include('..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable */
 include('..\\helpers\\buttons_xxx.js');
 /* global getButtonVersion:readable, getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
+include('..\\helpers\\helpers_xxx_input.js');
+/* global Input:readable */
 include('..\\helpers\\buttons_xxx_menu.js');
-/* global settingsMenu:readable  */
+/* global settingsMenu:readable, MF_GRAYED:readable */
 include('..\\helpers\\helpers_xxx_prototypes.js');
-/* global isBoolean:readable, isStringWeak:readable, _p:readable */
+/* global isBoolean:readable, isStringWeak:readable, _p:readable, isJSON:readable, capitalizeAll:readable, _b:readable */
 include('..\\helpers\\helpers_xxx_UI.js');
 /* global _gdiFont:readable, _gr:readable, _scale:readable, chars:readable */
 include('..\\helpers\\helpers_xxx_properties.js');
@@ -25,6 +27,8 @@ include('helpers\\buttons_others_wrapped_menu.js');
 /* global wrappedMenu:readable */
 include('..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable */
+include('..\\main\\spotify\\wrapped.js');
+/* global wrapped:readable */
 
 var prefix = 'wp'; // NOSONAR[global]
 var version = getButtonVersion('Wrapped-SMP'); // NOSONAR[global]
@@ -33,13 +37,14 @@ try { window.DefineScript('Wrapped button', { author: 'regorxxx', version, featu
 prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
 
 var newButtonsProperties = { // NOSONAR[global]
-	bDynamicMenus: ['Expose menus at  \'File\\Spider Monkey Panel\\Script commands\'', false, { func: isBoolean }, false],
-	bIconMode: ['Icon-only mode?', false, { func: isBoolean }, false],
-	latexCmd: ['LaTeX cmd for compiling into PDF', 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1', { func: isStringWeak }, 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1'],
 	queryFilter: ['Library query filter', '%RATING% MISSING OR %RATING% GREATER 2', { func: isStringWeak }, '%RATING% MISSING OR %RATING% GREATER 2'],
+	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
+	bOffline: ['Offline mode', false, { func: isBoolean }, false],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
 	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
-	bOffline: ['Offline mode', false, { func: isBoolean }, false],
+	latexCmd: ['LaTeX cmd for compiling into PDF', 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1', { func: isStringWeak }, 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1'],
+	bDynamicMenus: ['Expose menus at  \'File\\Spider Monkey Panel\\Script commands\'', false, { func: isBoolean }, false],
+	bIconMode: ['Icon-only mode?', false, { func: isBoolean }, false],
 };
 setProperties(newButtonsProperties, prefix, 0); //This sets all the panel properties at once
 newButtonsProperties = getPropertiesPairs(newButtonsProperties, prefix, 0);
@@ -79,6 +84,25 @@ addButton({
 								});
 							} else { deleteMainMenuDynamic('Wrapped'); }
 						}
+				},
+				(menu) => { // Append this menu entries to the config menu
+					const menuName = menu.getMainMenuName();
+					menu.newEntry({ menuName: menu.getMainMenuName(), entryText: 'sep' });
+					const subMenuName = menu.newMenu('Tag remap...', menuName);
+					menu.newEntry({ menuName: subMenuName, entryText: 'Tags used on report:', flags: MF_GRAYED });
+					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+					const tags = JSON.parse(this.buttonsProperties.tags[1]);
+					Object.keys(tags).forEach((key) => {
+						menu.newEntry({
+							menuName: subMenuName, entryText: capitalizeAll(key) + '\t' + _b(tags[key]), func: () => {
+								const input = Input.string('string', tags[key], 'Enter tag:\n(without %)', 'Wrapped', 'ALBUM ARTIST');
+								if (input === null) { return; }
+								tags[key]= input;
+								this.buttonsProperties.tags[1] = JSON.stringify(tags);
+								overwriteProperties(this.buttonsProperties);
+							}
+						});
+					});
 				}
 			);
 			menu.btn_up(this.currX, this.currY + this.currH);
