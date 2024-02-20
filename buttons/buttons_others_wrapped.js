@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/02/24
+//19/02/24
 
 /*
 	Wrapped
@@ -39,6 +39,7 @@ prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
 var newButtonsProperties = { // NOSONAR[global]
 	queryFilter: ['Library query filter', '%RATING% MISSING OR %RATING% GREATER 2', { func: isStringWeak }, '%RATING% MISSING OR %RATING% GREATER 2'],
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
+	bFilterGenresGraph: ['Filter genres with Graph exclusions', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
 	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
@@ -95,7 +96,7 @@ addButton({
 					Object.keys(tags).forEach((key) => {
 						menu.newEntry({
 							menuName: subMenuName, entryText: capitalizeAll(key) + '\t' + _b(tags[key]), func: () => {
-								const input = Input.string('string', tags[key], 'Enter tag:\n(without %)', 'Wrapped', 'ALBUM ARTIST');
+								const input = Input.string('string', tags[key], 'Enter tag(s):\n\nSingle tags may be written with/without %.\nEx.: ARTIST\n\nMultiple tags must be separated by \', \' and must include %.\nEx.: %GENRE%, %STYLE%', 'Wrapped', 'ALBUM ARTIST');
 								if (input === null) { return; }
 								tags[key]= input;
 								this.buttonsProperties.tags[1] = JSON.stringify(tags);

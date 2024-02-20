@@ -1,5 +1,5 @@
 'use strict';
-//18/02/24
+//19/02/24
 
 /* exported wrappedMenu */
 
@@ -18,14 +18,16 @@ include('..\\..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
 
 function wrappedMenu({ bSimulate = false } = {}) {
 	if (bSimulate) { return wrappedMenu.bind({ buttonsProperties: this.buttonsProperties, prefix: this.prefix })(false); }
-	// Globals
-	if (!wrapped.tokens.listenBrainz && this.buttonsProperties.lBrainzToken[1]) {
-		wrapped.tokens.listenBrainz = listenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
+	// Settings
+	if (!wrapped.settings.tokens.listenBrainz && this.buttonsProperties.lBrainzToken[1]) {
+		wrapped.settings.tokens.listenBrainz = listenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
 	}
-	wrapped.bOffline = this.buttonsProperties.bOffline[1];
+	['bFilterGenresGraph', 'bOffline']
+		.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
 	Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
 		if (pair[1]) {wrapped.tags[pair[0]] = pair[1];}
 	});
+	// Globals
 	const runWrapped = (year, query = '', latexCmd = null) => {
 		this.switchAnimation('Wrapped stats retrieval', true);
 		(
