@@ -1,14 +1,14 @@
 'use strict';
-//18/02/24
+//19/02/24
 
 /* exported wrapped */
 
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, isArrayEqual:readable, isPromise:readable */
+/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global sanitizePath:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
+/* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global sendToPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
@@ -38,15 +38,19 @@ include('..\\playlist_manager\\playlist_manager_listenbrainz.js');
 
 
 const wrapped = {
-	tokens: { listenBrainz: '' },
-	isWorking: [],
 	basePath: folders.temp + 'wrapped\\',
 	tags: {
 		artist: 'ALBUM ARTIST',
-		genre: 'GENRE'
+		genre: '%GENRE%, %STYLE%'
 	},
-	bOffline: false,
-	bDebug: false,
+	settings: {
+		bOffline: false,
+		bFilterGenresGraph: true,
+		bDebug: false,
+		tokens: { listenBrainz: '' },
+
+	},
+	isWorking: [],
 	backgroundImgs: [],
 	stats: {
 		genres: {
@@ -214,6 +218,9 @@ const wrapped = {
 		})
 			.then((/** @type [array] */ data) => {
 				data = data[0]; // There is only a single serie
+				if (this.settings.bFilterGenresGraph) {
+					data = data.filter((g) => !music_graph_descriptors.map_distance_exclusions.has(g.x));
+				}
 				// Process
 				data.forEach((genre) => {
 					genre.genre = genre.x;
@@ -395,7 +402,7 @@ const wrapped = {
 	*/
 	computeArtistsStats: function (artistsData) {
 		this.stats.artists.total = artistsData.length;
-		if (this.bDebug) { console.log('computeArtistsStats:', this.stats.artists); }
+		if (this.settings.bDebug) { console.log('computeArtistsStats:', this.stats.artists); }
 		return this.stats;
 	},
 	/**
@@ -438,7 +445,7 @@ const wrapped = {
 			node.score = round(node.score / listensTotal * 100);
 			this.stats.genres.groups.list.push(node);
 		});
-		if (this.bDebug) { console.log('computeGenresStats:', this.stats.genres); }
+		if (this.settings.bDebug) { console.log('computeGenresStats:', this.stats.genres); }
 		return this.stats;
 	},
 	/**
@@ -455,7 +462,7 @@ const wrapped = {
 	*/
 	computeTracksStats: function (tracksData) {
 		this.stats.tracks.total = tracksData.length;
-		if (this.bDebug) { console.log('computeTracksStats:', this.stats.tracks); }
+		if (this.settings.bDebug) { console.log('computeTracksStats:', this.stats.tracks); }
 		return this.stats;
 	},
 	/**
@@ -472,7 +479,7 @@ const wrapped = {
 	*/
 	computeAlbumsStats: function (albumsData) {
 		this.stats.albums.total = albumsData.length;
-		if (this.bDebug) { console.log('computeAlbumsStats:', this.stats.albums); }
+		if (this.settings.bDebug) { console.log('computeAlbumsStats:', this.stats.albums); }
 		return this.stats;
 	},
 	/**
@@ -492,7 +499,7 @@ const wrapped = {
 		countriesData.slice(0, 5).forEach((country) => {
 			this.stats.countries.byISO.push({ ...country, iso: getCountryISO(country.name) });
 		});
-		if (this.bDebug) { console.log('computeCountriesStats:', this.stats.countries); }
+		if (this.settings.bDebug) { console.log('computeCountriesStats:', this.stats.countries); }
 		return this.stats;
 	},
 	/**
@@ -508,7 +515,7 @@ const wrapped = {
 	*/
 	computeCitiesStats: function (citiesData) {
 		this.stats.cities.total = citiesData.length;
-		if (this.bDebug) { console.log('computeCitiesStats:', this.stats.cities); }
+		if (this.settings.bDebug) { console.log('computeCitiesStats:', this.stats.cities); }
 		return this.stats;
 	},
 	/**
@@ -541,7 +548,7 @@ const wrapped = {
 		const max = [...days.values()].reduce((acc, curr) => curr.time > acc.time ? curr : acc, { time: 0 });
 		this.stats.time.most.date = max.date;
 		this.stats.time.most.minutes = round(max.time / 60, 0);
-		if (this.bDebug) { console.log('computeListensStats:', this.stats.time); }
+		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.time); }
 		return this.stats;
 	},
 	/**
@@ -617,7 +624,7 @@ const wrapped = {
 			}
 		}
 		this.stats.character.list.forEach((character) => character.score = round(character.score, 2));
-		if (this.bDebug) { console.log('computeCharacterStats:', this.stats.character.scores); }
+		if (this.settings.bDebug) { console.log('computeCharacterStats:', this.stats.character.scores); }
 		return this.stats;
 	},
 	/**
@@ -640,7 +647,7 @@ const wrapped = {
 			this.stats.artists.top.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === this.stats.artists.top.artist ? 1 : 0), 0);
 			const topTrack = wrappedData.tracks.find((track) => track.artist === this.stats.artists.top.artist);
 			if (topTrack) { this.stats.artists.top.topTrack = topTrack; }
-			if (this.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
 			// By month
 			wrappedData.artists.slice(0, 5).forEach((artist) => {
 				const listens = getPlayCount(
@@ -653,7 +660,7 @@ const wrapped = {
 				listens.forEach((listenArr) => {
 					listenArr.forEach((listen) => {
 						const dateStr = listen.getMonth();
-						months.set(dateStr, (months.get(dateStr) || 0) + 1);
+						months.set(dateStr, (months.get(dateStr) || 0));
 					});
 				});
 				const max = [...months.entries()].sort((a, b) => b[1] - a[1])[0];
@@ -665,7 +672,7 @@ const wrapped = {
 					monthName: monthNames[max[0]]
 				});
 			});
-			if (this.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
 		}
 		// Top artist by Country
 		if (wrappedData.countries.length && wrappedData.artists.length) {
@@ -677,7 +684,7 @@ const wrapped = {
 					this.stats.countries.byArtist.push({ ...country, ...topArtist });
 				}
 			});
-			if (this.bDebug) { console.log('computeGlobalStats:', this.stats.countries.byArtist); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.countries.byArtist); }
 		}
 		return this.stats;
 	},
@@ -715,7 +722,7 @@ const wrapped = {
 	computeDiscoverPlaylist: function (tracksData, year, size = 100) {
 		let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
 		const query = '%ADDED% DURING ' + year;
-		if (this.bDebug) { console.log('computeDiscoverPlaylist: ' + query); }
+		if (this.settings.bDebug) { console.log('computeDiscoverPlaylist: ' + query); }
 		handleList = fb.GetQueryItemsCheck(handleList, query);
 		if (handleList) {
 			handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
@@ -742,7 +749,7 @@ const wrapped = {
 			'%RATING% MISSING OR %RATING% GREATER 2',
 			queryCombinations(artists, _t(this.tags.artist), 'OR')
 		], 'AND');
-		if (this.bDebug) { console.log('computeTopArtistsPlaylist: ' + query); }
+		if (this.settings.bDebug) { console.log('computeTopArtistsPlaylist: ' + query); }
 		/** @type {FbMetadbHandleList} */
 		let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 		if (handleList) {
@@ -771,7 +778,7 @@ const wrapped = {
 				'%RATING% MISSING OR %RATING% GREATER 2',
 				queryJoin(queryCombinations(genres, ['GENRE', 'STYLE'], 'OR'), 'OR')
 			], 'AND');
-			if (this.bDebug) { console.log('computeTopGenresPlaylist: ' + query); }
+			if (this.settings.bDebug) { console.log('computeTopGenresPlaylist: ' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -805,7 +812,7 @@ const wrapped = {
 				let handleList = new FbMetadbHandleList();
 				filters.forEach((query) => {
 					let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-					if (this.bDebug) { console.log('computeTopCountriesPlaylist: ' + _p(handleListCountry.Count) + ' <- ' + query); }
+					if (this.settings.bDebug) { console.log('computeTopCountriesPlaylist: ' + _p(handleListCountry.Count) + ' <- ' + query); }
 					if (handleListCountry) {
 						handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
 						handleList.AddRange(handleListCountry);
@@ -837,24 +844,26 @@ const wrapped = {
 		const mbidsAlt = [];
 		const tags = { TITLE: [], ARTIST: [] };
 		const lb = listenBrainz;
-		if (this.bOffline) {
+		if (this.settings.bOffline) {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
-					queryCombinations(genres, this.tags.genre, 'OR'),
+					queryJoin(queryCombinations(genres, this.tags.genre.split(', '), 'OR'), 'OR'),
 					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
+				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.bDebug) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebug) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
+					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
-					return handleList;
+					return handleList.Convert().slice(0, size);
 				}
 				return [];
 			})());
 		} else {
 			const workName = 'Computing suggested Genres playlists';
 			this.isWorking.push({ name: workName });
-			this.playlists.suggestions.genres = lb.getRecordingsByTag(genres, this.tokens.listenBrainz, size, 'or')
+			this.playlists.suggestions.genres = lb.getRecordingsByTag(genres, this.settings.tokens.listenBrainz, size, 'or')
 				.then((recommendations) => {
 					recommendations.forEach((recording) => {
 						mbids.push(recording.recording_mbid || '');
@@ -864,7 +873,7 @@ const wrapped = {
 					});
 					const count = mbids.length;
 					// Retrieve title info
-					return lb.lookupRecordingInfoByMBIDs(mbids.filter(Boolean), ['artist_credit_name', 'recording_mbid', 'recording_name', '[artist_credit_mbids]'], this.tokens.listenBrainz)
+					return lb.lookupRecordingInfoByMBIDs(mbids.filter(Boolean), ['artist_credit_name', 'recording_mbid', 'recording_name', '[artist_credit_mbids]'], this.settings.tokens.listenBrainz)
 						.then((info) => {
 							if (['artist_credit_name', 'recording_mbid', 'recording_name', '[artist_credit_mbids]'].every((tag) => Object.hasOwn(info, tag))) {
 								for (let i = 0; i < count; i++) {
@@ -938,12 +947,10 @@ const wrapped = {
 					}
 				}).then((items) => {
 					items.shuffle();
-					this.playlists.suggestions.genres = items;
 					this.isWorking.splice(this.isWorking.findIndex((obj) => obj.name === workName), 1);
-					return items;
+					return items.slice(0, size);
 				}).catch(() => {
 					this.isWorking.splice(this.isWorking.findIndex((obj) => obj.name === workName), 1);
-					this.playlists.suggestions.genres = [];
 					return [];
 				});
 		}
@@ -964,185 +971,177 @@ const wrapped = {
 		*/
 	computeSuggestedArtistsPlaylist: function (artistsData, year, size = 100) {
 		const artists = artistsData.slice(0, 5).map((artist) => artist.artist);
-		const mbids = [];
-		const mbidsAlt = [];
-		const tags = { TITLE: [], ARTIST: [] };
 		const lb = listenBrainz;
-		if (this.bOffline) {
+		if (this.settings.bOffline) {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([
 					queryCombinations(artists, _t(this.tags.artist), 'OR'),
 					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
+				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.bDebug) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebug) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
+					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
-					return handleList;
+					return handleList.Convert().slice(0, size);
 				}
 				return [];
 			})());
 		} else {
 			const workName = 'Computing suggested Artists playlists';
 			this.isWorking.push({ name: workName });
+			const mbids = [];
+			const suggestedArtists = [];
+			const mbidsAlt = [];
+			/** @type {{ TITLE: any[], ARTIST: any [] }[]} */
+			const tags = [];
 			this.playlists.suggestions.artists = lb.lookupArtistMBIDsByName(artists, true)
 				.then((results) => {
 					const mbids = results.filter(Boolean).map((d) => d.mbid);
 					// [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
-					return Promise.parallel(mbids, (mbid) => lb.retrieveSimilarArtists(mbid, this.tokens.listenBrainz), 15);
+					return Promise.parallel(mbids, (mbid) => lb.retrieveSimilarArtists(mbid, this.settings.tokens.listenBrainz), 15);
 				})
 				.then((results) => {
-					return Promise.parallel(results, (result) => {
+					results.forEach((result) => {
 						if (result.status === 'fulfilled') {
-							return Promise.resolve(result.value)
-								.then((recommendations) => {
-									recommendations.sort((a, b) => b.score - a.score);
-									recommendations.slice(0, 5).forEach((artist) => {
-										mbids.push(artist.artist_mbid || '');
-										tags.ARTIST.push(artist.name);
-										tags.TITLE.push('');
-									});
-									const count = mbids.length;
-									// Retrieve some recordings from given artists
-									return lb.getPopularRecordingsByArtist(mbids.filter(Boolean), this.tokens.listenBrainz, 5)
-										.then((artistRecommendations) => { // [{artist_mbids, count, recording_mbid}, ...]
-											let cache = '';
-											const selection = [];
-											artistRecommendations.forEach((recording) => {
-												if (!isArrayEqual(cache, recording.artist_mbids)) {
-													selection.push(recording);
-													cache = recording.artist_mbids;
-												} else { return; }
-											});
-											mbids.forEach((artist_mbid, i) => {
-												const selLen = selection.length;
-												mbidsAlt.push('');
-												for (let j = 0; j < selLen; j++) {
-													if (selection[j].artist_mbids.includes(artist_mbid)) {
-														mbidsAlt[i] = selection.splice(j, 1)[0].recording_mbid;
-														break;
-													}
-												}
-											});
-										})
-										.then(() => { // Retrieve title info
-											return lb.lookupRecordingInfoByMBIDs(mbidsAlt.filter(Boolean), ['recording_mbid', 'recording_name'], this.tokens.listenBrainz);
-										})
-										.then((info) => {
-											if (['recording_mbid', 'recording_name'].every((tag) => Object.hasOwn(info, tag))) {
-												for (let i = 0; i < count; i++) {
-													if (mbidsAlt[i] === info.recording_mbid[i]) {
-														if (info.recording_name[i]) { tags.TITLE[i] = info.recording_name[i]; }
-													}
-												}
-											}
-										});
-								}).then(() => {
-									let libItems;
-									if (globQuery.filter.length) {
-										try { libItems = fb.GetQueryItems(fb.GetLibraryItems(), globQuery.filter); } // Sanity check
-										catch (e) { libItems = fb.GetLibraryItems(); }
-									} else { libItems = fb.GetLibraryItems(); }
-									const notFound = [];
-									let items = [];
-									const queryArr = mbids.map((mbid, i) => {
-										const mbidAlt = mbidsAlt[i];
-										const tagArr = ['ARTIST', 'TITLE']
-											.map((key) => { return { key, val: sanitizeQueryVal(sanitizeTagValIds(tags[key][i])) }; });
-										const bMeta = tagArr.every((tag) => { return tag.val.length > 0; });
-										if (!tagArr[0].val.length > 0) { return; }
-										if (mbidAlt) { // Get specific recordings
-											const query = queryJoin(
-												[
-													(bMeta
-														? tagArr.map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
-														: tagArr.slice(0, 1).map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
-													) + ' AND NOT GENRE IS live AND NOT STYLE IS live',
-													'MUSICBRAINZ_TRACKID IS ' + mbidAlt
-												].filter(Boolean)
-												, 'OR'
-											);
-											return query;
-										} else { // Or any track by such artist
-											const query = queryJoin(
-												[
-													queryJoin(
-														[
-															tagArr.slice(0, 1).map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ') + ' AND NOT GENRE IS live AND NOT STYLE IS live',
-															'MUSICBRAINZ_ARTISTID IS ' + mbid + ' OR MUSICBRAINZ_ALBUMARTISTID IS ' + mbid
-														].filter(Boolean)
-														, 'OR'
-													),
-													'NOT (%RATING% IS 1 OR %RATING% IS 2)'
-												]
-												, 'AND');
-											return query;
-										}
-									}).filter(Boolean);
-									items = queryArr.map((query, i) => {
-										let itemHandleList;
-										try { itemHandleList = fb.GetQueryItems(libItems, query); } // Sanity check
-										catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; }
-										// Filter
-										if (itemHandleList.Count) {
-											itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
-											itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
-											return itemHandleList[0];
-										}
-										if (tags.TITLE[i].length) {
-											notFound.push({ creator: tags.ARTIST[i], title: tags.TITLE[i], tags: { MUSICBRAINZ_TRACKID: mbidsAlt[i], MUSICBRAINZ_ALBUMARTISTID: mbids[i], MUSICBRAINZ_ARTISTID: mbids[i] } });
-										}
-										return null;
-									});
-									// Add titles to report, since is a small amount, it's fine to iterate...
-									const tfo = fb.TitleFormat('[%TITLE%]');
-									items.forEach((handle, i) => {
-										if (handle && tags.TITLE[i].length === 0) { tags.TITLE[i] = tfo.EvalWithMetadb(handle) || '  \u2715  '; }
-									});
-									return { notFound, items };
-								}).then(({ notFound, items }) => {
-									if (notFound.length) {
-										const search = notFound.filter((t) => t.title.length && t.creator.length);
-										// Send request in parallel every x ms and process when all are done
-										return Promise.parallel(search, youTube.searchForYoutubeTrack, 5).then((results) => {
-											let j = 0;
-											const itemsLen = items.length;
-											results.forEach((result) => {
-												for (void (0); j <= itemsLen; j++) {
-													if (result.status !== 'fulfilled') { // Only code errors are output
-														console.log('YouTube:', result.status, result.reason.message);
-														break;
-													}
-													const link = result.value;
-													if (!link || !link.length) { break; }
-													if (!items[j]) {
-														items[j] = link.url;
-														break;
-													}
-												}
-											});
-											return items;
-										});
-									} else {
-										return items;
-									}
-								});
-						} else {
-							return null;
+							const recommendations = result.value;
+							recommendations.sort((a, b) => b.score - a.score);
+							recommendations.slice(0, 5).forEach((artist) => {
+								mbids.push(artist.artist_mbid || '');
+								suggestedArtists.push(artist.name);
+							});
 						}
-					}, 15);
+					});
 				})
-				.then((results) => {
-					return results.filter((r) => r.status === 'fulfilled').map((r) => r.value).flat(Infinity);
+				.then(() => {
+					// Retrieve some recordings from given artists
+					return lb.getPopularRecordingsByArtist(mbids.filter(Boolean), this.settings.tokens.listenBrainz, 100)
+						.then((artistRecommendations) => { // [{artist_mbids, count, recording_mbid}, ...]
+							const cache = new Map();
+							const selection = [];
+							artistRecommendations.forEach((recording) => {
+								if (recording.artist_mbids) {
+									const id = recording.artist_mbids[0];
+									let count = cache.get(id) || 0;
+									if (count < 10) {
+										selection.push(recording);
+										cache.set(id, ++count);
+									}
+								}
+							});
+							mbids.forEach((artist_mbid, i) => {
+								const selLen = selection.length;
+								mbidsAlt.push([]);
+								tags.push({ TITLE: [], ARTIST: [] });
+								for (let j = selLen - 1; j > 0; j--) {
+									if (selection[j].artist_mbids.includes(artist_mbid)) {
+										const recording = selection.splice(j, 1)[0];
+										mbidsAlt[i].push(recording.recording_mbid);
+										tags[i].ARTIST.push(recording.artists.map((a) => a.artist_credit_name));
+										tags[i].TITLE.push(recording.recording_name);
+									}
+								}
+							});
+						});
+				})
+				.then(() => {
+					let libItems;
+					if (globQuery.filter.length) {
+						try { libItems = fb.GetQueryItems(fb.GetLibraryItems(), globQuery.filter); } // Sanity check
+						catch (e) { libItems = fb.GetLibraryItems(); }
+					} else { libItems = fb.GetLibraryItems(); }
+					const notFound = [];
+					let items = [];
+					const queryArr = mbids.map((mbid, i) => {
+						const mbidAlt = mbidsAlt[i];
+						if (mbidAlt.length) { // Get specific recordings
+							return mbidAlt.map((mbid, j) => {
+								const tagArr = ['ARTIST', 'TITLE']
+									.map((key) => { return { key, val: sanitizeQueryVal(sanitizeTagValIds(tags[i][key][j])) }; });
+								const bMeta = tagArr.every((tag) => { return tag.val.length > 0; });
+								if (!tagArr[0].val.length > 0) { return; }
+								return queryJoin(
+									[
+										(bMeta
+											? tagArr.map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
+											: tagArr.slice(0, 1).map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
+										) + ' AND NOT GENRE IS live AND NOT STYLE IS live',
+										'MUSICBRAINZ_TRACKID IS ' + mbid
+									].filter(Boolean)
+									, 'OR'
+								);
+							});
+						} else { // Or any track by such artist
+							return [queryJoin(
+								[
+									queryJoin(
+										[
+											'ARTIST IS ' + suggestedArtists[i] + ' AND NOT GENRE IS live AND NOT STYLE IS live',
+											'MUSICBRAINZ_ARTISTID IS ' + mbid + ' OR MUSICBRAINZ_ALBUMARTISTID IS ' + mbid
+										].filter(Boolean)
+										, 'OR'
+									),
+									'NOT (%RATING% IS 1 OR %RATING% IS 2)'
+								]
+								, 'AND')];
+						}
+					}).filter(Boolean);
+					const tfo = fb.TitleFormat('[%TITLE%]');
+					items = queryArr.map((queries, i) => {
+						return queries.map((query, j) => {
+							let itemHandleList;
+							try { itemHandleList = fb.GetQueryItems(libItems, query); } // Sanity check
+							catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; }
+							const title = tags[i].TITLE[j];
+							// Filter
+							if (itemHandleList.Count) {
+								itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
+								itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
+								if (!title) { tags[i].TITLE[j] = tfo.EvalWithMetadb(itemHandleList[0]) || '  \u2715  '; }
+								return itemHandleList[0];
+							}
+							if (title) {
+								notFound.push({ creator: tags[i].ARTIST[j].joinLast(', ', ' & '), title: title, tags: { MUSICBRAINZ_TRACKID: mbidsAlt[i][j], MUSICBRAINZ_ALBUMARTISTID: mbids[i], MUSICBRAINZ_ARTISTID: mbids[i], ARTIST: tags[i].ARTIST[j] } });
+							}
+							return null;
+						});
+					}).flat(Infinity);
+					return { notFound, items };
+				}).then(({ notFound, items }) => {
+					if (notFound.length) {
+						const search = notFound.filter((t) => t.title.length && t.creator.length);
+						// Send request in parallel every x ms and process when all are done
+						return Promise.parallel(search, youTube.searchForYoutubeTrack, 5).then((results) => {
+							let j = 0;
+							const itemsLen = items.length;
+							results.forEach((result) => {
+								for (void (0); j <= itemsLen; j++) {
+									if (result.status !== 'fulfilled') { // Only code errors are output
+										console.log('YouTube:', result.status, result.reason.message);
+										break;
+									}
+									const link = result.value;
+									if (!link || !link.length) { break; }
+									if (!items[j]) {
+										items[j] = link.url;
+										break;
+									}
+								}
+							});
+							return items;
+						});
+					} else {
+						return items;
+					}
 				})
 				.then((items) => {
 					items.shuffle();
-					this.playlists.suggestions.artists = items.slice(0, size);
 					this.isWorking.splice(this.isWorking.findIndex((obj) => obj.name === workName), 1);
-					return items;
-				}).catch(() => {
+					return items.slice(0, size);
+				})
+				.catch(() => {
 					this.isWorking.splice(this.isWorking.findIndex((obj) => obj.name === workName), 1);
-					this.playlists.suggestions.artists = [];
 					return [];
 				});
 		}
@@ -1158,7 +1157,7 @@ const wrapped = {
 	 * @returns {string}
 	*/
 	getArtistImg: function (artist) {
-		return this.bOffline
+		return this.settings.bOffline
 			? Promise.resolve(null)
 			: spotify.searchArtistInfo(artist)
 				.then((sData) => {
@@ -1216,7 +1215,7 @@ const wrapped = {
 			tracksData,
 			(track) => this.getTrackImg(track.handle[0]).then((artPromise) => {
 				if (artPromise.image) {
-					const imgPath = path + _asciify(sanitizePath(track.title)).replace(/ /, '').slice(0, 10) + '.jpg';
+					const imgPath = path + _asciify(sanitize(track.title)).replace(/ /, '').slice(0, 10) + '.jpg';
 					artPromise.image.SaveAs(imgPath, 'image/jpeg');
 					track.albumImg = bRelative ? imgPath.replace(root, '') : imgPath;
 				} else { track.albumImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
@@ -1248,8 +1247,8 @@ const wrapped = {
 		return Promise.parallel(
 			dataArr,
 			(data) => {
-				if (data.artistImg && !this.bOffline) {
-					const imgPath = path + _asciify(sanitizePath(data.artist)).replace(/ /, '').slice(0, 10) + '.jpg';
+				if (data.artistImg && !this.settings.bOffline) {
+					const imgPath = path + _asciify(sanitize(data.artist)).replace(/ /, '').slice(0, 10) + '.jpg';
 					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe --connect-timeout 5 --max-time 5 --retry 3 --retry-max-time 5 -L -o ' + _q(imgPath) + ' ' + data.artistImg, false);
 					data.artistImg = bRelative ? imgPath.replace(root, '') : imgPath;
 				} else {
@@ -1387,7 +1386,7 @@ const wrapped = {
 	*/
 	getCityImg: function (cityData) {
 		cityData.img = null;
-		if (this.bOffline) { return Promise.resolve(null); }
+		if (this.settings.bOffline) { return Promise.resolve(null); }
 		const url = 'https://commons.wikimedia.org/w/index.php?search=' + cityData.name + '&title=Special:MediaSearch&go=Go&type=image&filemime=jpeg&assessment=featured-image';
 		return send({
 			method: 'GET',
@@ -1438,8 +1437,8 @@ const wrapped = {
 		return Promise.parallel(
 			citiesData,
 			(data) => {
-				if (data.img && !this.bOffline) {
-					const imgPath = path + _asciify(sanitizePath(data.name)).replace(/ /, '').slice(0, 10) + '.jpg';
+				if (data.img && !this.settings.bOffline) {
+					const imgPath = path + _asciify(sanitize(data.name)).replace(/ /, '').slice(0, 10) + '.jpg';
 					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(imgPath) + ' ' + data.img, false);
 					data.img = bRelative ? imgPath.replace(root, '') : imgPath;
 				} else {
@@ -1479,7 +1478,7 @@ const wrapped = {
 				this.computeGlobalStats(data, year);
 				Object.keys(data).forEach((key) => {
 					if (this.stats[key].total > 5) { data[key].length = 5; }
-					if (this.bDebug) { console.log('getData[' + key + ']:', data[key]); }
+					if (this.settings.bDebug) { console.log('getData[' + key + ']:', data[key]); }
 				});
 				return data;
 			});
@@ -1526,18 +1525,12 @@ const wrapped = {
 		if (this.playlists.topCountries.Count) {
 			sendToPlaylist(this.playlists.topCountries, 'Top Countries ' + year);
 		}
-		(isPromise(this.playlists.suggestions.genres)
-			? this.playlists.suggestions.genres
-			: Promise.resolve(this.playlists.suggestions.genres)
-		).then((pls) => {
+		this.playlists.suggestions.genres.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
 				sendToPlaylist(pls, 'Suggested Genres ' + year);
 			}
 		});
-		(isPromise(this.playlists.suggestions.artists)
-			? this.playlists.suggestions.artists
-			: Promise.resolve(this.playlists.suggestions.artists)
-		).then((pls) => {
+		this.playlists.suggestions.artists.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
 				sendToPlaylist(pls, 'Suggested Artists ' + year);
 			}
@@ -1555,7 +1548,7 @@ const wrapped = {
 	 * @returns {any}
 	*/
 	createPdfReport: function ({ year, query = '', latexCmd, root = this.basePath }) {
-		if (this.bOffline) { console.log('Wrapped: offline mode'); }
+		if (this.settings.bOffline) { console.log('Wrapped: offline mode'); }
 		this.cleanRoot(root);
 		this.copyDependencies(root);
 		return this.getData(year, query)
@@ -1977,7 +1970,7 @@ const wrapped = {
 			report += '\t\\cutpic{10px}{400px}{' + getImage(wrappedData.cities[0].img) + '}\n';
 			const artistsCity = wrappedData.cities[0].artists.length;
 			if (artistsCity > 0) {
-				const layout = artistsCity === 3 ? ['l', 'c', 'r'] : artistsCity === 2 ? ['l', 'r'] : ['c'];
+				const layout = artistsCity >= 3 ? ['l', 'c', 'r'] : artistsCity === 2 ? ['l', 'r'] : ['c'];
 				layout.forEach((align, i) => {
 					report += '\t\\llap{\\makebox[425px][' + align + ']{\\raisebox{-50px}{\\cutpic{10px}{100px}{' + getImage(wrappedData.cities[0].artists[i].artistImg) + '}}}}\n';
 				});
