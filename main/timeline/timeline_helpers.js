@@ -1,5 +1,5 @@
 'use strict';
-//19/02/24
+//20/02/24
 
 /* exported getData, getDataAsync */
 
@@ -470,7 +470,7 @@ async function getDataAsync({
 					country: tags.country,
 					artists: [...tags.artists]
 						.sort((a, b) => b[1] - a[1])
-						.map((a) => { return { artist: a[0], listens: [1] }; }),
+						.map((a) => { return { artist: a[0], listens: a[1] }; }),
 					...(bIncludeHandles ? { handle: handlesMap.get(point[0]) } : {})
 				};
 			})];
