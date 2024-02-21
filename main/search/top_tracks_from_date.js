@@ -8,10 +8,10 @@
 	multiple times like an auto-playlist does (if you have multiple versions of the same track).
  */
 
-/* exported topTracksFromDate, getPlayCount */
+/* exported topTracksFromDate, getPlayCount, getSkipCount */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global globTags:readable, globQuery:readable, isEnhPlayCount:readable,  isPlayCount:readable */
+/* global globTags:readable, globQuery:readable, isEnhPlayCount:readable, isPlayCount:readable, isSkipCount:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global _p:readable, _bt:readable, _b:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -92,8 +92,8 @@ function daysBetween(d1, d2) { // d1 and d2 are Dates objects
 }
 
 function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Date()) {
-	if (!isPlayCount) { fb.ShowPopupMessage('top_tracks_from_date: foo_playcount component is not installed.', window.Name); return []; }
-	if (!isEnhPlayCount) { fb.ShowPopupMessage('top_tracks_from_date: foo_enhanced_playcount is not installed.', window.Name); return []; }
+	if (!isPlayCount) { fb.ShowPopupMessage('getPlayCount: foo_playcount component is not installed.', window.Name); return []; }
+	if (!isEnhPlayCount) { fb.ShowPopupMessage('getPlayCount: foo_enhanced_playcount is not installed.', window.Name); return []; }
 	const datesArray = fb.TitleFormat(_bt('PLAYED_TIMES')).EvalWithMetadbs(handleList);
 	const datesLastFMArray = fb.TitleFormat(_bt('LASTFM_PLAYED_TIMES')).EvalWithMetadbs(handleList);
 	const lastPlayedArray = fb.TitleFormat(_bt('LAST_PLAYED_ENHANCED')).EvalWithMetadbs(handleList);
@@ -110,7 +110,7 @@ function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Dat
 			const dayArr = dateMap[day];
 			if (!dayArr) { dateMap[day] = [seconds]; }
 			else {
-				if (dayArr.every((listen) => Math.abs(seconds - listen) >= 3)) {
+				if (dayArr.every((listen) => Math.abs(seconds - listen) >= 30)) {
 					dayArr.push(seconds);
 				} else { dateArray.splice(i, 1); }
 			}
@@ -168,7 +168,7 @@ function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Dat
 			}
 			dataPool.push({ idx: i, playCount: count, listens });
 		}
-	} else {// Equal to year..
+	} else { // Equal to year...
 		for (let i = 0; i < datesArrayLength; i++) {
 			let count = 0;
 			const listens = [];
@@ -214,6 +214,47 @@ function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Dat
 				// being almost equivalent to 'top_tracks.js' in that case
 			}
 			dataPool.push({ idx: i, playCount: count, listens });
+		}
+	}
+	return dataPool;
+}
+
+function getSkipCount(handleList, timePeriod, timeKey = null, fromDate = new Date()) {
+	if (!isSkipCount) { fb.ShowPopupMessage('getSkipCount: foo_skipcount is not installed.', window.Name); return []; }
+	const datesArray = fb.TitleFormat(_bt('SKIP_TIMES_JS')).EvalWithMetadbs(handleList);
+	const datesArrayLength = datesArray.length;
+	let dataPool = [];
+	if (timePeriod && timeKey) { // During X time...
+		for (let i = 0; i < datesArrayLength; i++) {
+			let count = 0;
+			const skips = [];
+			const dateArray_i = JSON.parse(datesArray[i]);
+			if (dateArray_i.length) { // Every entry is also an array of dates
+				dateArray_i.forEach((date) => {
+					const skip = new Date(date);
+					if (timeKeys[timeKey](skip, fromDate) <= timePeriod) {
+						count++;
+						skips.push(skip);
+					}
+				});
+			}
+			dataPool.push({ idx: i, skipCount: count, skips });
+		}
+	} else { // Equal to year...
+		for (let i = 0; i < datesArrayLength; i++) {
+			let count = 0;
+			const skips = [];
+			const dateArray_i = JSON.parse(datesArray[i]);
+			if (dateArray_i.length) { // Every entry is also an array of dates
+				dateArray_i.forEach((date) => {
+					const skip = new Date(date);
+					if (skip.getFullYear() === timePeriod) {
+						count++;
+						skips.push(skip);
+					}
+				});
+			}
+			dataPool.push({ idx: i, skipCount: count, skips });
 		}
 	}
 	return dataPool;

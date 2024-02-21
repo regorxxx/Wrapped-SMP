@@ -1,10 +1,10 @@
 'use strict';
-//20/02/24
+//21/02/24
 
 /* exported wrapped */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable */
+/* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable, isSkipCount:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -174,7 +174,7 @@ const wrapped = {
 	*/
 	getArtistsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: [year,],
+			option: 'playcount', optionArg: {timePeriod: year},
 			x: this.tags.artist,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -210,7 +210,7 @@ const wrapped = {
 	*/
 	getGenresData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: [year,],
+			option: 'playcount', optionArg: {timePeriod: year},
 			x: this.tags.genre,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -244,17 +244,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{title:string, listens:number, handle:FbMetadbHandle[], artist:string}]>}
+	 * @returns {promise.<[{title:string, listens:number, skipCount: number, handle:FbMetadbHandle[], artist:string}]>}
 	*/
 	getTracksData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: [year,],
+			option: 'playcount', optionArg: {timePeriod: year, bSkipCount: isSkipCount},
 			x: 'TITLE',
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: true
 		})
-			.then((/** @type [{title: string, listens: number, handle: [FbMetadbHandle]}] */ data) => {
+			.then((/** @type [{title: string, listens: number, skipCount: number, handle: [FbMetadbHandle]}] */ data) => {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((track) => {
@@ -269,6 +269,7 @@ const wrapped = {
 				// Stats
 				this.computeTracksStats(data, year);
 				this.computeListensStats(data, year);
+				this.computeSkipsStats(data);
 				// Playlist
 				this.computeTopTracksPlaylist(data);
 				this.computeDiscoverPlaylist(data, year);
@@ -286,7 +287,7 @@ const wrapped = {
 	*/
 	getAlbumsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: [year,],
+			option: 'playcount', optionArg: {timePeriod: year},
 			x: 'ALBUM',
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -534,7 +535,7 @@ const wrapped = {
 		// Time
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
-		const listens = getPlayCount(new FbMetadbHandleList(tracksData.map((track) => track.handle[0])), year).map((track) => track.listens);
+		const listens = getPlayCount(new FbMetadbHandleList(tracksData.map((track) => track.handle).flat(Infinity)), year).map((track) => track.listens);
 		const days = new Map();
 		listens.forEach((listenArr, i) => {
 			listenArr.forEach((listen) => {
@@ -549,6 +550,22 @@ const wrapped = {
 		this.stats.time.most.date = max.date;
 		this.stats.time.most.minutes = round(max.time / 60, 0);
 		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.time); }
+		return this.stats;
+	},
+	/**
+	 * Calculate statistics for skips, using data from {@link wrapped.getTracksData}.
+	 *
+	 * @property
+	 * @name computeSkipsStats
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{title:string, skipCount:number, handle:FbMetadbHandle[]}[]} tracksData
+	 * @returns {{listens, time}}
+	*/
+	computeSkipsStats: function (tracksData) {
+		this.stats.skips.total = tracksData.reduce((prev, track) => prev + track.skipCount, 0);
+		if (this.settings.bDebug) { console.log('computeSkipsStats:', this.stats.skips); }
 		return this.stats;
 	},
 	/**
@@ -595,19 +612,20 @@ const wrapped = {
 					.reduce((acc, genre) => acc + (genre.listens > meanListens ? 1 : 0), 0) / this.stats.genres.total * 100;
 			}
 		}
-		// Alchemist: create many playlists
-		// Luminary: many listens for tracks with high BPM
+		/*  TODO add statistics
+			Alchemist: create many playlists
+			Luminary: many listens for tracks with high BPM
+			Vampire: many listens for atmospheric/emotional tracks
+			Time traveler: listen to old tracks
+			Collector: listen to own playlists
+		*/
 		// Hunter: many skips
-		// TODO add statistics
 		if (this.stats.listens.total > 0) {
 			const skipWeight = this.stats.skips.total / this.stats.listens.total;
 			if (this.stats.skips.total > 50 && skipWeight > 0.25) {
 				findChar('hunter').score = Math.min(skipWeight / (1 / 2), 100);
 			}
 		}
-		// Vampire: many listens for atmospheric/emotional tracks
-		// Time traveler: listen to old tracks
-		// Collector: listen to own playlists
 		// Hypnotist: listen to entire albums without skip (low proportion of albums per track)
 		if (this.stats.tracks.total) {
 			const albumWeight = this.stats.albums.total / this.stats.tracks.total;
