@@ -337,19 +337,20 @@ async function getDataAsync({
 			const idMap = new Map();
 			libraryTags.forEach((arr, i) => {
 				arr.forEach((tag) => {
-					let id = '';
 					if (bUseId) {
+						let id = '';
 						[tag, id] = tag.split('||');
 						if (id) {
 							if (!idMap.has(id)) { idMap.set(id, idChars.shuffle().join('')); }
 							id = idMap.get(id);
-						}
+						} else { id = ''; }
+						tag += id;
 					}
-					if (!tagCount.has(tag + id)) { tagCount.set(tag + id, Number(playCount[i])); }
-					else { tagCount.set(tag + id, tagCount.get(tag + id) + Number(playCount[i])); }
+					if (!tagCount.has(tag)) { tagCount.set(tag, Number(playCount[i])); }
+					else { tagCount.set(tag, tagCount.get(tag) + Number(playCount[i])); }
 					if (bIncludeHandles) {
-						const handles = handlesMap.get(tag + id);
-						if (!handles) { handlesMap.set(tag + id, [handleList[i]]); }
+						const handles = handlesMap.get(tag);
+						if (!handles) { handlesMap.set(tag, [handleList[i]]); }
 						else { handles.push(handleList[i]); }
 					}
 				});
@@ -360,17 +361,30 @@ async function getDataAsync({
 			break;
 		}
 		case 'playcount proportional': {
+			const bUseId = dedupByIdTags.has(x);
+			const xTag = _bt(x) +
+				(bUseId ? '||$if3(%MUSICBRAINZ_TRACKID%,%MUSICBRAINZ_ALBUMARTISTID%,%ARTIST%)' : '');
 			const libraryTags = noSplitTags.has(x.toUpperCase())
-				? (await fb.TitleFormat(_bt(x)).EvalWithMetadbsAsync(handleList)).map((val) => [val])
-				: (await fb.TitleFormat(_bt(x)).EvalWithMetadbsAsync(handleList)).map((val) => val.split(/, ?/));
+				? (await fb.TitleFormat(xTag).EvalWithMetadbsAsync(handleList)).map((val) => [val])
+				: (await fb.TitleFormat(xTag).EvalWithMetadbsAsync(handleList)).map((val) => val.split(/, ?/));
 			const playCount = optionArg
 				? getPlayCount(handleList, ...optionArg).map((V) => V.playCount)
 				: await fb.TitleFormat(globTags.playCount).EvalWithMetadbsAsync(handleList);
 			const tagCount = new Map();
 			const keyCount = new Map();
 			const handlesMap = new Map();
+			const idMap = new Map();
 			libraryTags.forEach((arr, i) => {
 				arr.forEach((tag) => {
+					if (bUseId) {
+						let id = '';
+						[tag, id] = tag.split('||');
+						if (id) {
+							if (!idMap.has(id)) { idMap.set(id, idChars.shuffle().join('')); }
+							id = idMap.get(id);
+						} else { id = ''; }
+						tag += id;
+					}
 					if (!tagCount.has(tag)) { tagCount.set(tag, Number(playCount[i])); }
 					else { tagCount.set(tag, tagCount.get(tag) + Number(playCount[i])); }
 					if (!keyCount.has(tag)) { keyCount.set(tag, 1); }
@@ -385,7 +399,7 @@ async function getDataAsync({
 			keyCount.forEach((value, key) => {
 				if (tagCount.has(key)) { tagCount.set(key, Math.round(tagCount.get(key) / keyCount.get(key))); }
 			});
-			data = [[...tagCount].map((point) => { return { x: point[0], y: point[1], ...(bIncludeHandles ? { handle: handlesMap.get(point[0]) } : {}) }; })];
+			data = [[...tagCount].map((point) => { return { x: point[0].replace(idCharsRegExp, ''), y: point[1], ...(bIncludeHandles ? { handle: handlesMap.get(point[0]) } : {}) }; })];
 			break;
 		}
 		case 'playcount wordlmap':
