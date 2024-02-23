@@ -1932,10 +1932,10 @@ const wrapped = {
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
 				report += subKey === 'title'
-					? '\t\\textbf{\\textit{' + p[subKey].cut(20) + '}} by \\textbf{\\textit{' + p.artist.cut(20) + '}} with \\textit{' + p.listens + ' listens}.\n'
+					? '\t{\\Large\\textbf{\\textit{' + p[subKey].cut(60).replace(latex, '\\$&') + '}}\\\\By \\textbf{\\textit{' + p.artist.cut(60).replace(latex, '\\$&') + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n'
 					: key === 'countries'
-						? '\t{\\Large\\textbf{' + p.name.cut(20) + '}: \\textit{' + p[subKey].cut(20) + '}} with \\textit{' + p.listens + ' listens}.\n'
-						: '\t{\\Large\\textbf{\\textit{' + p[subKey].cut(20) + '}} with \\textit{' + p.listens + ' listens}}.\n';
+						? '\t{\\Large\\textbf{' + p.name.cut(20).replace(latex, '\\$&') + '}:\\\\\\textit{' + p[subKey].cut(20).replace(latex, '\\$&') + '}}\\\\With \\textit{' + p.listens + ' listens}.\n'
+						: '\t{\\Large\\textbf{\\textit{' + p[subKey].cut(20).replace(latex, '\\$&') + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
 				report += '\\end{minipage}\n';
 			});
 		};
