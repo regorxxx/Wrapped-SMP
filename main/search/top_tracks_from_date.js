@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/02/24
+//23/02/24
 
 /*
 	Top X Tracks From Date
@@ -130,21 +130,21 @@ function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Dat
 			if (lastLen) { deDup(dateArray_i); }
 			if (lastLen || dateArray_i.length) { // Every entry is also an array of dates
 				dateArray_i.forEach((date) => {
-					const temp = date.substring(0, 10).split('-');
-					const listen = new Date(temp[0], temp[1], temp[2]);
+					const temp = date.substring(0, 10).split('-').map(Number);
+					const listen = new Date(temp[0], temp[1] - 1, temp[2]);
 					if (temp.length === 3 && timeKeys[timeKey](listen, fromDate) <= timePeriod) {
 						count++;
 						listens.push(listen);
 					}
 				});
 			} else { // For tracks without advanced statistics
-				const tempFirst = firstPlayedArray[i].substring(0, 10).split('-');
+				const tempFirst = firstPlayedArray[i].substring(0, 10).split('-').map(Number);
 				if (tempFirst.length !== 3) { continue; }
-				const firstListen = new Date(tempFirst[0], tempFirst[1], tempFirst[2]);
+				const firstListen = new Date(tempFirst[0], tempFirst[1] - 1, tempFirst[2]);
 				const diffFirst = timeKeys[timeKey](firstListen, fromDate);
-				const tempLast = lastPlayedArray[i].substring(0, 10).split('-');
+				const tempLast = lastPlayedArray[i].substring(0, 10).split('-').map(Number);
 				if (tempLast.length !== 3) { continue; }
-				const lastListen = new Date(tempLast[0], tempLast[1], tempLast[2]);
+				const lastListen = new Date(tempLast[0], tempLast[1] - 1, tempLast[2]);
 				const diffLast = timeKeys[timeKey](lastListen, fromDate);
 				// If first and last plays were from selected period, then all play counts too
 				if (diffFirst <= timePeriod && diffLast <= timePeriod) {
@@ -181,33 +181,43 @@ function getPlayCount(handleList, timePeriod, timeKey = null, fromDate = new Dat
 			if (lastLen || dateArray_i.length) { // Every entry is also an array of dates
 				dateArray_i.forEach((date) => {
 					if (Number(date.substring(0, 4)) === timePeriod) {
+						const temp = date.substring(0, 10).split('-', 3).map(Number);
+						if (temp.length !== 3) { return; }
 						count++;
-						listens.push(new Date(...date.substring(0, 10).split('-', 3)));
+						listens.push(new Date(temp[0], temp[1] - 1, temp[2]));
 					}
 				});
 			} else { // For tracks without advanced statistics
 				// If first and last plays were from selected year, then all play counts too
 				if (Number(firstPlayedArray[i].substring(0, 4)) === timePeriod && Number(lastPlayedArray[i].substring(0, 4)) === timePeriod) {
+					const tempFirst = firstPlayedArray[i].substring(0, 10).split('-').map(Number);
+					if (tempFirst.length !== 3) { continue; }
 					const total = playCountArray[i];
+					const firstListen = new Date(tempFirst[0], tempFirst[1] - 1, tempFirst[2]);
+					const tempLast = lastPlayedArray[i].substring(0, 10).split('-').map(Number);
+					if (tempLast.length !== 3) { continue; }
 					count += total;
-					const firstListen = new Date(...firstPlayedArray[i].substring(0, 10).split('-', 3));
 					listens.push(firstListen);
 					if (total >= 2) {
 						if (total > 2) {
 							for (let i = 2; i < total; i++) { listens.push(firstListen); }
 						}
-						listens.push(new Date(...lastPlayedArray[i].substring(0, 10).split('-', 3)));
+						listens.push(new Date(tempLast[0], tempLast[1] - 1, tempLast[2]));
 					}
 				}
 				// Or the first play
 				else if (Number(firstPlayedArray[i].substring(0, 4)) === timePeriod) {
+					const tempFirst = firstPlayedArray[i].substring(0, 10).split('-').map(Number);
+					if (tempFirst.length !== 3) { continue; }
 					count++;
-					listens.push(new Date(...firstPlayedArray[i].substring(0, 10).split('-', 3)));
+					listens.push(new Date(tempFirst[0], tempFirst[1] - 1, tempFirst[2]));
 				}
 				// Or the last play
 				else if (Number(lastPlayedArray[i].substring(0, 4)) === timePeriod) {
+					const tempLast = lastPlayedArray[i].substring(0, 10).split('-').map(Number);
+					if (tempLast.length !== 3) { continue; }
 					count++;
-					listens.push(new Date(...lastPlayedArray[i].substring(0, 10).split('-', 3)));
+					listens.push(new Date(tempLast[0], tempLast[1] - 1, tempLast[2]));
 				}
 				// Note any track known to have been played at selected year will be added to the pool, and since the handle List is already
 				// sorted by play Count, it will output tracks with higher total counts when they have not advanced statistics
