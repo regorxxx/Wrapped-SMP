@@ -1582,8 +1582,8 @@ const wrapped = {
 			case 'blue_note_cluster':
 			case 'jamaican_cluster':
 			case 'rap_cluster':
-			case 'Downtempo_cluster':
-			case 'Folk_cluster':
+			case 'downtempo_cluster':
+			case 'folk_cluster':
 				fileName = group.replace(/([_&])|(cluster)/g, '');
 				break;
 			case 'breakbeat dance_cluster':
