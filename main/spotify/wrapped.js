@@ -2085,6 +2085,11 @@ const wrapped = {
 			'}} was a special day for you, listening during \\textbf{\\textit{' +
 			this.stats.time.most.minutes +
 			'}} minutes to your favourite music.}\\\\\n';
+		report += '\\vspace{10mm}\n';
+		report += '{\\large Your most listened track was \\textbf{\\textit{' +
+			this.stats.time.most.track.title.replace(latex, '\\$&') +
+			'}} by \\textbf{\\textit{' +
+			this.stats.time.most.track.artist.replace(latex, '\\$&') + '}}.}\\\\\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		// Artist by month
