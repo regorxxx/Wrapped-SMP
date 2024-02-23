@@ -15,6 +15,8 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global queryCombinations:readable, queryJoin:readable, sanitizeQueryVal:readable, sanitizeTagIds:readable, sanitizeTagValIds:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
 /* global send:readable */
+include('..\\..\\helpers\\camelot_wheel_xxx.js');
+/* global camelotWheel:readable */
 include('..\\timeline\\timeline_helpers.js');
 /* global getDataAsync:readable */
 include('..\\search\\top_tracks_from_date.js');
@@ -41,7 +43,10 @@ const wrapped = {
 	basePath: folders.temp + 'wrapped\\',
 	tags: {
 		artist: 'ALBUM ARTIST',
-		genre: '%GENRE%, %STYLE%'
+		genre: [globTags.genre, globTags.style].map(_t).join(', '),
+		bpm: globTags.bpm,
+		key: globTags.key,
+		mood: globTags.mood
 	},
 	settings: {
 		bOffline: false,
@@ -94,7 +99,26 @@ const wrapped = {
 		cities: { total: 0 },
 		listens: { total: 0 },
 		skips: { total: 0 },
-		time: { minutes: 0, days: 0, most: { date: new Date(), minutes: 0 } },
+		bpms: {
+			mean: { val: 0, listens: 0 },
+			max: { val: 0, listens: 0 },
+			min: { val: 0, listens: 0 },
+			high: { listens: 0 },
+			low: { listens: 0 },
+			stdDev: 0
+		},
+		keys: {
+			mean: { tone: { val: 0, listens: 0 }, key: { val: 0, listens: 0 } },
+			minor: { listens: 0 },
+			major: { listens: 0 },
+		},
+		moods: {
+			sad: { listens: 0 },
+			calm: { listens: 0 },
+			happy: { listens: 0 },
+			energetic: { listens: 0 },
+		},
+		time: { minutes: 0, days: 0, most: { date: new Date(), minutes: 0, track: {title: '', artist:'', handle: null}} },
 		character: {
 			list: [
 				{ name: 'Roboticist', score: 0, description: 'You like to hit play, kick back, and let the clever algorithms work their magic, track after track. Oh look, that rhymes.' },
@@ -273,6 +297,104 @@ const wrapped = {
 				// Playlist
 				this.computeTopTracksPlaylist(data);
 				this.computeDiscoverPlaylist(data, year);
+				return data;
+			});
+	},
+	/**
+	 * It takes a `year` parameter and returns a promise that resolves to an array of BPM data.
+	 *
+	 * @name getBpmsData
+	 * @kind method
+	 * @memberof wrapped
+	 * @param {number} year
+	 * @returns {promise.<{bpm:number, listens:number}[]>}
+	*/
+	getBpmsData: function (year, query) {
+		return getDataAsync({
+			option: 'playcount', optionArg: null,
+			x: this.tags.bpm,
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			sourceType: 'library',
+			bRemoveDuplicates: true,
+		})
+			.then((/** @type [{x: number, y: number}[]] */ data) => {
+				data = data[0].filter((bpm) => bpm.x); // There is only a single serie
+				// Process
+				data.forEach((bpm) => {
+					bpm.bpm = Number(bpm.x);
+					bpm.listens = bpm.y;
+					delete bpm.x;
+					delete bpm.y;
+				});
+				data.sort((a, b) => b.listens - a.listens);
+				// Stats
+				this.computeBpmsStats(data, year);
+				return data;
+			});
+	},
+	/**
+	 * It takes a `year` parameter and returns a promise that resolves to an array of key data.
+	 *
+	 * @name getKeyData
+	 * @kind method
+	 * @memberof wrapped
+	 * @param {number} year
+	 * @returns {promise.<{key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]>}
+	*/
+	getKeyData: function (year, query) {
+		return getDataAsync({
+			option: 'playcount', optionArg: null,
+			x: this.tags.key,
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			sourceType: 'library',
+			bRemoveDuplicates: true,
+		})
+			.then((/** @type [{x: string, y: number}[]] */ data) => {
+				data = data[0].filter((key) => key.x); // There is only a single serie
+				// Process
+				data.forEach((key) => {
+					key.key = camelotWheel.getKeyNotationObjectOpen(key.x);
+					key.openKey = camelotWheel.getKeyNotationOpen(key.key);
+					key.stdKey = camelotWheel.getKeyNotationFlat(key.key);
+					key.listens = key.y;
+					delete key.x;
+					delete key.y;
+				});
+				data.sort((a, b) => b.listens - a.listens);
+				// Stats
+				this.computeKeyStats(data, year);
+				return data;
+			});
+	},
+	/**
+	 * It takes a `year` parameter and returns a promise that resolves to an array of key data.
+	 *
+	 * @name getMoodsData
+	 * @kind method
+	 * @memberof wrapped
+	 * @param {number} year
+	 * @returns {promise.<{key:string, listens:number}[]>}
+	*/
+	getMoodsData: function (year, query) {
+		return getDataAsync({
+			option: 'playcount', optionArg: null,
+			x: this.tags.mood,
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			sourceType: 'library',
+			bRemoveDuplicates: true,
+		})
+			.then((/** @type [{x:string, y:number}[]] */ data) => {
+				data = data[0].filter((key) => key.x); // There is only a single serie
+				// Process
+				data.forEach((mood) => {
+					mood.mood = mood.x;
+					mood.listens = mood.y;
+					delete mood.x;
+					delete mood.y;
+				});
+				data.sort((a, b) => b.listens - a.listens);
+				// Stats
+				this.computeMoodsStats(data, year);
 				return data;
 			});
 	},
@@ -566,6 +688,121 @@ const wrapped = {
 	computeSkipsStats: function (tracksData) {
 		this.stats.skips.total = tracksData.reduce((prev, track) => prev + track.skipCount, 0);
 		if (this.settings.bDebug) { console.log('computeSkipsStats:', this.stats.skips); }
+		return this.stats;
+	},
+	/**
+	 * Calculate statistics for skips, using data from {@link wrapped.getBpmsData}.
+	 *
+	 * @property
+	 * @name computeBpmStats
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{bpm:number, listens:number}[]} bpmData
+	 * @returns {{bpm}}
+	*/
+	computeBpmsStats: function (bpmData) {
+		this.stats.bpms.min.val = Infinity;
+		let sum = 0, sumQuad = 0, listens = 0;
+		bpmData.forEach((p) => {
+			['max', 'min'].forEach((key) => {
+				if (this.stats.bpms[key].val === p.bpm) {
+					this.stats.bpms[key].listens += p.listens;
+				} else {
+					this.stats.bpms[key].val = Math[key](this.stats.bpms[key].val, p.bpm);
+					if (this.stats.bpms[key].val === p.bpm) { this.stats.bpms[key].listens = p.listens; }
+				}
+			});
+			sum += p.bpm * p.listens;
+			sumQuad += p.bpm ** 2 * p.listens;
+			listens += p.listens;
+			this.stats.bpms.high.listens += (p.bpm > 145 ? p.listens : 0);
+			this.stats.bpms.low.listens += (p.bpm < 90 ? p.listens : 0);
+		});
+		if (listens >= 1) {
+			this.stats.bpms.mean.val = Math.round(sum / listens);
+			this.stats.bpms.stdDev = Math.round(Math.sqrt((sumQuad - sum ** 2 / listens) / (listens - 1)));
+			const offset = Math.round(this.stats.bpms.stdDev / 10);
+			this.stats.bpms.mean.listens = bpmData.reduce((prev, p) => {
+				return prev + (Math.abs(p.bpm - this.stats.bpms.mean.val) <= offset ? p.listens : 0);
+			}, 0);
+		} else {
+			this.stats.bpms.mean.val = sum;
+			this.stats.bpms.mean.listens = listens;
+		}
+		if (this.settings.bDebug) { console.log('computeBpmStats:', this.stats.bpms); }
+		return this.stats;
+	},
+	/**
+	 * Calculate statistics for skips, using data from {@link wrapped.getKeyData}.
+	 *
+	 * @property
+	 * @name computeKeyStats
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{key:{hour:number, letter:string}, openKey:string, stdKey:string, listens:number}[]} keyData
+	 * @returns {{key}}
+	*/
+	computeKeyStats: function (keyData) {
+		let sum = 0, sumQuad = 0, listens = 0;
+		keyData.forEach((p) => {
+			const num = p.key.hour;
+			const letter = p.key.letter;
+			sum += num * p.listens;
+			sumQuad += num ** 2 * p.listens;
+			listens += p.listens;
+			this.stats.keys.major.listens += (letter === 'd' ? p.listens : 0);
+			this.stats.keys.minor.listens += (letter === 'm' ? p.listens : 0);
+		});
+		if (listens >= 1) {
+			this.stats.keys.mean.tone.val = Math.round(sum / listens);
+			this.stats.keys.mean.key.val = {
+				hour: this.stats.keys.mean.tone.val,
+				letter: this.stats.keys.major.listens > this.stats.keys.minor.listens ? 'd' : 'm'
+			};
+			this.stats.keys.stdDev = Math.round(Math.sqrt((sumQuad - sum ** 2 / listens) / (listens - 1)));
+			const offset = Math.round(this.stats.keys.stdDev / 10);
+			this.stats.keys.mean.tone.listens = keyData.reduce((prev, p) => {
+				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= offset ? p.listens : 0);
+			}, 0);
+			this.stats.keys.mean.key.listens = keyData.reduce((prev, p) => {
+				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= offset && p.key.letter === this.stats.keys.mean.key.val.letter ? p.listens : 0);
+			}, 0);
+		} else {
+			this.stats.keys.mean.tone.val = sum;
+			this.stats.keys.mean.tone.listens = this.stats.keys.mean.key.listens = listens;
+			this.stats.keys.mean.key.val = {
+				hour: sum,
+				letter: this.stats.keys.major.listens > this.stats.keys.minor.listens ? 'd' : 'm'
+			};
+		}
+		if (this.settings.bDebug) { console.log('computeKeyStats:', this.stats.keys); }
+		return this.stats;
+	},
+	/**
+	 * Calculate statistics for moods, using data from {@link wrapped.getMoodsData}.
+	 *
+	 * @property
+	 * @name computeMoodsStats
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{mood:string, listens:number}[]} moodData
+	 * @returns {{key}}
+	*/
+	computeMoodsStats: function (moodData) {
+		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow']);
+		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark']);
+		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun']);
+		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting']);
+		moodData.forEach((p) => {
+			if (calmMoods.has(p.mood)) { this.stats.moods.calm.listens += p.listens; }
+			if (sadMoods.has(p.mood)) { this.stats.moods.sad.listens += p.listens; }
+			if (happyMoods.has(p.mood)) { this.stats.moods.happy.listens += p.listens; }
+			if (energeticMoods.has(p.mood)) { this.stats.moods.energetic.listens += p.listens; }
+		});
+		if (this.settings.bDebug) { console.log('computeMoodStats:', this.stats.moods); }
 		return this.stats;
 	},
 	/**
@@ -1488,10 +1725,13 @@ const wrapped = {
 			this.getArtistsData(year, query),
 			this.getAlbumsData(year, query),
 			this.getCountriesData(year, query),
-			this.getCitiesData(year, query)
+			this.getCitiesData(year, query),
+			this.getBpmsData(year, query),
+			this.getKeyData(year, query),
+			this.getMoodsData(year, query),
 		])
 			.then((data) => {
-				data = { genres: data[0], tracks: data[1], artists: data[2], albums: data[3], countries: data[4], cities: data[5] };
+				data = { genres: data[0], tracks: data[1], artists: data[2], albums: data[3], countries: data[4], cities: data[5], bpms: data[6], keys: data[7], moods: data[8] };
 				this.computeCharacterStats(data);
 				this.computeGlobalStats(data, year);
 				Object.keys(data).forEach((key) => {
@@ -1510,7 +1750,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; }} wrappedData
-	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[], albumImg:string}[]; artists: {artist:string, listens:number, artistImg:string}[]; }>}
+	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getDataImages: function (wrappedData) {
 		console.log('Wrapped: retrieving images...');
@@ -1586,7 +1826,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; countries: {name:string, listens:number}[]; cities: {name:string, listens:number}[] }>} wrappedData - Data from {@link wrapped.getData}
+	 * @param {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>} wrappedData - Data from {@link wrapped.getData}
 	 * @param {number} year - Used for formatting purposes
 	 * @param {?string} root - Optional parameter that specifies the root directory for the report
 	 * @returns {string}
@@ -1596,7 +1836,7 @@ const wrapped = {
 		const latex = /[&#%$_^{}]/gi;
 		for (const type in wrappedData) {
 			wrappedData[type].forEach((item) => {
-				['artist', 'title', 'genre', 'name'].forEach((key) => {
+				['artist', 'title', 'genre', 'name', 'city', 'album', 'mood'].forEach((key) => {
 					if (Object.hasOwn(item, key)) {
 						item[key] = item[key].replaceAll('\\', '/').replace(latex, '\\$&');
 					}
