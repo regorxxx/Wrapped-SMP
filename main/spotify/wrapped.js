@@ -840,7 +840,7 @@ const wrapped = {
 				const topArtistWeight = wrappedData.artists[0].listens / wrappedData.artists.slice(0, 5).reduce((acc, artist) => acc + artist.listens, 0);
 				const topArtistListenWeight = wrappedData.artists[0].listens / this.stats.listens.total;
 				if (topArtistListenWeight > 1 / 5 || topArtistWeight > 1 / 5) {
-					findChar('fanatic').score = (Math.min(topArtistListenWeight / (2 / 3), 100) + Math.min(topArtistWeight / (2 / 3), 100)) / 2;
+					findChar('fanatic').score = (Math.min(topArtistListenWeight / (2 / 3) * 100, 100) + Math.min(topArtistWeight / (2 / 3), 100)) / 2;
 				}
 			}
 			// Shapeshifter: listen too many different artists
@@ -855,7 +855,7 @@ const wrapped = {
 			if (this.stats.listens.total > 0) {
 				const topGenreWeight = wrappedData.genres[0].listens / this.stats.listens.total;
 				if (topGenreWeight > 1 / 3) {
-					findChar('cyclops').score = Math.min(topGenreWeight / (2 / 3), 100);
+					findChar('cyclops').score = Math.min(topGenreWeight / (2 / 3) * 100, 100);
 				}
 			}
 			// Mastermind: listen too many different genres
@@ -867,23 +867,62 @@ const wrapped = {
 		}
 		/*  TODO add statistics
 			Alchemist: create many playlists
-			Luminary: many listens for tracks with high BPM
-			Vampire: many listens for atmospheric/emotional tracks
-			Time traveler: listen to old tracks
 			Collector: listen to own playlists
 		*/
-		// Hunter: many skips
 		if (this.stats.listens.total > 0) {
+			// Luminary: many listens for light/upbeat tracks -> major key (33%) + mood (33%) + high BPM (34%)
+			const hBpmWeight = (
+				Math.max(
+					this.stats.bpms.high.listens - this.stats.bpms.low.listens / 2
+					, 0
+				) / this.stats.listens.total +
+				Math.min(Math.max(
+					((this.stats.bpms.mean.val + this.stats.bpms.stdDev) - this.stats.bpms.min.val)
+					, 0
+				) / 145, 1) * this.stats.bpms.mean.listens / this.stats.listens.total
+			) / 2;
+			if (this.stats.bpms.high.listens > this.stats.bpms.low.listens && this.stats.bpms.mean.val > 110 && hBpmWeight > 0.25) {
+				findChar('luminary').score = Math.min(hBpmWeight * 100, 34);
+			}
+			const majKeyWeight = this.stats.keys.major.listens / this.stats.listens.total;
+			if (this.stats.keys.major.listens > this.stats.keys.minor.listens && majKeyWeight > 0.25) {
+				findChar('luminary').score += Math.min(majKeyWeight * 100, 33);
+			}
+			const upbeatWeight = (this.stats.moods.energetic.listens + this.stats.moods.positive.listens) / 2 / this.stats.listens.total;
+			if (this.stats.moods.energetic.listens > this.stats.moods.calm.listens && upbeatWeight > 0.25) {
+				findChar('luminary').score += Math.min(upbeatWeight * 100, 33);
+			}
+			// Vampire: many listens for atmospheric/emotional tracks -> key (33%) + mood (33%) + low bpm (34%)
+			const lBpmWeight = this.stats.bpms.low.listens / this.stats.listens.total;
+			if (this.stats.bpms.low.listens > this.stats.bpms.high.listens && this.stats.bpms.mean.val < 110 && lBpmWeight > 0.25) {
+				findChar('vampire').score += Math.min(lBpmWeight * 100, 34);
+			}
+			const minKeyWeight = this.stats.keys.minor.listens / this.stats.listens.total;
+			if (this.stats.keys.minor.listens > this.stats.keys.major.listens && minKeyWeight > 0.25) {
+				findChar('vampire').score += Math.min(minKeyWeight * 100, 33);
+			}
+			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.dark.listens) / 2 / this.stats.listens.total;
+			if (this.stats.moods.calm.listens > this.stats.moods.energetic.listens && emotWeight > 0.25) {
+				findChar('vampire').score += Math.min(emotWeight * 100, 33);
+			}
+			// Time traveler: listen to favourite tracks many times
+			const top5Listens = wrappedData.tracks.slice(0, 5).reduce((prev, track) => prev + track.listens, 0);
+			const top20Listens = top5Listens + wrappedData.tracks.slice(5, 20).reduce((prev, track) => prev + track.listens, 0);
+			const favWeight = (top5Listens / this.stats.listens.total + top5Listens / top20Listens) / 2;
+			if (favWeight > 1 / 10) {
+				findChar('time traveler').score = Math.min(favWeight / (1 / 5) * 100, 100);
+			}
+			// Hunter: many skips
 			const skipWeight = this.stats.skips.total / this.stats.listens.total;
 			if (this.stats.skips.total > 50 && skipWeight > 0.25) {
-				findChar('hunter').score = Math.min(skipWeight / (1 / 2), 100);
+				findChar('hunter').score = Math.min(skipWeight / (1 / 2) * 100, 100);
 			}
 		}
 		// Hypnotist: listen to entire albums without skip (low proportion of albums per track)
 		if (this.stats.tracks.total) {
 			const albumWeight = this.stats.albums.total / this.stats.tracks.total;
 			if (albumWeight < 1 / 5) {
-				findChar('hypnotist').score = Math.min((1 / 5 - albumWeight) / (1 / 5), 100);
+				findChar('hypnotist').score = Math.min((1 / 5 - albumWeight) / (1 / 5) * 100, 100);
 			}
 			// Roboticist: smart shuffle (every artist should have a similar proportion)
 			const diffArtistsWeight = this.stats.artists.total / this.stats.tracks.total;
