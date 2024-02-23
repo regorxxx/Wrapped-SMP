@@ -1872,7 +1872,7 @@ const wrapped = {
 				report += '\t\\begin{figure}[H]\n';
 				report += '\t\t\\centering\n';
 				report += '\t\t\\includegraphics[width=100px,height=100px]{' + getImage(p[imgKey]) + '}\n';
-				report += '\t\t\\label{fig:' + getUniqueLabel(p[subKey]) + '}\n';
+				report += '\t\t\\label{fig:' + getUniqueLabel(p[subKey].replace(latex, '\\$&')) + '}\n';
 				report += '\t\\end{figure}\n';
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
@@ -1927,7 +1927,7 @@ const wrapped = {
 		report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\textwidth,height=24.4cm]{' + getCharImg(root) + '}};\n';
 		report += '\\begin{center}\n';
 		report += '\\tikz[baseline=0.6ex,overlay] \\fill [opacity=0.4,white] (-4,-1.6) rectangle (\\paperwidth,6ex);\n';
-		report += '\\textbf{\\textit{\\Large ' + this.stats.character.main.description + '}}\n';
+		report += '\\textbf{\\textit{\\Large ' + this.stats.character.main.description.replace(latex, '\\$&') + '}}\n';
 		report += '\\end{center}\n\n';
 		report += '\n';
 		// Burger genres
@@ -1954,7 +1954,7 @@ const wrapped = {
 				const iH = i === 0 ? 2.5 : round(6 * (genre.score + this.stats.genres.byScore[0].score / 4) / 100, 2);
 				y -= iH;
 				report += '\t\t\\filldraw [fill=' + burguerColors[i] + ', draw=' + burguerColors[i] + '] (-1,' + y + ') rectangle ++(14cm,' + iH + ');\n';
-				report += '\t\t\\node[rectangle] (a) at (6,' + round(y + iH / 2, 1) + ') {\\Large \\textbf{' + genre.genre + '}};\n';
+				report += '\t\t\\node[rectangle] (a) at (6,' + round(y + iH / 2, 1) + ') {\\Large \\textbf{' + genre.genre.replace(latex, '\\$&') + '}};\n';
 			});
 			report += '\t\\end{tikzpicture}\\llap{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
 			report += '\\end{figure}\n';
@@ -2157,7 +2157,7 @@ const wrapped = {
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.artists.top.topTrack.albumImg) + '}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(this.stats.artists.top.topTrack.title) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(this.stats.artists.top.topTrack.title.replace(latex, '\\$&').cut(20)) + '}\n';
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
@@ -2173,50 +2173,52 @@ const wrapped = {
 			report += '\\vfill %\n\n';
 		}
 		// Regions
-		report += '\\pagebreak\n';
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{part}{Region statistics}\n';
-		report += '\\pagecolor{brown}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\section[Your listens around the world]{Your listens around the world:}\n';
-		report += '\\begin{enumerate}\n';
-		wrappedData.countries.forEach((country) => {
-			report += '\t\\item \\textbf{\\textit{' + country.name.cut(20) + '}} with \\textit{' + country.listens + ' listens}.\n';
-		});
-		report += '\\end{enumerate}\n';
-		report += '\\vspace{15mm}\n';
-		report += '\\begin{figure}[H]\n';
-		report += '\t\\centering\n';
-		report += '\t\\setbox1=\\hbox{\\includegraphics[width=15cm]{img/map/worldmap_shapes}}\n';
-		report += '\t\\includegraphics[width=15cm]{img/map/worldmap_shapes}';
-		this.stats.countries.byISO.forEach((country) => {
-			report += '\\llap{\\includegraphics[width=15cm]{img/map/' + country.iso + '}}';
-		});
-		report += '\n';
-		report += '\\end{figure}\n';
-		// Top Artist by Region
-		report += '\\pagebreak\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\section[Top Artist from Country]{Top Artist from Country:}\n';
-		enumerate(this.stats.countries.byArtist, 'countries');
-		// Sound City
-		report += '\\pagebreak\n';
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{section}{Sound Town}\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=500px]{img/soundcity/travel}};\n';
-		report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont{\\Large ' +
-			topDay + ' ' + year + '\\hspace{' + (78 + Math.max(topDay.length - 10, 0) * 2) + 'mm}}}};\n';
-		report += '\\vspace{139mm}\n';
-		report += '\\begin{center}\n';
-		report += '{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont\n';
-		report += '\t{\\Large This year, your listening took you places...\\\\\n';
-		report += '\tAnd one place listened just like you.}\n';
-		report += '}\n';
-		report += '\\end{center}\n';
-		report += '\\vfill %\n\n';
 		if (this.stats.countries.total > 0) {
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Region statistics}\n';
+			report += '\\pagecolor{brown}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Your listens around the world]{Your listens around the world:}\n';
+			report += '\\begin{enumerate}\n';
+			wrappedData.countries.forEach((country) => {
+				report += '\t\\item \\textbf{\\textit{' + country.name.cut(20) + '}} with \\textit{' + country.listens + ' listens}.\n';
+			});
+			report += '\\end{enumerate}\n';
+			report += '\\vspace{15mm}\n';
+			report += '\\begin{figure}[H]\n';
+			report += '\t\\centering\n';
+			report += '\t\\setbox1=\\hbox{\\includegraphics[width=15cm]{img/map/worldmap_shapes}}\n';
+			report += '\t\\includegraphics[width=15cm]{img/map/worldmap_shapes}';
+			this.stats.countries.byISO.forEach((country) => {
+				report += '\\llap{\\includegraphics[width=15cm]{img/map/' + country.iso + '}}';
+			});
+			report += '\n';
+			report += '\\end{figure}\n';
+			// Top Artist by Region
+			report += '\\pagebreak\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Top Artist from Country]{Top Artist from Country:}\n';
+			enumerate(this.stats.countries.byArtist, 'countries');
+		}
+		// Sound City
+		if (this.stats.cities.total > 0) {
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{section}{Sound Town}\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=500px]{img/soundcity/travel}};\n';
+			report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont{\\Large ' +
+				topDay + ' ' + year + '\\hspace{' + (78 + Math.max(topDay.length - 10, 0) * 2) + 'mm}}}};\n';
+			report += '\\vspace{139mm}\n';
+			report += '\\begin{center}\n';
+			report += '{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont\n';
+			report += '\t{\\Large This year, your listening took you places...\\\\\n';
+			report += '\tAnd one place listened just like you.}\n';
+			report += '}\n';
+			report += '\\end{center}\n';
+			report += '\\vfill %\n\n';
 			report += '\\pagebreak\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
@@ -2237,7 +2239,7 @@ const wrapped = {
 			report += '\\vspace{7mm}\n';
 			if (artistsCity > 0) {
 				const topArtistCity = wrappedData.cities[0].artists.slice(0, 3)
-					.map((data) => '\\textbf{\\textit{' + data.artist + '}}')
+					.map((data) => '\\textbf{\\textit{' + data.artist.replace(latex, '\\$&') + '}}')
 					.joinLast(', ', ' or ');
 				report += '{\\Large Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
 			}
