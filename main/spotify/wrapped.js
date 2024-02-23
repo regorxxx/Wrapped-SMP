@@ -1,5 +1,5 @@
 'use strict';
-//21/02/24
+//23/02/24
 
 /* exported wrapped */
 
@@ -170,17 +170,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{artist:string, listens:number}]>}
+	 * @returns {promise.<{artist:string, listens:number}[]>}
 	*/
 	getArtistsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: {timePeriod: year},
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
-			.then((/** @type [array] */ data) => {
+			.then((/** @type [{x: string, y: number}[]]*/ data) => {
 				data = data[0];
 				// Process
 				data.forEach((artist) => {
@@ -206,17 +206,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{genre:string, listens:number}]>}
+	 * @returns {promise.<{genre:string, listens:number}[]>}
 	*/
 	getGenresData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: {timePeriod: year},
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: this.tags.genre,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
-			.then((/** @type [array] */ data) => {
+			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				if (this.settings.bFilterGenresGraph) {
 					data = data.filter((g) => !music_graph_descriptors.map_distance_exclusions.has(g.x));
@@ -244,17 +244,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{title:string, listens:number, skipCount: number, handle:FbMetadbHandle[], artist:string}]>}
+	 * @returns {promise.<{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]>}
 	*/
 	getTracksData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: {timePeriod: year, bSkipCount: isSkipCount},
+			option: 'playcount', optionArg: { timePeriod: year, bSkipCount: isSkipCount },
 			x: 'TITLE',
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: true
 		})
-			.then((/** @type [{title: string, listens: number, skipCount: number, handle: [FbMetadbHandle]}] */ data) => {
+			.then((/** @type [{x:string, y:number, skipCount:number, handle:FbMetadbHandle[]}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((track) => {
@@ -283,17 +283,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{title:string, listens:number}]>}
+	 * @returns {promise.<{album:string, listens:number}[]>}
 	*/
 	getAlbumsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: {timePeriod: year},
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: 'ALBUM',
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
-			.then((/** @type [{album: string, listens: number */ data) => {
+			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((album) => {
@@ -315,17 +315,17 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {number} year
-	 * @returns {promise.<[{name:string, listens:number}]>}
+	 * @returns {promise.<{name:string, listens:number}[]>}
 	*/
 	getCountriesData: function (year, query) {
 		return getDataAsync({
 			option: 'playcount wordlmap', optionArg: [year,],
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
-			.then((/** @type [{country: string, listens: number */ data) => {
+			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((country) => {
@@ -355,11 +355,11 @@ const wrapped = {
 		return getDataAsync({
 			option: 'playcount wordlmap city', optionArg: [year,],
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
-			.then((/** @type [{name: string, listens: number */ data) => {
+			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				// Process
 				data.forEach((city) => {
@@ -493,7 +493,7 @@ const wrapped = {
 	 * @type {function}
 	 * @param {{name:string, listens:number}[]} countriesData
 	 * @param {number} year
-	 * @returns {{tracks}}
+	 * @returns {{countries}}
 	*/
 	computeCountriesStats: function (countriesData) {
 		this.stats.countries.total = countriesData.length;
@@ -512,7 +512,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{name:string, listens:number}[]} citiesData
-	 * @returns {{tracks}}
+	 * @returns {{cities}}
 	*/
 	computeCitiesStats: function (citiesData) {
 		this.stats.cities.total = citiesData.length;
@@ -527,7 +527,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{title:string, listens:number, handle:FbMetadbHandle[]}[]} tracksData
+	 * @param {{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]} tracksData
 	 * @param {number} year
 	 * @returns {{listens, time}}
 	*/
@@ -561,7 +561,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{title:string, skipCount:number, handle:FbMetadbHandle[]}[]} tracksData
-	 * @returns {{listens, time}}
+	 * @returns {{skips}}
 	*/
 	computeSkipsStats: function (tracksData) {
 		this.stats.skips.total = tracksData.reduce((prev, track) => prev + track.skipCount, 0);
@@ -576,7 +576,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; }} wrappedData
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData
 	 * @returns {{character}}
 	*/
 	computeCharacterStats: function (wrappedData) {
@@ -866,7 +866,7 @@ const wrapped = {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
 					queryJoin(queryCombinations(genres, this.tags.genre.split(', '), 'OR'), 'OR'),
-					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
+					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -994,7 +994,7 @@ const wrapped = {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([
 					queryCombinations(artists, _t(this.tags.artist), 'OR'),
-					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year
+					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -1476,7 +1476,7 @@ const wrapped = {
 	 @type {function}
 	 @param {number} year
 	 @param {string} query - Recommended to use '%RATING% MISSING OR %RATING% GREATER 2'
-	 @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; }>}
+	 @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getData: function (year, query) {
 		console.log('Wrapped: retrieving listening stats...');
