@@ -57,8 +57,18 @@ Requirements:
 
 Optional:
 ---------
-	- World-Map-SMP: To get country stats.
+	- World-Map-SMP: To get country stats. Tags must be written
+	to the JSON database. If locale tags are already present
+	on tracks, use 'Database...\Merge file tags with JSON...'; 
+	otherwise you will need to retrieve tags using the Bio panel.
+	Note artists without a country on the JSON database will
+	not be used on the country/city stats, so be sure to get
+	the tags for all artists in your library (use 'Database...\
+	Find artists without locale tags...').
 	https://github.com/regorxxx/World-Map-SMP
+
+	- Biography (Wil-B):
+	https://github.com/Wil-B/Biography
 
 	- ListenBrainz token: It's not a requisite to get
 	playlists suggestions, since it will use the public API,
