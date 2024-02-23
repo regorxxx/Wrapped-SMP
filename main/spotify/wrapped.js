@@ -657,21 +657,37 @@ const wrapped = {
 		// Time
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
-		const listens = getPlayCount(new FbMetadbHandleList(tracksData.map((track) => track.handle).flat(Infinity)), year).map((track) => track.listens);
+		const tracks = tracksData.map((track) => track.handle.map((handle) => {
+			return {handle, title: track.title, artist: track.artist};
+		})).flat(Infinity);
+		console.log(tracksData, tracks.length);
+		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), year).map((track) => track.listens);
 		const days = new Map();
 		listens.forEach((listenArr, i) => {
+			const listenCount = listenArr.length;
 			listenArr.forEach((listen) => {
 				this.stats.listens.total++;
 				const dateStr = listen.toString();
-				const old = days.get(dateStr) || { date: listen, time: 0 };
-				old.time += tracksData[i].handle[0].Length;
+				const old = days.get(dateStr) || {
+					date: listen,
+					time: 0,
+					track: { listens: 0, handle: null, title: '', artist: '' }
+				};
+				old.time += tracks[i].handle.Length;
+				if (listenCount > old.track.listens) {
+					old.track.handle = tracks[i].handle;
+					old.track.title = tracks[i].title;
+					old.track.artist = tracks[i].artist;
+				}
 				days.set(dateStr, old);
 			});
 		});
+		/** @type {{date:Date, time:number, track:{handle:FbMetadbHandle, title:string, artist:string}}} */
 		const max = [...days.values()].reduce((acc, curr) => curr.time > acc.time ? curr : acc, { time: 0 });
 		this.stats.time.most.date = max.date;
 		this.stats.time.most.minutes = round(max.time / 60, 0);
-		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.time); }
+		this.stats.time.most.track = max.track;
+		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.listens); console.log('computeListensStats:', this.stats.time); }
 		return this.stats;
 	},
 	/**
