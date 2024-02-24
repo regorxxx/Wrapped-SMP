@@ -51,7 +51,7 @@ const wrapped = {
 	settings: {
 		bOffline: false,
 		bFilterGenresGraph: true,
-		bDebug: true,
+		bDebug: false,
 		bDebugQuery: false,
 		tokens: { listenBrainz: '' },
 
