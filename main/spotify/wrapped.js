@@ -676,6 +676,7 @@ const wrapped = {
 				};
 				old.time += tracks[i].handle.Length;
 				if (listenCount > old.track.listens) {
+					old.track.listens = listenCount;
 					old.track.handle = tracks[i].handle;
 					old.track.title = tracks[i].title;
 					old.track.artist = tracks[i].artist;
