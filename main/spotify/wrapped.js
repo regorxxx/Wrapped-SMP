@@ -890,7 +890,7 @@ const wrapped = {
 			if (this.stats.keys.major.listens > this.stats.keys.minor.listens && majKeyWeight > 0.25) {
 				findChar('luminary').score += Math.min(majKeyWeight * 100, 33);
 			}
-			const upbeatWeight = (this.stats.moods.energetic.listens + this.stats.moods.positive.listens) / 2 / this.stats.listens.total;
+			const upbeatWeight = (this.stats.moods.energetic.listens + this.stats.moods.happy.listens) / 2 / this.stats.listens.total;
 			if (this.stats.moods.energetic.listens > this.stats.moods.calm.listens && upbeatWeight > 0.25) {
 				findChar('luminary').score += Math.min(upbeatWeight * 100, 33);
 			}
@@ -903,7 +903,7 @@ const wrapped = {
 			if (this.stats.keys.minor.listens > this.stats.keys.major.listens && minKeyWeight > 0.25) {
 				findChar('vampire').score += Math.min(minKeyWeight * 100, 33);
 			}
-			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.dark.listens) / 2 / this.stats.listens.total;
+			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.listens.total;
 			if (this.stats.moods.calm.listens > this.stats.moods.energetic.listens && emotWeight > 0.25) {
 				findChar('vampire').score += Math.min(emotWeight * 100, 33);
 			}
