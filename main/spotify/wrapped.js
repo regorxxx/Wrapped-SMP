@@ -2310,6 +2310,27 @@ const wrapped = {
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 		}
+		// Moods
+		if (['calm','energetic','happy','sad'].some((key) => this.stats.moods[key].listens > 0)) {
+			const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
+			const y = round(- 8.25 - 8.25 * Math.max(1 - this.stats.moods.energetic.listens / this.stats.moods.calm.listens, -1), 2);
+			report += '\\pagebreak\n';
+			report += '\\pagecolor{pink}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\part[Mood stats]{Mood stats:}\n';
+			report += '\\vspace{20mm}\n';
+			report += '\\begin{center}\n';
+			report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
+			report += '\t\t\\node[main,scale=2,align=center] (1) {Energ.};\n';
+			report += '\t\t\\node[main,scale=2,align=center] (2) [below left of=1]{Happy};\n';
+			report += '\t\t\\node[main,scale=2,align=center] (3) [below right of=1]{Sad};\n';
+			report += '\t\t\\node[main,scale=2,align=center] (4) [below right of=2]{Calm};\n';
+			report += '\t\t\\node[main,scale=0.5,fill=red!15,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
+			report += '\t\t\\draw[-] (1.south) -- (4.north);\n';
+			report += '\t\t\\draw[-] (2.east) -- (3.west);\n';
+			report += '\t\\end{tikzpicture}\n';
+			report += '\\end{center}\n';
+		}
 		// End
 		report += '\n';
 		report += '\\end{document}';
