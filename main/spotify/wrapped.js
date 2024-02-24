@@ -1,5 +1,5 @@
 'use strict';
-//24/02/24
+//25/02/24
 
 /* exported wrapped */
 
@@ -1967,7 +1967,7 @@ const wrapped = {
 			'\\usepackage[a4paper,left=1in,right=1in,top=0.75in,bottom=0in]{geometry} % margins\n' +
 			'\\usepackage{graphicx} % figures\n' +
 			'\\usepackage{float} % [H]\n' +
-			'\\usepackage{xcolor} % Page color\n' +
+			'\\usepackage[dvipsnames]{xcolor} % Page color\n' +
 			'\\usepackage{tikz} % Background Image\n' +
 			'\\usetikzlibrary{shadows} % Shadows for nodes\n' +
 			'\\usepackage{multicol} % Columns\n' +
@@ -1988,13 +1988,16 @@ const wrapped = {
 			'\t}] {};}\n' +
 			'\n\n' +
 			'\\begin{document}\n';
-		report += '\\pagecolor{pink}\n';
+		// Front
 		report += '\\phantomsection\n';
 		report += '\\addcontentsline{toc}{part}{Wrapped ' + year + '}\n';
 		report += '\\clearpage \\vspace*{\\fill}\n';
+		report += '\\begin{tikzpicture}[remember picture,overlay]\n';
+		report += '\t\\node [fill, rectangle, top color=RedViolet, middle color=Goldenrod, bottom color=Emerald, anchor=north, minimum width=\\paperwidth, minimum height=\\paperheight] (box) at (current page.north){};\n';
+		report += '\\end{tikzpicture}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\fontsize{100}{80}\\selectfont Wrapped\\\\' + year + '}\n';
+		report += '{\\fontsize{100}{80}\\selectfont {\\color{Turquoise}W}{\\color{CarnationPink}r}{\\color{Yellow}a}{\\color{Cerulean}p}{\\color{SpringGreen}p}{\\color{YellowOrange}e}{\\color{OrangeRed}d}\\\\' + year.toString().split('').map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}').join('') + '}\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		report += '\n';
@@ -2002,7 +2005,7 @@ const wrapped = {
 		report += '\\pagebreak\n';
 		report += '\\phantomsection\n';
 		report += '\\addcontentsline{toc}{part}{User statistics}\n';
-		report += '\\pagecolor{pink}\n';
+		report += '\\pagecolor{Periwinkle}\n';
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getCharImgBlur(root) + '}};\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\textwidth,height=24.4cm]{' + getCharImg(root) + '}};\n';
@@ -2015,7 +2018,7 @@ const wrapped = {
 		report += '\\pagebreak\n';
 		report += '\\phantomsection\n';
 		report += '\\addcontentsline{toc}{part}{Genre statistics}\n';
-		report += '\\pagecolor{lime}\n';
+		report += '\\pagecolor{lime!70}\n';
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{figure}[H]\n';
@@ -2028,7 +2031,7 @@ const wrapped = {
 		{
 			report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
 			report += '\t\\begin{tikzpicture}\n';
-			report += '\t\t\\filldraw [draw=lime, ultra thick] (0,0) rectangle ++(14cm,0);\n';
+			report += '\t\t\\filldraw [draw=lime!70, ultra thick] (0,0) rectangle ++(14cm,0);\n';
 			let y = 9.5;
 			const burguerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
 			this.stats.genres.byScore.forEach((genre, i) => {
@@ -2053,7 +2056,6 @@ const wrapped = {
 		report += '\\vfill %\n\n';
 		// Genre groups
 		report += '\\pagebreak\n';
-		report += '\\pagecolor{lime}\n';
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\phantomsection\n';
@@ -2077,7 +2079,6 @@ const wrapped = {
 		report += '\\vfill %\n\n';
 		// Genres
 		report += '\\pagebreak\n';
-		report += '\\pagecolor{lime}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\section[Your top 5 Genres]{Your top 5 Genres:}\n';
 		report += '\\begin{enumerate}\n';
@@ -2206,6 +2207,7 @@ const wrapped = {
 		});
 		// Artists
 		report += '\\pagebreak\n';
+		report += '\\pagecolor{teal!70}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\section[Your top 5 Artists]{Your top 5 Artists:}\n';
 		enumerate(wrappedData, 'artists');
@@ -2263,7 +2265,7 @@ const wrapped = {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Region statistics}\n';
-			report += '\\pagecolor{brown}\n';
+			report += '\\pagecolor{RawSienna}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\section[Your listens around the world]{Your listens around the world:}\n';
 			report += '\\begin{enumerate}\n';
@@ -2340,7 +2342,7 @@ const wrapped = {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Mood, BPM and Key stats}\n';
-			report += '\\pagecolor{pink}\n';
+			report += '\\pagecolor{Orchid}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			if (bMoods) {
 				const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
@@ -2382,7 +2384,7 @@ const wrapped = {
 				report += '\t\\vspace{10mm}\\\\\n';
 				report += '\t{\\Huge You usually listen to music with a BPM around \\textbf{\\textit{' + this.stats.bpms.mean.val + '}} beats/min, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks this year.}\n';
 				report += '\t\\vspace{10mm}\\\\\n';
-				report += '\t{\\LARGE ' + (this.stats.bpms.high.listens > this.stats.bpms.low.listens 
+				report += '\t{\\LARGE ' + (this.stats.bpms.high.listens > this.stats.bpms.low.listens
 					? 'Light and Ubpeat tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.high.listens + '}} high BPM listens on your record.'
 					: 'Calm and Slow tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.low.listens + '}} low BPM listens on your record.'
 				) + '}\n';
@@ -2412,10 +2414,10 @@ const wrapped = {
 				report += '\t\t};\n';
 				report += '\t\\end{tikzpicture}\n';
 				report += '\t\\vspace{20mm}\\\\\n';
-				report += '\t{\\Huge ' + (this.stats.keys.major.listens > this.stats.keys.minor.listens 
+				report += '\t{\\Huge ' + (this.stats.keys.major.listens > this.stats.keys.minor.listens
 					? 'Most music you like is usually played in Major scales. You played \\textbf{\\textit{' + this.stats.keys.major.listens + '}} tracks like this.'
 					: 'Most music you like is usually played in Minor scales. You played  \\textbf{\\textit{' + this.stats.keys.minor.listens + '}} tracks like this.'
-					
+
 				) + '}\n';
 				report += '\\end{center}\n\n';
 			}
