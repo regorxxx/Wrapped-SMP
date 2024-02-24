@@ -114,6 +114,7 @@ const wrapped = {
 			major: { listens: 0 },
 		},
 		moods: {
+			total: 0,
 			sad: { listens: 0 },
 			calm: { listens: 0 },
 			happy: { listens: 0 },
@@ -312,7 +313,7 @@ const wrapped = {
 	*/
 	getBpmsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: null,
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: this.tags.bpm,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -344,7 +345,7 @@ const wrapped = {
 	*/
 	getKeyData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: null,
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: this.tags.key,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -378,7 +379,7 @@ const wrapped = {
 	*/
 	getMoodsData: function (year, query) {
 		return getDataAsync({
-			option: 'playcount', optionArg: null,
+			option: 'playcount', optionArg: { timePeriod: year },
 			x: this.tags.mood,
 			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
@@ -665,8 +666,8 @@ const wrapped = {
 		const days = new Map();
 		listens.forEach((listenArr, i) => {
 			const listenCount = listenArr.length;
+			this.stats.listens.total += listenCount;
 			listenArr.forEach((listen) => {
-				this.stats.listens.total++;
 				const dateStr = listen.toString();
 				const old = days.get(dateStr) || {
 					date: listen,
@@ -733,13 +734,13 @@ const wrapped = {
 			sum += p.bpm * p.listens;
 			sumQuad += p.bpm ** 2 * p.listens;
 			listens += p.listens;
-			this.stats.bpms.high.listens += (p.bpm > 145 ? p.listens : 0);
+			this.stats.bpms.high.listens += (p.bpm > 130 ? p.listens : 0);
 			this.stats.bpms.low.listens += (p.bpm < 90 ? p.listens : 0);
 		});
 		if (listens >= 1) {
 			this.stats.bpms.mean.val = Math.round(sum / listens);
 			this.stats.bpms.stdDev = Math.round(Math.sqrt((sumQuad - sum ** 2 / listens) / (listens - 1)));
-			const offset = Math.round(this.stats.bpms.stdDev / 10);
+			const offset = Math.round(this.stats.bpms.stdDev / 5);
 			this.stats.bpms.mean.listens = bpmData.reduce((prev, p) => {
 				return prev + (Math.abs(p.bpm - this.stats.bpms.mean.val) <= offset ? p.listens : 0);
 			}, 0);
@@ -813,7 +814,9 @@ const wrapped = {
 		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark']);
 		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun']);
 		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting']);
+		// Every track may have multiple moods of same type, so total is not = total listens
 		moodData.forEach((p) => {
+			this.stats.moods.total += p.listens;
 			if (calmMoods.has(p.mood)) { this.stats.moods.calm.listens += p.listens; }
 			if (sadMoods.has(p.mood)) { this.stats.moods.sad.listens += p.listens; }
 			if (happyMoods.has(p.mood)) { this.stats.moods.happy.listens += p.listens; }
@@ -871,47 +874,46 @@ const wrapped = {
 			Collector: listen to own playlists
 		*/
 		if (this.stats.listens.total > 0) {
-			// Luminary: many listens for light/upbeat tracks -> major key (33%) + mood (33%) + high BPM (34%)
+			// Luminary: many listens for light/upbeat tracks -> major key (30%) + mood (30%) + high BPM (40%)
+			let char = findChar('luminary');
 			const hBpmWeight = (
-				Math.max(
-					this.stats.bpms.high.listens - this.stats.bpms.low.listens / 2
-					, 0
-				) / this.stats.listens.total +
+				Math.max(this.stats.bpms.high.listens, 0) / this.stats.listens.total +
 				Math.min(Math.max(
 					((this.stats.bpms.mean.val + this.stats.bpms.stdDev) - this.stats.bpms.min.val)
 					, 0
-				) / 145, 1) * this.stats.bpms.mean.listens / this.stats.listens.total
+				) / 130, 1) * this.stats.bpms.mean.listens / this.stats.listens.total
 			) / 2;
-			if (this.stats.bpms.high.listens > this.stats.bpms.low.listens && this.stats.bpms.mean.val > 110 && hBpmWeight > 0.25) {
-				findChar('luminary').score = Math.min(hBpmWeight * 100, 34);
+			if (this.stats.bpms.high.listens > this.stats.bpms.low.listens && this.stats.bpms.mean.val > 110 && hBpmWeight > 0.10) {
+				char.score += Math.min(hBpmWeight / 1.5 * 100, 40);
 			}
-			const majKeyWeight = this.stats.keys.major.listens / this.stats.listens.total;
-			if (this.stats.keys.major.listens > this.stats.keys.minor.listens && majKeyWeight > 0.25) {
-				findChar('luminary').score += Math.min(majKeyWeight * 100, 33);
+			const majKeyWeight = (this.stats.keys.major.listens - this.stats.keys.minor.listens / 2) / this.stats.listens.total;
+			if (majKeyWeight > 0.10) {
+				char.score += Math.min(majKeyWeight / 1.5 * 100, 30);
 			}
-			const upbeatWeight = (this.stats.moods.energetic.listens + this.stats.moods.happy.listens) / 2 / this.stats.listens.total;
-			if (this.stats.moods.energetic.listens > this.stats.moods.calm.listens && upbeatWeight > 0.25) {
-				findChar('luminary').score += Math.min(upbeatWeight * 100, 33);
+			const upbeatWeight = (this.stats.moods.energetic.listens + this.stats.moods.happy.listens) / 2 / this.stats.moods.total;
+			if (upbeatWeight > 0.10) {
+				char.score += Math.min(upbeatWeight / 1.5 * 100, 30);
 			}
-			// Vampire: many listens for atmospheric/emotional tracks -> key (33%) + mood (33%) + low bpm (34%)
+			// Vampire: many listens for atmospheric/emotional tracks -> key (30%) + mood (30%) + low bpm (40%)
+			char = findChar('vampire');
 			const lBpmWeight = this.stats.bpms.low.listens / this.stats.listens.total;
-			if (this.stats.bpms.low.listens > this.stats.bpms.high.listens && this.stats.bpms.mean.val < 110 && lBpmWeight > 0.25) {
-				findChar('vampire').score += Math.min(lBpmWeight * 100, 34);
+			if (this.stats.bpms.low.listens > this.stats.bpms.high.listens && this.stats.bpms.mean.val < 110 && lBpmWeight > 0.10) {
+				char.score += Math.min(lBpmWeight / 1.5 * 100, 40);
 			}
-			const minKeyWeight = this.stats.keys.minor.listens / this.stats.listens.total;
-			if (this.stats.keys.minor.listens > this.stats.keys.major.listens && minKeyWeight > 0.25) {
-				findChar('vampire').score += Math.min(minKeyWeight * 100, 33);
+			const minKeyWeight = (this.stats.keys.minor.listens - this.stats.keys.major.listens / 2) / this.stats.listens.total;
+			if (minKeyWeight > 0.10) {
+				char.score += Math.min(minKeyWeight / 1.5 * 100, 30);
 			}
-			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.listens.total;
-			if (this.stats.moods.calm.listens > this.stats.moods.energetic.listens && emotWeight > 0.25) {
-				findChar('vampire').score += Math.min(emotWeight * 100, 33);
+			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.moods.total;
+			if (emotWeight > 0.10) {
+				char.score += Math.min(emotWeight / 1.5 * 100, 30);
 			}
 			// Time traveler: listen to favourite tracks many times
 			const top5Listens = wrappedData.tracks.slice(0, 5).reduce((prev, track) => prev + track.listens, 0);
 			const top20Listens = top5Listens + wrappedData.tracks.slice(5, 20).reduce((prev, track) => prev + track.listens, 0);
 			const favWeight = (top5Listens / this.stats.listens.total + top5Listens / top20Listens) / 2;
 			if (favWeight > 1 / 10) {
-				findChar('time traveler').score = Math.min(favWeight / (1 / 5) * 100, 100);
+				findChar('time traveler').score = Math.min(favWeight * 100, 100);
 			}
 			// Hunter: many skips
 			const skipWeight = this.stats.skips.total / this.stats.listens.total;
