@@ -810,10 +810,10 @@ const wrapped = {
 	 * @returns {{key}}
 	*/
 	computeMoodsStats: function (moodData) {
-		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow']);
-		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark']);
-		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun']);
-		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting']);
+		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow','Cold', 'Healing', 'Laidback', 'Meditation', 'Peaceful', 'Relaxed', 'Reflective', 'Slow', 'Smooth', 'Soft']);
+		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark', 'Drepressive', 'Emotional', 'Lonely', 'Nostalgic', 'Morose', 'Suicidal', 'Yearning']);
+		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun', 'Feel Good', 'Hot', 'Humorous', 'Positive', 'Sweet', 'Trippy']);
+		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting', 'Angry', 'Crazy', 'Energetic', 'Fast', 'Heavy', 'High', 'Upbeat', 'Wild']);
 		// Every track may have multiple moods of same type, so total is not = total listens
 		moodData.forEach((p) => {
 			this.stats.moods.total += p.listens;
