@@ -1,5 +1,5 @@
 'use strict';
-//23/02/24
+//24/02/24
 
 /* exported wrapped */
 
@@ -51,7 +51,8 @@ const wrapped = {
 	settings: {
 		bOffline: false,
 		bFilterGenresGraph: true,
-		bDebug: false,
+		bDebug: true,
+		bDebugQuery: false,
 		tokens: { listenBrainz: '' },
 
 	},
@@ -1032,7 +1033,7 @@ const wrapped = {
 	computeDiscoverPlaylist: function (tracksData, year, size = 100) {
 		let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
 		const query = '%ADDED% DURING ' + year;
-		if (this.settings.bDebug) { console.log('computeDiscoverPlaylist: ' + query); }
+		if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
 		handleList = fb.GetQueryItemsCheck(handleList, query);
 		if (handleList) {
 			handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
@@ -1059,7 +1060,7 @@ const wrapped = {
 			'%RATING% MISSING OR %RATING% GREATER 2',
 			queryCombinations(artists, _t(this.tags.artist), 'OR')
 		], 'AND');
-		if (this.settings.bDebug) { console.log('computeTopArtistsPlaylist: ' + query); }
+		if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist: ' + query); }
 		/** @type {FbMetadbHandleList} */
 		let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 		if (handleList) {
@@ -1088,7 +1089,7 @@ const wrapped = {
 				'%RATING% MISSING OR %RATING% GREATER 2',
 				queryJoin(queryCombinations(genres, ['GENRE', 'STYLE'], 'OR'), 'OR')
 			], 'AND');
-			if (this.settings.bDebug) { console.log('computeTopGenresPlaylist: ' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist: ' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -1122,7 +1123,7 @@ const wrapped = {
 				let handleList = new FbMetadbHandleList();
 				filters.forEach((query) => {
 					let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-					if (this.settings.bDebug) { console.log('computeTopCountriesPlaylist: ' + _p(handleListCountry.Count) + ' <- ' + query); }
+					if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist: ' + _p(handleListCountry.Count) + ' <- ' + query); }
 					if (handleListCountry) {
 						handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
 						handleList.AddRange(handleListCountry);
@@ -1162,7 +1163,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebug) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
@@ -1290,7 +1291,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebug) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
