@@ -1821,6 +1821,7 @@ const wrapped = {
 			.then(() => this.downloadArtistsImgs(this.stats.countries.byArtist))
 			.then(() => !!wrappedData.cities[0] && this.downloadArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
 			.then(() => this.saveTracksImgs(wrappedData.tracks))
+			.then(() => this.saveTracksImgs([this.stats.artists.top.topTrack]))
 			.then(() => !!wrappedData.cities[0] && this.getCityImg(wrappedData.cities[0]))
 			.then(() => this.downloadCityImgs(wrappedData.cities))
 			.then(() => wrappedData);
