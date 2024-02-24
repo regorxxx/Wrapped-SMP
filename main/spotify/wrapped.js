@@ -661,7 +661,6 @@ const wrapped = {
 		const tracks = tracksData.map((track) => track.handle.map((handle) => {
 			return {handle, title: track.title, artist: track.artist};
 		})).flat(Infinity);
-		console.log(tracksData, tracks.length);
 		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), year).map((track) => track.listens);
 		const days = new Map();
 		listens.forEach((listenArr, i) => {
