@@ -2316,9 +2316,11 @@ const wrapped = {
 			const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
 			const y = round(- 8.25 - 8.25 * Math.max(1 - this.stats.moods.energetic.listens / this.stats.moods.calm.listens, -1), 2);
 			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Mood stats}\n';
 			report += '\\pagecolor{pink}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-			report += '\\part[Mood stats]{Mood stats:}\n';
+			report += '\\section[Mood stats]{Mood stats:}\n';
 			report += '\\vspace{20mm}\n';
 			report += '\\begin{center}\n';
 			report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
