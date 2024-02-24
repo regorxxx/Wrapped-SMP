@@ -11,6 +11,8 @@ include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global sendToPlaylist:readable */
+include('..\\..\\helpers\\helpers_xxx_statistics.js');
+/* global calcHistogram:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global queryCombinations:readable, queryJoin:readable, sanitizeQueryVal:readable, sanitizeTagIds:readable, sanitizeTagValIds:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
@@ -106,12 +108,15 @@ const wrapped = {
 			min: { val: 0, listens: 0 },
 			high: { listens: 0 },
 			low: { listens: 0 },
-			stdDev: 0
+			stdDev: 0,
+			histogram: []
 		},
 		keys: {
 			mean: { tone: { val: 0, listens: 0 }, key: { val: 0, listens: 0 } },
 			minor: { listens: 0 },
 			major: { listens: 0 },
+			stdDev: 0,
+			histogram: []
 		},
 		moods: {
 			total: 0,
@@ -120,7 +125,7 @@ const wrapped = {
 			happy: { listens: 0 },
 			energetic: { listens: 0 },
 		},
-		time: { minutes: 0, days: 0, most: { date: new Date(), minutes: 0, track: {title: '', artist:'', handle: null}} },
+		time: { minutes: 0, days: 0, most: { date: new Date(), minutes: 0, track: { title: '', artist: '', handle: null } } },
 		character: {
 			list: [
 				{ name: 'Roboticist', score: 0, description: 'You like to hit play, kick back, and let the clever algorithms work their magic, track after track. Oh look, that rhymes.' },
@@ -168,7 +173,7 @@ const wrapped = {
 			} else if (!Object.getOwnPropertyDescriptor(obj, key)['get']) {
 				if (key === 'date') {
 					obj[key] = new Date();
-				} else if (['byMonth', 'similar', 'byScore', 'byISO', 'byArtist'].includes(key)) {
+				} else if (['byMonth', 'similar', 'byScore', 'byISO', 'byArtist', 'histogram'].includes(key)) {
 					obj[key].length = 0;
 				} else if (['artist', 'title'].includes(key)) {
 					obj[key] = '';
@@ -660,7 +665,7 @@ const wrapped = {
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
 		const tracks = tracksData.map((track) => track.handle.map((handle) => {
-			return {handle, title: track.title, artist: track.artist};
+			return { handle, title: track.title, artist: track.artist };
 		})).flat(Infinity);
 		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), year).map((track) => track.listens);
 		const days = new Map();
@@ -722,6 +727,7 @@ const wrapped = {
 	computeBpmsStats: function (bpmData) {
 		this.stats.bpms.min.val = Infinity;
 		let sum = 0, sumQuad = 0, listens = 0;
+		const histogram = [];
 		bpmData.forEach((p) => {
 			['max', 'min'].forEach((key) => {
 				if (this.stats.bpms[key].val === p.bpm) {
@@ -736,18 +742,25 @@ const wrapped = {
 			listens += p.listens;
 			this.stats.bpms.high.listens += (p.bpm > 130 ? p.listens : 0);
 			this.stats.bpms.low.listens += (p.bpm < 90 ? p.listens : 0);
+			let i = p.listens;
+			while (i--) { histogram.push(p.bpm); }
 		});
+		let binSize = 1;
 		if (listens >= 1) {
 			this.stats.bpms.mean.val = Math.round(sum / listens);
 			this.stats.bpms.stdDev = Math.round(Math.sqrt((sumQuad - sum ** 2 / listens) / (listens - 1)));
-			const offset = Math.round(this.stats.bpms.stdDev / 5);
+			binSize = Math.round(this.stats.bpms.stdDev / 5) || 1;
 			this.stats.bpms.mean.listens = bpmData.reduce((prev, p) => {
-				return prev + (Math.abs(p.bpm - this.stats.bpms.mean.val) <= offset ? p.listens : 0);
+				return prev + (Math.abs(p.bpm - this.stats.bpms.mean.val) <= binSize ? p.listens : 0);
 			}, 0);
 		} else {
 			this.stats.bpms.mean.val = sum;
 			this.stats.bpms.mean.listens = listens;
 		}
+		const max = this.stats.bpms.max.val;
+		const min = this.stats.bpms.min.val;
+		this.stats.bpms.histogram = calcHistogram(histogram, binSize, max, min)
+			.map((y, i) => {return {x: min + binSize * i, y};});
 		if (this.settings.bDebug) { console.log('computeBpmStats:', this.stats.bpms); }
 		return this.stats;
 	},
@@ -764,6 +777,7 @@ const wrapped = {
 	*/
 	computeKeyStats: function (keyData) {
 		let sum = 0, sumQuad = 0, listens = 0;
+		const histogram = [];
 		keyData.forEach((p) => {
 			const num = p.key.hour;
 			const letter = p.key.letter;
@@ -772,6 +786,8 @@ const wrapped = {
 			listens += p.listens;
 			this.stats.keys.major.listens += (letter === 'd' ? p.listens : 0);
 			this.stats.keys.minor.listens += (letter === 'm' ? p.listens : 0);
+			let i = p.listens;
+			while (i--) { histogram.push(p.key.hour); }
 		});
 		if (listens >= 1) {
 			this.stats.keys.mean.tone.val = Math.round(sum / listens);
@@ -780,12 +796,12 @@ const wrapped = {
 				letter: this.stats.keys.major.listens > this.stats.keys.minor.listens ? 'd' : 'm'
 			};
 			this.stats.keys.stdDev = Math.round(Math.sqrt((sumQuad - sum ** 2 / listens) / (listens - 1)));
-			const offset = Math.round(this.stats.keys.stdDev / 10);
+			const binSize = Math.round(this.stats.keys.stdDev / 10);
 			this.stats.keys.mean.tone.listens = keyData.reduce((prev, p) => {
-				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= offset ? p.listens : 0);
+				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= binSize ? p.listens : 0);
 			}, 0);
 			this.stats.keys.mean.key.listens = keyData.reduce((prev, p) => {
-				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= offset && p.key.letter === this.stats.keys.mean.key.val.letter ? p.listens : 0);
+				return prev + (Math.abs(p.key.hour - this.stats.keys.mean.tone.val) <= binSize && p.key.letter === this.stats.keys.mean.key.val.letter ? p.listens : 0);
 			}, 0);
 		} else {
 			this.stats.keys.mean.tone.val = sum;
@@ -795,6 +811,8 @@ const wrapped = {
 				letter: this.stats.keys.major.listens > this.stats.keys.minor.listens ? 'd' : 'm'
 			};
 		}
+		this.stats.keys.histogram = calcHistogram(histogram, 1, 12, 1)
+			.map((y, i) => {return {x: 1 + i, y};});
 		if (this.settings.bDebug) { console.log('computeKeyStats:', this.stats.keys); }
 		return this.stats;
 	},
@@ -810,7 +828,7 @@ const wrapped = {
 	 * @returns {{key}}
 	*/
 	computeMoodsStats: function (moodData) {
-		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow','Cold', 'Healing', 'Laidback', 'Meditation', 'Peaceful', 'Relaxed', 'Reflective', 'Slow', 'Smooth', 'Soft']);
+		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow', 'Cold', 'Healing', 'Laidback', 'Meditation', 'Peaceful', 'Relaxed', 'Reflective', 'Slow', 'Smooth', 'Soft']);
 		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark', 'Drepressive', 'Emotional', 'Lonely', 'Nostalgic', 'Morose', 'Suicidal', 'Yearning']);
 		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun', 'Feel Good', 'Hot', 'Humorous', 'Positive', 'Sweet', 'Trippy']);
 		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting', 'Angry', 'Crazy', 'Energetic', 'Fast', 'Heavy', 'High', 'Upbeat', 'Wild']);
@@ -833,7 +851,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData
 	 * @returns {{character}}
 	*/
 	computeCharacterStats: function (wrappedData) {
@@ -1772,7 +1790,7 @@ const wrapped = {
 	 @type {function}
 	 @param {number} year
 	 @param {string} query - Recommended to use '%RATING% MISSING OR %RATING% GREATER 2'
-	 @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
+	 @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getData: function (year, query) {
 		console.log('Wrapped: retrieving listening stats...');
@@ -1809,7 +1827,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; }} wrappedData
-	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
+	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getDataImages: function (wrappedData) {
 		console.log('Wrapped: retrieving images...');
@@ -1886,7 +1904,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>} wrappedData - Data from {@link wrapped.getData}
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData - Data from {@link wrapped.getData}
 	 * @param {number} year - Used for formatting purposes
 	 * @param {?string} root - Optional parameter that specifies the root directory for the report
 	 * @returns {string}
@@ -1953,8 +1971,11 @@ const wrapped = {
 			'\\usepackage{tikz} % Background Image\n' +
 			'\\usetikzlibrary{shadows} % Shadows for nodes\n' +
 			'\\usepackage{multicol} % Columns\n' +
-			'\\usepackage[colorlinks=true,linkcolor=blue,urlcolor=black,bookmarksopen=true]{hyperref}\n' +
-			'\\usepackage[open]{bookmark}\n' +
+			'\\usepackage[colorlinks=true,linkcolor=blue,urlcolor=black,bookmarksopen=true]{hyperref}% TOC\n' +
+			'\\usepackage[open]{bookmark} % TOC\n' +
+			'\\usepackage{pgfplots} % Graphs\n' +
+			'\\pgfplotsset{compat=1.18} % Graphs\n' +
+			'\\usepackage{pgf-pie} % Graphs\n' +
 			'\\renewcommand{\\familydefault}{\\sfdefault}\n\n' +
 			'\\newsavebox{\\picbox}\n' +
 			'\\newcommand{\\cutpic}[3]{\n' +
@@ -2312,27 +2333,92 @@ const wrapped = {
 			report += '\\vfill %\n\n';
 		}
 		// Moods
-		if (['calm','energetic','happy','sad'].some((key) => this.stats.moods[key].listens > 0)) {
-			const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
-			const y = round(- 8.25 - 8.25 * Math.max(1 - this.stats.moods.energetic.listens / this.stats.moods.calm.listens, -1), 2);
+		const bMoods = ['calm', 'energetic', 'happy', 'sad'].some((key) => this.stats.moods[key].listens > 0);
+		const bBpms = wrappedData.bpms.length && this.stats.bpms.histogram.length > 1;
+		const bKeys = wrappedData.keys.length && this.stats.keys.histogram.length > 1;
+		if (bMoods || bBpms || bKeys) {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
-			report += '\\addcontentsline{toc}{part}{Mood stats}\n';
+			report += '\\addcontentsline{toc}{part}{Mood, BPM and Key stats}\n';
 			report += '\\pagecolor{pink}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-			report += '\\section[Mood stats]{Mood stats:}\n';
-			report += '\\vspace{20mm}\n';
-			report += '\\begin{center}\n';
-			report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
-			report += '\t\t\\node[main,scale=2,align=center] (1) {Energ.};\n';
-			report += '\t\t\\node[main,scale=2,align=center] (2) [below left of=1]{Happy};\n';
-			report += '\t\t\\node[main,scale=2,align=center] (3) [below right of=1]{Sad};\n';
-			report += '\t\t\\node[main,scale=2,align=center] (4) [below right of=2]{Calm};\n';
-			report += '\t\t\\node[main,scale=0.5,fill=red!15,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
-			report += '\t\t\\draw[-] (1.south) -- (4.north);\n';
-			report += '\t\t\\draw[-] (2.east) -- (3.west);\n';
-			report += '\t\\end{tikzpicture}\n';
-			report += '\\end{center}\n';
+			if (bMoods) {
+				const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
+				const y = round(- 8.25 - 8.25 * Math.max(1 - this.stats.moods.energetic.listens / this.stats.moods.calm.listens, -1), 2);
+				report += '\\section[Mood stats]{Mood stats:}\n';
+				report += '\\vspace{20mm}\n';
+				report += '\\begin{center}\n';
+				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
+				report += '\t\t\\node[main,scale=2,align=center] (1) {Energ.};\n';
+				report += '\t\t\\node[main,scale=2,align=center] (2) [below left of=1]{Happy};\n';
+				report += '\t\t\\node[main,scale=2,align=center] (3) [below right of=1]{Sad};\n';
+				report += '\t\t\\node[main,scale=2,align=center] (4) [below right of=2]{Calm};\n';
+				report += '\t\t\\node[main,scale=0.5,fill=red!15,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
+				report += '\t\t\\draw[-] (1.south) -- (4.north);\n';
+				report += '\t\t\\draw[-] (2.east) -- (3.west);\n';
+				report += '\t\\end{tikzpicture}\n';
+				report += '\t\\vspace{20mm}\\\\\n';
+				report += '\t{\\Huge Music you love is usually associated to \\textbf{\\textit{' + (x > 0 ? 'Sad' : 'Happy') + '}} and \\textbf{\\textit{' + (y > -8.25 ? 'Energetic' : 'Calm') + '}} moods.}\n';
+				report += '\\end{center}\n\n';
+			}
+			if (bBpms) {
+				if (bMoods) {
+					report += '\\pagebreak\n';
+					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+				}
+				report += '\\section[BPM stats]{BPM stats:}\n';
+				report += '\\vspace{20mm}\n';
+				report += '\\begin{center}\n';
+				report += '\t\\begin{tikzpicture}\n';
+				report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
+				report += '\t\t\\begin{axis} [ybar,width=\\textwidth,xmin=' + this.stats.bpms.histogram[0].x + ',xmax=' + this.stats.bpms.histogram.slice(-1)[0].x + ',ymin=0,ylabel={Listens},xlabel={BPM},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left]\n';
+				report += '\t\t\t\\addplot coordinates {\n';
+				this.stats.bpms.histogram.forEach((point) => {
+					report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
+				});
+				report += '\t\t\t};\n';
+				report += '\t\t\\end{axis}\n';
+				report += '\t\\end{tikzpicture}\n';
+				report += '\t\\vspace{10mm}\\\\\n';
+				report += '\t{\\Huge You usually listen to music with a BPM around \\textbf{\\textit{' + this.stats.bpms.mean.val + '}} beats/min, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks this year.}\n';
+				report += '\t\\vspace{10mm}\\\\\n';
+				report += '\t{\\LARGE ' + (this.stats.bpms.high.listens > this.stats.bpms.low.listens 
+					? 'Light and Ubpeat tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.high.listens + '}} high BPM listens on your record.'
+					: 'Calm and Slow tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.low.listens + '}} low BPM listens on your record.'
+				) + '}\n';
+				report += '\\end{center}\n\n';
+			}
+			if (bKeys) {
+				if (bMoods || bBpms) {
+					report += '\\pagebreak\n';
+					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+				}
+				report += '\\section[Key stats]{Key stats:}\n';
+				report += '\\vspace{20mm}\n';
+				report += '\\begin{center}\n';
+				report += '\t\\begin{tikzpicture}\n';
+				report += '\t\\hspace*{-0.75cm} %\n';
+				report += '\t\t\\tikzstyle{every node}=[font=\\Huge]\n';
+				report += '\t\t\\pie[rotate=90,radius=5.5,explode=0.3,text=pin,font=\\Huge,scale font]{\n';
+				const noKeyListens =  Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
+				const labels = this.stats.keys.histogram.length;
+				this.stats.keys.histogram.forEach((point, j) => {
+					const perc = Math.round(point.y / this.stats.listens.total * 100);
+					report += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ?  ',' : '' ) + '\n';
+				});
+				if (noKeyListens) {
+					report += '\t\t\t' + noKeyListens + '/?\n';
+				}
+				report += '\t\t};\n';
+				report += '\t\\end{tikzpicture}\n';
+				report += '\t\\vspace{20mm}\\\\\n';
+				report += '\t{\\Huge ' + (this.stats.keys.major.listens > this.stats.keys.minor.listens 
+					? 'Most music you like is usually played in Major scales. You played \\textbf{\\textit{' + this.stats.keys.major.listens + '}} tracks like this.'
+					: 'Most music you like is usually played in Minor scales. You played  \\textbf{\\textit{' + this.stats.keys.minor.listens + '}} tracks like this.'
+					
+				) + '}\n';
+				report += '\\end{center}\n\n';
+			}
 		}
 		// End
 		report += '\n';
