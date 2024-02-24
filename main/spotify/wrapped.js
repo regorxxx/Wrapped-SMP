@@ -872,6 +872,7 @@ const wrapped = {
 		/*  TODO add statistics
 			Alchemist: create many playlists
 			Collector: listen to own playlists
+			Joker: vampire and luminary stats similar, similar proportions of all moods
 		*/
 		if (this.stats.listens.total > 0) {
 			// Luminary: many listens for light/upbeat tracks -> major key (30%) + mood (30%) + high BPM (40%)
