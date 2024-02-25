@@ -2365,12 +2365,12 @@ const wrapped = {
 				report += '\\section[Mood stats]{Mood stats:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
-				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,general shadow={fill=Black!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
-				report += '\t\t\\node[main,scale=2,align=center,fill=Goldenrod] (1) {Energ.};\n';
-				report += '\t\t\\node[main,scale=2,align=center,fill=WildStrawberry!75] (2) [below left of=1]{Happy};\n';
-				report += '\t\t\\node[main,scale=2,align=center,fill=teal!75] (3) [below right of=1]{Sad};\n';
-				report += '\t\t\\node[main,scale=2,align=center,fill=YellowGreen] (4) [below right of=2]{Calm};\n';
-				report += '\t\t\\node[main,scale=0.5,fill=White!75,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
+				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,general shadow={fill=Black!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.55}}]\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=Goldenrod,fill opacity=0.75] (1) {Energ.};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=WildStrawberry!75,fill opacity=0.75] (2) [below left of=1]{Happy};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=teal!75,fill opacity=0.75] (3) [below right of=1]{Sad};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=YellowGreen,fill opacity=0.75] (4) [below right of=2]{Calm};\n';
+				report += '\t\t\\node[main,scale=0.5,fill=White!75,align=center,fill opacity=0.85] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
 				report += '\t\t\\draw[-] (1.south) -- (4.north);\n';
 				report += '\t\t\\draw[-] (2.east) -- (3.west);\n';
 				report += '\t\\end{tikzpicture}\n';
@@ -2393,21 +2393,21 @@ const wrapped = {
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
 				report += '\t\t\\begin{axis} [ybar,width=\\textwidth,xmin=' + this.stats.bpms.histogram[0].x + ',xmax=' + this.stats.bpms.histogram.slice(-1)[0].x + ',ymin=0,ylabel={Listens},xlabel={BPM},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,bar shift=0pt]\n';
-				report += '\t\t\t\\addplot[BlueViolet,fill=SeaGreen!80!black!40] coordinates {\n';
+				report += '\t\t\t\\addplot[fill opacity=0.8,BlueViolet,fill=SeaGreen!80!black!40] coordinates {\n';
 				this.stats.bpms.histogram.forEach((point) => {
 					if (point.x < this.stats.bpms.low.val) {
 						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
 					}
 				});
 				report += '\t\t\t};\n';
-				report += '\t\t\t\\addplot[BurntOrange!40!black,fill=VioletRed!80] coordinates {\n';
+				report += '\t\t\t\\addplot[fill opacity=0.8,BurntOrange!40!black,fill=VioletRed!80] coordinates {\n';
 				this.stats.bpms.histogram.forEach((point) => {
 					if (point.x >= this.stats.bpms.low.val && point.x <= this.stats.bpms.high.val) {
 						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
 					}
 				});
 				report += '\t\t\t};\n';
-				report += '\t\t\t\\addplot[yellow!40!black,fill=Goldenrod!65] coordinates {\n';
+				report += '\t\t\t\\addplot[fill opacity=0.8,yellow!40!black,fill=Goldenrod!65] coordinates {\n';
 				this.stats.bpms.histogram.forEach((point) => {
 					if (point.x > this.stats.bpms.high.val) {
 						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
@@ -2443,7 +2443,7 @@ const wrapped = {
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Huge]\n';
-				report += '\t\t\\pie[rotate=90,change direction,radius=6,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75},/tikz/nodes={text opacity=0.75,overlay}]{\n';
+				report += '\t\t\\pie[rotate=90,change direction,radius=6,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75},/tikz/nodes={text opacity=0.75,overlay},fill opacity=0.75]{\n';
 				const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
 				const labels = this.stats.keys.histogram.length;
 				const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
