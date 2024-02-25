@@ -2447,9 +2447,19 @@ const wrapped = {
 				report += '\t\t\\pie[rotate=90,change direction,radius=5.5,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75}]{\n';
 				const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
 				const labels = this.stats.keys.histogram.length;
+				const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
+				// Add rounding errors
+				const offset = 100 - percs.reduce((prev, curr) => prev + curr, 0);
+				if (offset !== 0) {
+					percs.some((perc, i) => {
+						if (perc > 10) {
+							percs[i] += offset;
+							return true;
+						}
+					});
+				}
 				this.stats.keys.histogram.forEach((point, j) => {
-					const perc = Math.round(point.y / this.stats.listens.total * 100);
-					report += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ? ',' : '') + '\n';
+					report += '\t\t\t' + percs[j] + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ? ',' : '') + '\n';
 				});
 				if (noKeyListens) {
 					report += '\t\t\t' + noKeyListens + '/?\n';
