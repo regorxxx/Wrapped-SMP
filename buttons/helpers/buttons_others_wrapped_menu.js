@@ -1,10 +1,10 @@
 'use strict';
-//19/02/24
+//25/02/24
 
 /* exported wrappedMenu */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_GRAYED:readable, VK_SHIFT:readable */
+/* global MF_GRAYED:readable, VK_SHIFT:readable, VK_CONTROL:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable  */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -29,14 +29,16 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	});
 	// Globals
 	const runWrapped = (year, query = '', latexCmd = null) => {
+		const bShift = utils.IsKeyPressed(VK_SHIFT);
+		const bCtrl = utils.IsKeyPressed(VK_CONTROL);
 		this.switchAnimation('Wrapped stats retrieval', true);
 		(
-			utils.IsKeyPressed(VK_SHIFT)
+			bShift
 				? wrapped.getData(year, query)
 				: wrapped.createPdfReport({ year, query, latexCmd })
 		)
 			.then((bDone) => {
-				if (bDone) { wrapped.createPlaylists(year); }
+				if (bDone && !bCtrl) { wrapped.createPlaylists(year); }
 			})
 			.finally(() => {
 				this.switchAnimation('Wrapped stats retrieval', false);
