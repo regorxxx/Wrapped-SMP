@@ -24,12 +24,16 @@ as a PDF and outputs some playlists recommendations.
 			+ Artist/Country with more listens
 		* Sound town
 			+ Top 3 artists from that city
+		* Mood stats
+		* BPM stats
+		* Key stats
+
 	- Downloads artist and city images.
 	  (Offline mode may be set to skip image downloading)
 	- Retrieves album covers.
 	- Generates random backgrounds (which can be customized by user).
 	- Outputs a report in Latex format. Compilation in PDF.
-	- Playlists recommendations:
+	- Playlists recommendations: (skipped with Ctrl + L. Click)
 		* Top Favourite Songs
 		* Discovered Songs (during the year)
 		* Top Artists
