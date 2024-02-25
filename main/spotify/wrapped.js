@@ -2046,7 +2046,7 @@ const wrapped = {
 		{
 			report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
 			report += '\t\\begin{tikzpicture}\n';
-			report += '\t\t\\filldraw [draw=lime!70, ultra thick] (0,0) rectangle ++(14cm,0);\n';
+			report += '\t\t\\filldraw [draw=lime!70, ultra thick,draw opacity=0,fill opacity=0] (0,0) rectangle ++(14cm,0);\n';
 			let y = 9.5;
 			const burguerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
 			this.stats.genres.byScore.forEach((genre, i) => {
