@@ -2442,9 +2442,8 @@ const wrapped = {
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}\n';
-				report += '\t\\hspace*{-0.75cm} %\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Huge]\n';
-				report += '\t\t\\pie[rotate=90,change direction,radius=5.5,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75}]{\n';
+				report += '\t\t\\pie[rotate=90,change direction,radius=6,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75},/tikz/nodes={text opacity=0.75,overlay}]{\n';
 				const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
 				const labels = this.stats.keys.histogram.length;
 				const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
