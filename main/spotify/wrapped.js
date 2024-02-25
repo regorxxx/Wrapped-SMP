@@ -1923,6 +1923,7 @@ const wrapped = {
 	formatLatexReport: function (wrappedData, year, root = this.basePath) {
 		console.log('Wrapped: creating LaTeX report...');
 		const latex = /[&#%$_^{}]/gi;
+		const illegalChars = /[\\&#%$_^{}!]/gi;
 		const sanitizeCut = new RegExp('\\s?\\\\\u2026$', 'gi'); // \...
 		for (const type in wrappedData) {
 			wrappedData[type].forEach((item) => {
@@ -1940,13 +1941,14 @@ const wrapped = {
 		const getUniqueLabel = (() => {
 			const labels = new Set();
 			return function (label) {
-				label = label.replace(latex, '');
+				label = label.replace(illegalChars, '');
 				while (labels.has(label)) { label += '_'; }
 				labels.add(label);
 				return label;
 			};
 		})();
-		const cutReplace = (s, n) => s.cut(n).replace(sanitizeCut, '').replace(latex, '\\$&');
+		const cutReplace = (s, n) => s.cut(n).replace(latex, '\\$&');
+		const cut = (s, n) => s.cut(n).replace(sanitizeCut, '');
 		const getImage = (path) => (path || '').replaceAll('\\', '/');
 		const getBgImg = (path) => this.getRandomBackgroundImg(path).replaceAll('\\', '/');
 		const getCharImg = (path) => this.getCharacterImg(path).replaceAll('\\', '/');
@@ -1963,15 +1965,15 @@ const wrapped = {
 				report += '\t\\begin{figure}[H]\n';
 				report += '\t\t\\centering\n';
 				report += '\t\t\\includegraphics[width=100px,height=100px]{' + getImage(p[imgKey]) + '}\n';
-				report += '\t\t\\label{fig:' + getUniqueLabel(p[subKey].replace(latex, '\\$&')) + '}\n';
+				report += '\t\t\\label{fig:' + getUniqueLabel(p[subKey]) + '}\n';
 				report += '\t\\end{figure}\n';
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
 				report += subKey === 'title'
-					? '\t{\\Large\\textbf{\\textit{' + cutReplace(p[subKey], 40) + '}}\\\\By \\textbf{\\textit{' + cutReplace(p.artist, 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n'
+					? '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n'
 					: key === 'countries'
-						? '\t{\\Large\\textbf{' + cutReplace(p.name, 40) + '}:\\\\\\textit{' + cutReplace(p[subKey], 40) + '}}\\\\With \\textit{' + p.listens + ' listens}.\n'
-						: '\t{\\Large\\textbf{\\textit{' + cutReplace(p[subKey], 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
+						? '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\\textit{' + cut(p[subKey], 40) + '}}\\\\With \\textit{' + p.listens + ' listens}.\n'
+						: '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
 				report += '\\end{minipage}\n';
 			});
 		};
@@ -2139,7 +2141,7 @@ const wrapped = {
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{section}{Top Track}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge The track you have listened the most has been \\textbf{\\textit{' + wrappedData.tracks[0].title + '}} by \\textbf{\\textit{' + cutReplace(wrappedData.tracks[0].artist, 20) + '}}.}\n\n';
+			report += '{\\Huge The track you have listened the most has been \\textbf{\\textit{' + wrappedData.tracks[0].title + '}} by \\textbf{\\textit{' + cut(wrappedData.tracks[0].artist, 20) + '}}.}\n\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\includegraphics[width=400px]{' + getImage(wrappedData.tracks[0].albumImg) + '}\n';
@@ -2201,7 +2203,7 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '{\\Huge \\textbf{N\u00BA' + (i + 1) + '}}\\\\\n';
 			report += '\\vspace{2mm}\n';
-			report += '{\\Huge \\textbf{' + cutReplace(artist.artist, 40) + '}}\n';
+			report += '{\\Huge \\textbf{' + cut(artist.artist, 40) + '}}\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\setbox1=\\hbox{\\includegraphics[width=400px]{' +
@@ -2211,7 +2213,7 @@ const wrapped = {
 				'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
 				getImage(wrappedData.artists[i].artistImg) +
 				'}}}}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(wrappedData.artists[0].artist, 20)) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
 			report += '\\end{figure}\n';
 			report += '{\\Large Month with more listens:\\\\\n';
 			report += '\\textbf{' + monthName + '}}\n';
@@ -2244,11 +2246,11 @@ const wrapped = {
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\includegraphics[width=400px,height=800px,keepaspectratio]{' + getImage(wrappedData.artists[0].artistImg) + '}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(wrappedData.artists[0].artist, 20)) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
 			report += '\\end{figure}\n';
 			report += '\\vspace{5mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cutReplace(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top.tracks + '}} different tracks played this year.}\n\n';
+			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top.tracks + '}} different tracks played this year.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top artist's track
@@ -2283,7 +2285,7 @@ const wrapped = {
 			report += '\\section[Your listens around the world]{Your listens around the world:}\n';
 			report += '\\begin{enumerate}\n';
 			wrappedData.countries.forEach((country) => {
-				report += '\t\\item \\textbf{\\textit{' + cutReplace(country.name, 20) + '}} with \\textit{' + country.listens + ' listens}.\n';
+				report += '\t\\item \\textbf{\\textit{' + cut(country.name, 20) + '}} with \\textit{' + country.listens + ' listens}.\n';
 			});
 			report += '\\end{enumerate}\n';
 			report += '\\vspace{15mm}\n';
