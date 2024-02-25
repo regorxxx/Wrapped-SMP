@@ -2080,11 +2080,12 @@ const wrapped = {
 		report += '\\end{center}\n';
 		report += '\\vspace{15mm}\n';
 		report += '\\begin{center}\n';
-		report += '\\begin{tikzpicture}[node distance={22mm},minimum size=2cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
+		report += '\\begin{tikzpicture}[node distance={22mm},minimum size=2cm,main/.style = {draw,circle,fill opacity=0.75,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.4}}]\n';
+		const colors = ['Aquamarine!85', 'Aquamarine!70', 'BlueGreen!60', 'BlueGreen!50'];
 		this.stats.genres.groups.scores.slice(0, 4).forEach((group, i) => {
 			const name = group.name.replace(/dance_cluster|music_cluster|cluster/gi, '')
 				.replace(/[ _]/gi, ' ').replace(latex, '\\$&');
-			report += '\t\\node[main,scale=' + Math.max((4 - i), 1) + ',align=center] (' + (i + 1) + ') ' +
+			report += '\t\\node[main,scale=' + Math.max((4 - i), 1) + ',align=center,fill=' + colors[i] + '] (' + (i + 1) + ') ' +
 				(i > 0 ? '[below right of=' + i + ']' : '') +
 				'{' + name + '\\\\{\\scriptsize' + _p(group.score + '\\%') + '}};\n';
 		});
