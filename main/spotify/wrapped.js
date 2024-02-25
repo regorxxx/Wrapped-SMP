@@ -2391,6 +2391,7 @@ const wrapped = {
 				report += '\\section[BPM stats]{BPM stats:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
+				report += '\\hfuzz=20pt\n';
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
 				report += '\t\t\\begin{axis} [ybar,width=\\textwidth,xmin=' + this.stats.bpms.histogram[0].x + ',xmax=' + this.stats.bpms.histogram.slice(-1)[0].x + ',ymin=0,ylabel={Listens},xlabel={BPM},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,bar shift=0pt]\n';
