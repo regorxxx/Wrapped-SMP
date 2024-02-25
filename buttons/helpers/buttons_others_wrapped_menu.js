@@ -25,13 +25,14 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	['bFilterGenresGraph', 'bOffline']
 		.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
 	Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
-		if (pair[1]) {wrapped.tags[pair[0]] = pair[1];}
+		if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
 	});
 	// Globals
 	const runWrapped = (year, query = '', latexCmd = null) => {
 		const bShift = utils.IsKeyPressed(VK_SHIFT);
 		const bCtrl = utils.IsKeyPressed(VK_CONTROL);
 		this.switchAnimation('Wrapped stats retrieval', true);
+		if (bCtrl) { wrapped.settings.bSuggestions = false; }
 		(
 			bShift
 				? wrapped.getData(year, query)
@@ -56,6 +57,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 						}
 					}, 500);
 				}
+				if (bCtrl) { wrapped.settings.bSuggestions = true; }
 			});
 	};
 	// Menu

@@ -53,6 +53,7 @@ const wrapped = {
 	settings: {
 		bOffline: false,
 		bFilterGenresGraph: true,
+		bSuggestions: true,
 		bDebug: false,
 		bDebugQuery: false,
 		tokens: { listenBrainz: '' },
@@ -227,8 +228,10 @@ const wrapped = {
 				// stats
 				this.computeArtistsStats(data);
 				// Playlists
-				this.computeTopArtistsPlaylist(data);
-				this.computeSuggestedArtistsPlaylist(data, year);
+				if (this.settings.bSuggestions) {
+					this.computeTopArtistsPlaylist(data);
+					this.computeSuggestedArtistsPlaylist(data, year);
+				}
 				return data;
 			});
 	},
@@ -265,8 +268,10 @@ const wrapped = {
 				// stats
 				this.computeGenresStats(data);
 				// Playlists
-				this.computeTopGenresPlaylist(data);
-				this.computeSuggestedGenresPlaylist(this.stats.genres.similar, year);
+				if (this.settings.bSuggestions) {
+					this.computeTopGenresPlaylist(data);
+					this.computeSuggestedGenresPlaylist(this.stats.genres.similar, year);
+				}
 				return data;
 			});
 	},
@@ -304,8 +309,10 @@ const wrapped = {
 				this.computeListensStats(data, year);
 				this.computeSkipsStats(data);
 				// Playlist
-				this.computeTopTracksPlaylist(data);
-				this.computeDiscoverPlaylist(data, year);
+				if (this.settings.bSuggestions) {
+					this.computeTopTracksPlaylist(data);
+					this.computeDiscoverPlaylist(data, year);
+				}
 				return data;
 			});
 	},
@@ -469,7 +476,9 @@ const wrapped = {
 				// Stats
 				this.computeCountriesStats(data, year);
 				// Playlists
-				this.computeTopCountriesPlaylist(data);
+				if (this.settings.bSuggestions) {
+					this.computeTopCountriesPlaylist(data);
+				}
 				return data;
 			});
 	},
