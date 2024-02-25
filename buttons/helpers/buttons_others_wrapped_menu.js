@@ -62,7 +62,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	};
 	// Menu
 	const menu = new _menu();
-	menu.newEntry({ entryText: 'Shift + Click to skip report:', flags: MF_GRAYED });
+	menu.newEntry({ entryText: 'Shift/Ctrl skips report/playlists:', flags: MF_GRAYED });
 	menu.newEntry({ entryText: 'sep' });
 	const currentYear = new Date().getFullYear();
 	const years = range(currentYear - 4, currentYear, 1).reverse();
