@@ -1961,7 +1961,7 @@ const wrapped = {
 				report += '\\begin{minipage}{0.05\\textwidth}\n';
 				report += '\t{\\Large \\textbf{' + (i + 1) + '}}\n';
 				report += '\\end{minipage}\n';
-				report += '\\begin{minipage}{0.25\\textwidth}\n';
+				report += '\\begin{minipage}{0.238\\textwidth}\n';
 				report += '\t\\begin{figure}[H]\n';
 				report += '\t\t\\centering\n';
 				report += '\t\t\\includegraphics[width=100px,height=100px]{' + getImage(p[imgKey]) + '}\n';
