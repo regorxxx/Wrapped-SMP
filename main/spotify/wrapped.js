@@ -106,8 +106,8 @@ const wrapped = {
 			mean: { val: 0, listens: 0 },
 			max: { val: 0, listens: 0 },
 			min: { val: 0, listens: 0 },
-			high: { listens: 0 },
-			low: { listens: 0 },
+			high: { val: 130, listens: 0 },
+			low: { val: 90, listens: 0 },
 			stdDev: 0,
 			histogram: []
 		},
@@ -184,6 +184,8 @@ const wrapped = {
 				}
 			}
 		});
+		this.stats.bpms.high.val = 130;
+		this.stats.bpms.low.val = 90;
 	},
 	resetPlaylists: function () {
 		forEachNested(this.playlists, (_, key, obj) => {
@@ -740,8 +742,8 @@ const wrapped = {
 			sum += p.bpm * p.listens;
 			sumQuad += p.bpm ** 2 * p.listens;
 			listens += p.listens;
-			this.stats.bpms.high.listens += (p.bpm > 130 ? p.listens : 0);
-			this.stats.bpms.low.listens += (p.bpm < 90 ? p.listens : 0);
+			this.stats.bpms.high.listens += (p.bpm > this.stats.bpms.high.val ? p.listens : 0);
+			this.stats.bpms.low.listens += (p.bpm < this.stats.bpms.low.val ? p.listens : 0);
 			let i = p.listens;
 			while (i--) { histogram.push(p.bpm); }
 		});
@@ -760,7 +762,7 @@ const wrapped = {
 		const max = this.stats.bpms.max.val;
 		const min = this.stats.bpms.min.val;
 		this.stats.bpms.histogram = calcHistogram(histogram, binSize, max, min)
-			.map((y, i) => {return {x: min + binSize * i, y};});
+			.map((y, i) => { return { x: min + binSize * i, y }; });
 		if (this.settings.bDebug) { console.log('computeBpmStats:', this.stats.bpms); }
 		return this.stats;
 	},
@@ -812,7 +814,7 @@ const wrapped = {
 			};
 		}
 		this.stats.keys.histogram = calcHistogram(histogram, 1, 12, 1)
-			.map((y, i) => {return {x: 1 + i, y};});
+			.map((y, i) => { return { x: 1 + i, y }; });
 		if (this.settings.bDebug) { console.log('computeKeyStats:', this.stats.keys); }
 		return this.stats;
 	},
@@ -900,7 +902,7 @@ const wrapped = {
 				Math.min(Math.max(
 					((this.stats.bpms.mean.val + this.stats.bpms.stdDev) - this.stats.bpms.min.val)
 					, 0
-				) / 130, 1) * this.stats.bpms.mean.listens / this.stats.listens.total
+				) / this.stats.bpms.high.val, 1) * this.stats.bpms.mean.listens / this.stats.listens.total
 			) / 2;
 			if (this.stats.bpms.high.listens > this.stats.bpms.low.listens && this.stats.bpms.mean.val > 110 && hBpmWeight > 0.10) {
 				char.score += Math.min(hBpmWeight / 1.5 * 100, 40);
@@ -2265,7 +2267,7 @@ const wrapped = {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Region statistics}\n';
-			report += '\\pagecolor{RawSienna}\n';
+			report += '\\pagecolor{RawSienna!85}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\section[Your listens around the world]{Your listens around the world:}\n';
 			report += '\\begin{enumerate}\n';
@@ -2350,17 +2352,21 @@ const wrapped = {
 				report += '\\section[Mood stats]{Mood stats:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
-				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,fill=blue!15,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
-				report += '\t\t\\node[main,scale=2,align=center] (1) {Energ.};\n';
-				report += '\t\t\\node[main,scale=2,align=center] (2) [below left of=1]{Happy};\n';
-				report += '\t\t\\node[main,scale=2,align=center] (3) [below right of=1]{Sad};\n';
-				report += '\t\t\\node[main,scale=2,align=center] (4) [below right of=2]{Calm};\n';
-				report += '\t\t\\node[main,scale=0.5,fill=red!15,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
+				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,general shadow={fill=Black!60,shadow xshift=3pt,shadow yshift=-3pt}}]\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=Goldenrod] (1) {Energ.};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=WildStrawberry!75] (2) [below left of=1]{Happy};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=teal!75] (3) [below right of=1]{Sad};\n';
+				report += '\t\t\\node[main,scale=2,align=center,fill=YellowGreen] (4) [below right of=2]{Calm};\n';
+				report += '\t\t\\node[main,scale=0.5,fill=White!75,align=center] (5) [below of=1,xshift=' + x + 'cm,yshift=' + y + 'cm]{};\n';
 				report += '\t\t\\draw[-] (1.south) -- (4.north);\n';
 				report += '\t\t\\draw[-] (2.east) -- (3.west);\n';
 				report += '\t\\end{tikzpicture}\n';
 				report += '\t\\vspace{20mm}\\\\\n';
-				report += '\t{\\Huge Music you love is usually associated to \\textbf{\\textit{' + (x > 0 ? 'Sad' : 'Happy') + '}} and \\textbf{\\textit{' + (y > -8.25 ? 'Energetic' : 'Calm') + '}} moods.}\n';
+				report += '\t{\\Huge Music you love is usually associated to ' +
+					'{\\color{' + (x > 0 ? 'teal!75!black!100' : 'WildStrawberry!100!white!80') + '}' +
+					'\\textbf{\\textit{' + (x > 0 ? 'Sad' : 'Happy') + '}}}' +
+					' and {\\color{' + (y > -8.25 ? 'Goldenrod!70' : 'YellowGreen!100!white!50') + '}' +
+					'\\textbf{\\textit{' + (y > -8.25 ? 'Energetic' : 'Calm') + '}}} moods.}\n';
 				report += '\\end{center}\n\n';
 			}
 			if (bBpms) {
@@ -2373,20 +2379,44 @@ const wrapped = {
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
-				report += '\t\t\\begin{axis} [ybar,width=\\textwidth,xmin=' + this.stats.bpms.histogram[0].x + ',xmax=' + this.stats.bpms.histogram.slice(-1)[0].x + ',ymin=0,ylabel={Listens},xlabel={BPM},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left]\n';
-				report += '\t\t\t\\addplot coordinates {\n';
+				report += '\t\t\\begin{axis} [ybar,width=\\textwidth,xmin=' + this.stats.bpms.histogram[0].x + ',xmax=' + this.stats.bpms.histogram.slice(-1)[0].x + ',ymin=0,ylabel={Listens},xlabel={BPM},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,bar shift=0pt]\n';
+				report += '\t\t\t\\addplot[BlueViolet,fill=SeaGreen!80!black!40] coordinates {\n';
 				this.stats.bpms.histogram.forEach((point) => {
-					report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
+					if (point.x < this.stats.bpms.low.val) {
+						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
+					}
+				});
+				report += '\t\t\t};\n';
+				report += '\t\t\t\\addplot[BurntOrange!40!black,fill=VioletRed!80] coordinates {\n';
+				this.stats.bpms.histogram.forEach((point) => {
+					if (point.x >= this.stats.bpms.low.val && point.x <= this.stats.bpms.high.val) {
+						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
+					}
+				});
+				report += '\t\t\t};\n';
+				report += '\t\t\t\\addplot[yellow!40!black,fill=Goldenrod!65] coordinates {\n';
+				this.stats.bpms.histogram.forEach((point) => {
+					if (point.x > this.stats.bpms.high.val) {
+						report += '\t\t\t\t(' + point.x + ',' + point.y + ')\n';
+					}
 				});
 				report += '\t\t\t};\n';
 				report += '\t\t\\end{axis}\n';
 				report += '\t\\end{tikzpicture}\n';
 				report += '\t\\vspace{10mm}\\\\\n';
-				report += '\t{\\Huge You usually listen to music with a BPM around \\textbf{\\textit{' + this.stats.bpms.mean.val + '}} beats/min, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks this year.}\n';
+				report += '\t{\\Huge You usually listen to music with a BPM around {\\color{' +
+					(
+						this.stats.bpms.mean.val < this.stats.bpms.low.val
+							? 'SeaGreen!80!black!40'
+							: this.stats.bpms.mean.val > this.stats.bpms.high.val
+								? 'Goldenrod!65'
+								: 'VioletRed!80'
+					) +
+					'}\\textbf{\\textit{' + this.stats.bpms.mean.val + '} beats/min}}, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks this year.}\n';
 				report += '\t\\vspace{10mm}\\\\\n';
 				report += '\t{\\LARGE ' + (this.stats.bpms.high.listens > this.stats.bpms.low.listens
-					? 'Light and Ubpeat tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.high.listens + '}} high BPM listens on your record.'
-					: 'Calm and Slow tracks are your thing, with \\textbf{\\textit{' + this.stats.bpms.low.listens + '}} low BPM listens on your record.'
+					? '{\\color{Goldenrod!65}\\textbf{Light and Ubpeat}} tracks are your thing, with {\\color{Goldenrod!65}\\textbf{\\textit{' + this.stats.bpms.high.listens + '} High BPM}} listens on your record.'
+					: '{\\color{SeaGreen!80!black!40}\\textbf{Calm and Slow}} tracks are your thing, with {\\color{SeaGreen!80!black!40}\\textbf{\\textit{' + this.stats.bpms.low.listens + '} Low BPM}} listens on your record.'
 				) + '}\n';
 				report += '\\end{center}\n\n';
 			}
@@ -2401,12 +2431,12 @@ const wrapped = {
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\\hspace*{-0.75cm} %\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Huge]\n';
-				report += '\t\t\\pie[rotate=90,radius=5.5,explode=0.3,text=pin,font=\\Huge,scale font]{\n';
-				const noKeyListens =  Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
+				report += '\t\t\\pie[rotate=90,change direction,radius=5.5,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75}]{\n';
+				const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
 				const labels = this.stats.keys.histogram.length;
 				this.stats.keys.histogram.forEach((point, j) => {
 					const perc = Math.round(point.y / this.stats.listens.total * 100);
-					report += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ?  ',' : '' ) + '\n';
+					report += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ? ',' : '') + '\n';
 				});
 				if (noKeyListens) {
 					report += '\t\t\t' + noKeyListens + '/?\n';
