@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/02/24
+//26/02/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -252,7 +252,7 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 			) + ': ' + (typeof entry[1] === 'object'
 				? entry[1] === null ? 'null' : entry[1].toStr()
 				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
-			);
+				);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });

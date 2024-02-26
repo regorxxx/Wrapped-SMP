@@ -1,5 +1,5 @@
 'use strict';
-//21/02/24
+//26/02/24
 
 /* exported getData, getDataAsync */
 
@@ -46,7 +46,11 @@ include('..\\search_by_distance\\search_by_distance_culture.js');
 */
 
 /**
+ * Retrieve statistics data as x-y-z points
  *
+ * @function
+ * @name getData
+ * @kind function
  * @param {object} [o] - arguments
  * @param {string} o.option - [='tf'] timeline|tf|playcount|playcount proportional
  * @param {?*} o.optionArg - Optional arg for 'playcount' options', see getPlayCount()
@@ -230,7 +234,11 @@ function getData({
 }
 
 /**
+ * Retrieve statistics data as x-y-z points
  *
+ * @function
+ * @name getDataAsync
+ * @kind function
  * @param {object} [o] - arguments
  * @param {string} o.option - [='tf'] timeline|tf|playcount|playcount proportional
  * @param {?*} o.optionArg - Optional arg for 'playcount' options', see getPlayCount()
