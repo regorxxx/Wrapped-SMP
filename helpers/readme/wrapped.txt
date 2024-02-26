@@ -1,19 +1,19 @@
 ﻿Creates a report of user listening habits during the selected year
 as a PDF and outputs some playlists recommendations.
 	- Computes statistics from the library by:
-		* Listening behavior
-		* Listens
-			+ Total (minutes/days)
-			+ Day with most listens
+		* Listening behavior (character)
 		* Genres/styles
 			+ Total
 			+ Top 5
 			+ Suggested genres
-		* Musical categories
+		* Musical categories (chart)
 		* Tracks
 			+ Total
 			+ Most played track
 			+ Top 5
+		* Listens
+			+ Total (minutes/days)
+			+ Day with most listens
 		* Artists
 			+ Total
 			+ Top 5
@@ -24,24 +24,31 @@ as a PDF and outputs some playlists recommendations.
 			+ Artist/Country with more listens
 		* Sound town
 			+ Top 3 artists from that city
-		* Mood stats
-		* BPM stats
-		* Key stats
+		* Mood stats (chart)
+		* BPM stats (chart)
+		* Key stats (chart)
 
 	- Downloads artist and city images.
 	  (Offline mode may be set to skip image downloading)
+
 	- Retrieves album covers.
+
 	- Generates random backgrounds (which can be customized by user).
+
 	- Outputs a report in Latex format. Compilation in PDF.
-	- Playlists recommendations: (skipped with Ctrl + L. Click)
+          (skipped with Shift + L. Click)
+
+	- Playlists recommendations: 
+	  (skipped with Ctrl + L. Click)
 		* Top Favourite Songs
 		* Discovered Songs (during the year)
 		* Top Artists
 		* Top Genres
 		* Top Countries
 		* Suggested Genres (you may like) (ListenBrainz)
+		  (0ffline mode may be set to only use queries)
 		* Suggested Artists (you make like) (ListenBrainz)
-		  (0ffline mode may be set to use only queries)
+		  (0ffline mode may be set to only use queries)
 
 Requirements:
 -------------
