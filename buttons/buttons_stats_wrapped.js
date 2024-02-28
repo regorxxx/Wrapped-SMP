@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/24
+//28/02/24
 
 /*
 	Wrapped
@@ -10,7 +10,7 @@
 include('..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable */
 include('..\\helpers\\buttons_xxx.js');
-/* global getButtonVersion:readable, getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
+/* global getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
 include('..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\helpers\\buttons_xxx_menu.js');
@@ -31,7 +31,7 @@ include('..\\main\\spotify\\wrapped.js');
 /* global wrapped:readable */
 
 var prefix = 'wp'; // NOSONAR[global]
-var version = getButtonVersion('Wrapped-SMP'); // NOSONAR[global]
+var version = '1.0.0'; // NOSONAR[global]
 
 try { window.DefineScript('Wrapped button', { author: 'regorxxx', version, features: { drag_n_drop: false } }); } catch (e) {  /* May be loaded along other buttons */ }
 prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
