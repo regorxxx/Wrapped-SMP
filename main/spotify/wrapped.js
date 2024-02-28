@@ -2439,13 +2439,13 @@ const wrapped = {
 		if (bMoods || bBpms || bKeys) {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
-			report += '\\addcontentsline{toc}{part}{Mood, BPM and Key stats}\n';
+			report += '\\addcontentsline{toc}{part}{Mood, BPM and Key statistics}\n';
 			report += '\\pagecolor{Orchid}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			if (bMoods) {
 				const x = round(- 8.25 * Math.max(1 - this.stats.moods.sad.listens / this.stats.moods.happy.listens, -1), 2);
 				const y = round(- 8.25 - 8.25 * Math.max(1 - this.stats.moods.energetic.listens / this.stats.moods.calm.listens, -1), 2);
-				report += '\\section[Mood stats]{Mood stats:}\n';
+				report += '\\section[Mood statistics]{Mood statistics:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}[node distance={45mm},minimum size=1.5cm,main/.style = {draw,circle,general shadow={fill=Black!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.55}}]\n';
@@ -2470,7 +2470,7 @@ const wrapped = {
 					report += '\\pagebreak\n';
 					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 				}
-				report += '\\section[BPM stats]{BPM stats:}\n';
+				report += '\\section[BPM statistics]{BPM statistics:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
 				report += '\\hfuzz=20pt\n';
@@ -2522,7 +2522,7 @@ const wrapped = {
 					report += '\\pagebreak\n';
 					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 				}
-				report += '\\section[Key stats]{Key stats:}\n';
+				report += '\\section[Key statistics]{Key statistics:}\n';
 				report += '\\vspace{20mm}\n';
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}\n';
