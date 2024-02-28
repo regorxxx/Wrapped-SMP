@@ -73,13 +73,13 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Auto-device2](https://user-images.githubusercontent.com/83307074/125861102-9253716b-ded6-41d5-83b5-84664edeb17f.gif)
 
-## Requirements
+## Requirements[^details]
 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
 2. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
 3. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
 4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7 (64 bit) use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7). [For Win 7 / Wine (32 bit), use 21.6 version](https://www.npackd.org/p/org.miktex.MiKTeX/21.6).
 
-## Optional
+## Optional[^details]
 1. [World-Map-SMP](https://github.com/regorxxx/World-Map-SMP): Script required if region related statistics/playlists are desired.
 2. [ListenBrainz token](https://listenbrainz.org/settings/import/): To get playlists suggestions, with it will be less probably to reach rate limits using the public API.
 4. [ExifTool](https://exiftool.org): Binary used to clean all metadata from images used on report.
@@ -88,6 +88,8 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 ##  Installation
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
+
+[^details]: There are more details about versions and software required (or optional) on the readme which can be opened at the button.
 
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Wrapped-SMP.svg
