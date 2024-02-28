@@ -23,7 +23,7 @@ include('..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
 include('..\\main\\main_menu\\main_menu_custom.js');
 /* global bindDynamicMenus:readable, deleteMainMenuDynamic:readable */
-include('helpers\\buttons_others_wrapped_menu.js');
+include('helpers\\buttons_stats_wrapped_menu.js');
 /* global wrappedMenu:readable */
 include('..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable */
