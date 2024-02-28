@@ -13,18 +13,18 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 - Computes statistics from the library by:
 	* Listening behavior
-	* Listens
-		+ Total (minutes/days)
-		+ Day with most listens
 	* Genres/styles
 		+ Total
 		+ Top 5
 		+ Suggested genres
-	* Musical categories
+	* Musical categories (chart)
 	* Tracks
 		+ Total
 		+ Most played track
 		+ Top 5
+	* Listens
+		+ Total (minutes/days)
+		+ Day with most listens
 	* Artists
 		+ Total
 		+ Top 5
@@ -35,20 +35,31 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 		+ Artist/Country with more listens
 	* Sound town
 		+ Top 3 artists from that city
+	* Mood stats (chart)
+	* BPM stats (chart)
+	* Key stats (chart)
+
 - Downloads artist and city images.
   (Offline mode may be set to skip image downloading)
+
 - Retrieves album covers.
+
 - Generates random backgrounds (which can be customized by user).
+
 - Outputs a report in Latex format. Compilation in PDF.
-- Playlists recommendations:
+  (skipped with Shift + L. Click)
+
+- Playlists recommendations: 
+  (skipped with Ctrl + L. Click)
 	* Top Favourite Songs
 	* Discovered Songs (during the year)
 	* Top Artists
 	* Top Genres
 	* Top Countries
 	* Suggested Genres (you may like) (ListenBrainz)
+	  (0ffline mode may be set to only use queries)
 	* Suggested Artists (you make like) (ListenBrainz)
-	  (0ffline mode may be set to use only queries)
+	  (0ffline mode may be set to only use queries)
 
 ![Animation6](https://user-images.githubusercontent.com/83307074/116752378-03c11800-a9f5-11eb-9971-b3eff6e8d0fa.gif)
 
@@ -66,11 +77,12 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
 2. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
 3. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
-4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7, use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7)
+4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7 (64 bit) use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7). [For Win 7 / Wine (32 bit), use 21.6 version](https://www.npackd.org/p/org.miktex.MiKTeX/21.6).
 
 ## Optional
 1. [World-Map-SMP](https://github.com/regorxxx/World-Map-SMP): Script required if region related statistics/playlists are desired.
-2. [ExifTool](https://exiftool.org): Binary used to clean all metadata from images used on report.
+2. [ListenBrainz token](https://listenbrainz.org/settings/import/): To get playlists suggestions, with it will be less probably to reach rate limits using the public API.
+4. [ExifTool](https://exiftool.org): Binary used to clean all metadata from images used on report.
 2. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
 
 ##  Installation
