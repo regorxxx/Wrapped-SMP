@@ -89,7 +89,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
-[^details]: There are more details about versions and software required (or optional) on the readme which can be opened at the button.
+[^details]: There are further details about versions and  required (or optional) software on the readme which can be opened at the button (at the settings menu). Not following those instructions carefully will probably break some things.
 
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Wrapped-SMP.svg
