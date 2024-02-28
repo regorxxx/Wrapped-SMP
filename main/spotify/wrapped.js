@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/02/24
+//27/02/24
 
 /* exported wrapped */
 
@@ -198,19 +198,28 @@ const wrapped = {
 		});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of artist data.
+	 * Retrieves Artist stats in a promise that resolves to an array of artist data.
 	 *
 	 * @name getArtistsData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{artist:string, listens:number}[]>}
 	*/
-	getArtistsData: function (year, query) {
+	getArtistsData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
+				query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
@@ -230,25 +239,34 @@ const wrapped = {
 				// Playlists
 				if (this.settings.bSuggestions) {
 					this.computeTopArtistsPlaylist(data);
-					this.computeSuggestedArtistsPlaylist(data, year);
+					this.computeSuggestedArtistsPlaylist(data, queryParam);
 				}
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of genre data.
+	 * Retrieves Genres stats in a promise that resolves to an array of genre data.
 	 *
 	 * @name getGenresData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{genre:string, listens:number}[]>}
 	*/
-	getGenresData: function (year, query) {
+	getGenresData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.genre,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
+				query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
@@ -270,25 +288,31 @@ const wrapped = {
 				// Playlists
 				if (this.settings.bSuggestions) {
 					this.computeTopGenresPlaylist(data);
-					this.computeSuggestedGenresPlaylist(this.stats.genres.similar, year);
+					this.computeSuggestedGenresPlaylist(this.stats.genres.similar, queryParam);
 				}
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of tracks data.
+	 * Retrieves Tracks stats in a promise that resolves to an array of tracks data.
 	 *
 	 * @name getTracksData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]>}
 	*/
-	getTracksData: function (year, query) {
+	getTracksData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year, bSkipCount: isSkipCount },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate, bSkipCount: isSkipCount },
 			x: 'TITLE',
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin(['%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam, query || ''].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: true
 		})
@@ -305,31 +329,40 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeTracksStats(data, year);
-				this.computeListensStats(data, year);
+				this.computeTracksStats(data);
+				this.computeListensStats(data, timePeriod, timeKey, fromDate);
 				this.computeSkipsStats(data);
 				// Playlist
 				if (this.settings.bSuggestions) {
 					this.computeTopTracksPlaylist(data);
-					this.computeDiscoverPlaylist(data, year);
+					this.computeDiscoverPlaylist(data, queryParam);
 				}
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of BPM data.
+	 * Retrieves BPMs stats in a promise that resolves to an array of BPM data.
 	 *
 	 * @name getBpmsData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{bpm:number, listens:number}[]>}
 	*/
-	getBpmsData: function (year, query) {
+	getBpmsData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.bpm,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
+				query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -344,24 +377,33 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeBpmsStats(data, year);
+				this.computeBpmsStats(data);
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of key data.
+	 * Retrieves Keys stats in a promise that resolves to an array of key data.
 	 *
 	 * @name getKeyData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]>}
 	*/
-	getKeyData: function (year, query) {
+	getKeyData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.key,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				, query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -378,24 +420,33 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeKeyStats(data, year);
+				this.computeKeyStats(data);
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of key data.
+	 * Retrieves Moods stats in a promise that resolves to an array of key data.
 	 *
 	 * @name getMoodsData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{key:string, listens:number}[]>}
 	*/
-	getMoodsData: function (year, query) {
+	getMoodsData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.mood,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				, query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -410,24 +461,33 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeMoodsStats(data, year);
+				this.computeMoodsStats(data);
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of albums data.
+	 * Retrieves Albums stats in a promise that resolves to an array of albums data.
 	 *
 	 * @name getAlbumsData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{album:string, listens:number}[]>}
 	*/
-	getAlbumsData: function (year, query) {
+	getAlbumsData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount', optionArg: { timePeriod: year },
+			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: 'ALBUM',
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				, query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -442,24 +502,33 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeAlbumsStats(data, year);
+				this.computeAlbumsStats(data);
 				return data;
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of regions data.
+	 * Retrieves Countries stats in a promise that resolves to an array of regions data.
 	 *
 	 * @name getCountriesData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{name:string, listens:number}[]>}
 	*/
-	getCountriesData: function (year, query) {
+	getCountriesData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount wordlmap', optionArg: [year,],
+			option: 'playcount wordlmap', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				, query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -474,7 +543,7 @@ const wrapped = {
 				});
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
-				this.computeCountriesStats(data, year);
+				this.computeCountriesStats(data);
 				// Playlists
 				if (this.settings.bSuggestions) {
 					this.computeTopCountriesPlaylist(data);
@@ -483,19 +552,28 @@ const wrapped = {
 			});
 	},
 	/**
-	 * It takes a `year` parameter and returns a promise that resolves to an array of cities data.
+	 * Retrieves Cities stats in a promise that resolves to an array of cities data.
 	 *
 	 * @name getCitiesData
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Filter the library
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {promise.<{city:string, listens:number, artists:{artist:string, listens:number}[]}[]>}
 	*/
-	getCitiesData: function (year, query) {
+	getCitiesData: function (timePeriod, query, timeKey, fromDate) {
+		const queryParam = timeKey
+			? 'DURING LAST ' + timePeriod + ' ' + timeKey
+			: 'SINCE ' + timePeriod;
 		return getDataAsync({
-			option: 'playcount wordlmap city', optionArg: [year,],
+			option: 'playcount wordlmap city', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year, query || ''].filter(Boolean), 'AND'),
+			query: queryJoin([
+				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				, query || ''
+			].filter(Boolean), 'AND'),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -668,17 +746,19 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]} tracksData
-	 * @param {number} year
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {{listens, time}}
 	*/
-	computeListensStats: function (tracksData, year) {
+	computeListensStats: function (tracksData, timePeriod, timeKey, fromDate) {
 		// Time
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
 		const tracks = tracksData.map((track) => track.handle.map((handle) => {
 			return { handle, title: track.title, artist: track.artist };
 		})).flat(Infinity);
-		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), year).map((track) => track.listens);
+		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), timePeriod, timeKey, fromDate).map((track) => track.listens);
 		const days = new Map();
 		listens.forEach((listenArr, i) => {
 			const listenCount = listenArr.length;
@@ -982,7 +1062,7 @@ const wrapped = {
 	 * @param {number} year
 	 * @returns {{character}}
 	*/
-	computeGlobalStats: function (wrappedData, year) {
+	computeGlobalStats: function (wrappedData, timePeriod, timeKey, fromDate) {
 		// Top artists
 		if (wrappedData.artists.length && wrappedData.tracks.length) {
 			// Top artist
@@ -997,7 +1077,7 @@ const wrapped = {
 					new FbMetadbHandleList(
 						wrappedData.tracks.filter((track) => track.artist === artist.artist)
 							.map((track) => track.handle[0])
-					), year
+					), timePeriod, timeKey, fromDate
 				).map((track) => track.listens);
 				const months = new Map();
 				listens.forEach((listenArr) => {
@@ -1062,9 +1142,9 @@ const wrapped = {
 	 * @param {number} size
 	 * @returns {FbMetadbHandleList}
 	*/
-	computeDiscoverPlaylist: function (tracksData, year, size = 100) {
+	computeDiscoverPlaylist: function (tracksData, timePeriod, size = 100) {
 		let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
-		const query = '%ADDED% DURING ' + year;
+		const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
 		if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
 		handleList = fb.GetQueryItemsCheck(handleList, query);
 		if (handleList) {
@@ -1178,11 +1258,11 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {string[]} genres
-	 * @param {number} year
+	 * @param {string} queryParam - SINCE <YEAR>|DURING LAST X <TIME-UNIT>
 	 * @param {number} size
 	 * @returns {(FbMetadbHandle|String)[]}
 	*/
-	computeSuggestedGenresPlaylist: function (genres, year, size = 100) {
+	computeSuggestedGenresPlaylist: function (genres, queryParam, size = 100) {
 		const mbids = [];
 		const mbidsAlt = [];
 		const tags = { TITLE: [], ARTIST: [] };
@@ -1191,7 +1271,7 @@ const wrapped = {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
 					queryJoin(queryCombinations(genres, this.tags.genre.split(', '), 'OR'), 'OR'),
-					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year
+					'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -1308,18 +1388,18 @@ const wrapped = {
 		 * @memberof wrapped
 		 * @type {function}
 		 * @param {{artist:string, listens:number}[]} artistsData
-		 * @param {number} year
+		 * @param {string} queryParam - SINCE <YEAR>|DURING LAST X <TIME-UNIT>
 		 * @param {number} size
 		 * @returns {(FbMetadbHandle|String)[]}
 		*/
-	computeSuggestedArtistsPlaylist: function (artistsData, year, size = 100) {
+	computeSuggestedArtistsPlaylist: function (artistsData, queryParam, size = 100) {
 		const artists = artistsData.slice(0, 5).map((artist) => artist.artist);
 		const lb = listenBrainz;
 		if (this.settings.bOffline) {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([
 					queryCombinations(artists, _t(this.tags.artist), 'OR'),
-					'%LAST_PLAYED_ENHANCED% SINCE ' + year + ' OR %LAST_PLAYED% SINCE ' + year + ' OR %2003_LAST_PLAYED% SINCE ' + year
+					'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -1794,34 +1874,36 @@ const wrapped = {
 	/**
 	 * Retrieves all library statistics from {@link wrapped.getTracksData}, {@link wrapped.getArtistsData}, and {@link wrapped.getGenresData} for a given year
 	 *
-	 @property
-	 @name getData
-	 @kind method
-	 @memberof wrapped
-	 @type {function}
-	 @param {number} year
-	 @param {string} query - Recommended to use '%RATING% MISSING OR %RATING% GREATER 2'
-	 @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
+	 * @property
+	 * @name getData
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {number} timePeriod - Single year or number of time units
+	 * @param {string} query? - Recommended to use '%RATING% MISSING OR %RATING% GREATER 2'
+	 * @param {string} timeKey? - Time units: Days|Weeks
+	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
+	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
-	getData: function (year, query) {
+	getData: function (timePeriod, query, timeKey = null, fromDate = null) {
 		console.log('Wrapped: retrieving listening stats...');
 		this.resetStats();
 		this.resetPlaylists();
 		return Promise.all([
-			this.getGenresData(year, query),
-			this.getTracksData(year, query),
-			this.getArtistsData(year, query),
-			this.getAlbumsData(year, query),
-			this.getCountriesData(year, query),
-			this.getCitiesData(year, query),
-			this.getBpmsData(year, query),
-			this.getKeyData(year, query),
-			this.getMoodsData(year, query),
+			this.getGenresData(timePeriod, query, timeKey, fromDate),
+			this.getTracksData(timePeriod, query, timeKey, fromDate),
+			this.getArtistsData(timePeriod, query, timeKey, fromDate),
+			this.getAlbumsData(timePeriod, query, timeKey, fromDate),
+			this.getCountriesData(timePeriod, query, timeKey, fromDate),
+			this.getCitiesData(timePeriod, query, timeKey, fromDate),
+			this.getBpmsData(timePeriod, query, timeKey, fromDate),
+			this.getKeyData(timePeriod, query, timeKey, fromDate),
+			this.getMoodsData(timePeriod, query, timeKey, fromDate),
 		])
 			.then((data) => {
 				data = { genres: data[0], tracks: data[1], artists: data[2], albums: data[3], countries: data[4], cities: data[5], bpms: data[6], keys: data[7], moods: data[8] };
 				this.computeCharacterStats(data);
-				this.computeGlobalStats(data, year);
+				this.computeGlobalStats(data, timePeriod, timeKey, fromDate);
 				Object.keys(data).forEach((key) => {
 					if (this.stats[key].total > 5) { data[key].length = 5; }
 					if (this.settings.bDebug) { console.log('getData[' + key + ']:', data[key]); }
@@ -1856,30 +1938,30 @@ const wrapped = {
 			.then(() => this.downloadCityImgs(wrappedData.cities))
 			.then(() => wrappedData);
 	},
-	createPlaylists: function (year) {
+	createPlaylists: function (timePeriod) {
 		if (this.playlists.top.Count) {
-			sendToPlaylist(this.playlists.top, 'Top Favourite Songs ' + year);
+			sendToPlaylist(this.playlists.top, 'Top Favourite Songs ' + timePeriod);
 		}
 		if (this.playlists.discover.Count) {
-			sendToPlaylist(this.playlists.discover, 'Discovered Songs ' + year);
+			sendToPlaylist(this.playlists.discover, 'Discovered Songs ' + timePeriod);
 		}
 		if (this.playlists.topArtists.Count) {
-			sendToPlaylist(this.playlists.topArtists, 'Top Artists ' + year);
+			sendToPlaylist(this.playlists.topArtists, 'Top Artists ' + timePeriod);
 		}
 		if (this.playlists.topGenres.Count) {
-			sendToPlaylist(this.playlists.topGenres, 'Top Genres ' + year);
+			sendToPlaylist(this.playlists.topGenres, 'Top Genres ' + timePeriod);
 		}
 		if (this.playlists.topCountries.Count) {
-			sendToPlaylist(this.playlists.topCountries, 'Top Countries ' + year);
+			sendToPlaylist(this.playlists.topCountries, 'Top Countries ' + timePeriod);
 		}
 		this.playlists.suggestions.genres.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
-				sendToPlaylist(pls, 'Suggested Genres ' + year);
+				sendToPlaylist(pls, 'Suggested Genres ' + timePeriod);
 			}
 		});
 		this.playlists.suggestions.artists.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
-				sendToPlaylist(pls, 'Suggested Artists ' + year);
+				sendToPlaylist(pls, 'Suggested Artists ' + timePeriod);
 			}
 		});
 	},
@@ -1891,21 +1973,21 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ year: number query: string latexCmd: string root?: string }} { year, query, latexCmd, root }
+	 * @param {{ timePeriod: number; timeKey?: string; fromDate?: Date; query?: string latexCmd: string root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, root }
 	 * @returns {any}
 	*/
-	createPdfReport: function ({ year, query = '', latexCmd, root = this.basePath }) {
+	createPdfReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', latexCmd, root = this.basePath }) {
 		if (this.settings.bOffline) { console.log('Wrapped: offline mode'); }
 		this.cleanRoot(root);
 		this.copyDependencies(root);
-		return this.getData(year, query)
+		return this.getData(timePeriod, query, timeKey, fromDate)
 			.then((wrappedData) => this.getDataImages(wrappedData))
 			.then((wrappedData) => {
 				this.cleanExif();
 				this.compressImgs();
-				return this.formatLatexReport(wrappedData, year, root);
+				return this.formatLatexReport(wrappedData, timePeriod, root);
 			})
-			.then((report) => this.compileLatexReport(report, year, latexCmd, root));
+			.then((report) => this.compileLatexReport(report, timePeriod, latexCmd, root));
 	},
 	/**
 	 * Gives format in LaTeX to data retrieved {@link wrapped.getData} for a given year
@@ -2445,26 +2527,46 @@ const wrapped = {
 				report += '\\begin{center}\n';
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\tikzstyle{every node}=[font=\\Huge]\n';
-				report += '\t\t\\pie[rotate=90,change direction,radius=6,explode=0.3,text=pin,font=\\Huge,scale font,color={Rhodamine, Purple, Violet, RoyalBlue, SkyBlue, SeaGreen, Green!75, GreenYellow, Yellow, Orange, Red, RedViolet!75},/tikz/nodes={text opacity=0.75,overlay},fill opacity=0.75]{\n';
-				const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
-				const labels = this.stats.keys.histogram.length;
-				const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
-				// Add rounding errors
-				const offset = 100 - percs.reduce((prev, curr) => prev + curr, 0);
-				if (offset !== 0) {
-					percs.some((perc, i) => {
-						if (perc > 10) {
-							percs[i] += offset;
-							return true;
+				let toAddReport = '';
+				const toAddColors = [];
+				{
+					const colors = ['Rhodamine', 'Purple', 'Violet', 'RoyalBlue', 'SkyBlue', 'SeaGreen', 'Green!75', 'GreenYellow', 'Yellow', 'Orange', 'Red', 'RedViolet!75'];
+					const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
+					const labels = this.stats.keys.histogram.length;
+					const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
+					let rest = 0;
+					percs.forEach((perc) => { if (perc < 8) { rest += perc; } });
+					// Add rounding errors
+					const offset = 100 - percs.reduce((prev, curr) => prev + curr, 0) - noKeyListens;
+					if (offset !== 0) {
+						if (rest) { rest += offset; }
+						else {
+							percs.some((perc, i) => {
+								if (perc > 10) {
+									percs[i] += offset;
+									return true;
+								}
+							});
+						}
+					}
+					this.stats.keys.histogram.forEach((point, j) => {
+						const perc = percs[j];
+						if (perc >= 8) {
+							toAddReport += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || rest > 0 || (labels - 1 !== j) ? ',' : '') + '\n';
+							toAddColors.push(colors[j]);
 						}
 					});
+					if (rest) {
+						toAddReport += '\t\t\t' + rest + '/Rest' + (noKeyListens ? ',' : '') + '\n';
+						toAddColors.push('Gray');
+					}
+					if (noKeyListens) {
+						toAddReport += '\t\t\t' + noKeyListens + '/No Key\n';
+						toAddColors.push('White');
+					}
 				}
-				this.stats.keys.histogram.forEach((point, j) => {
-					report += '\t\t\t' + percs[j] + '/' + point.x + 'd|m' + (noKeyListens || (labels - 1 !== j) ? ',' : '') + '\n';
-				});
-				if (noKeyListens) {
-					report += '\t\t\t' + noKeyListens + '/?\n';
-				}
+				report += '\t\t\\pie[rotate=90,change direction,radius=6,explode=0.3,text=pin,font=\\Huge,scale font,color={' + toAddColors.join(', ') + '},/tikz/nodes={text opacity=0.75,overlay},fill opacity=0.75]{\n';
+				report += toAddReport;
 				report += '\t\t};\n';
 				report += '\t\\end{tikzpicture}\n';
 				report += '\t\\vspace{20mm}\\\\\n';

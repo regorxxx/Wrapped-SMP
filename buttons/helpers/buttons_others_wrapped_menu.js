@@ -1,5 +1,5 @@
 'use strict';
-//25/02/24
+//27/02/24
 
 /* exported wrappedMenu */
 
@@ -28,18 +28,18 @@ function wrappedMenu({ bSimulate = false } = {}) {
 		if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
 	});
 	// Globals
-	const runWrapped = (year, query = '', latexCmd = null) => {
+	const runWrapped = (timePeriod, query = '', latexCmd = null) => {
 		const bShift = utils.IsKeyPressed(VK_SHIFT);
 		const bCtrl = utils.IsKeyPressed(VK_CONTROL);
 		this.switchAnimation('Wrapped stats retrieval', true);
 		if (bCtrl) { wrapped.settings.bSuggestions = false; }
 		(
 			bShift
-				? wrapped.getData(year, query)
-				: wrapped.createPdfReport({ year, query, latexCmd })
+				? wrapped.getData(timePeriod, query)
+				: wrapped.createPdfReport({ timePeriod, query, latexCmd })
 		)
 			.then((bDone) => {
-				if (bDone && !bCtrl) { wrapped.createPlaylists(year); }
+				if (bDone && !bCtrl) { wrapped.createPlaylists(timePeriod); }
 			})
 			.finally(() => {
 				this.switchAnimation('Wrapped stats retrieval', false);
