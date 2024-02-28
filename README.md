@@ -80,10 +80,11 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7 (64 bit) use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7). [For Win 7 / Wine (32 bit), use 21.6 version](https://www.npackd.org/p/org.miktex.MiKTeX/21.6).
 
 ## Optional[^details]
-1. [World-Map-SMP](https://github.com/regorxxx/World-Map-SMP): Script required if region related statistics/playlists are desired.
-2. [ListenBrainz token](https://listenbrainz.org/settings/import/): To get playlists suggestions, with it will be less probably to reach rate limits using the public API.
+1. [Skip Count](https://github.com/Fjara-h/foo_skipcount): To get some extra track stats.
+2. [World-Map-SMP](https://github.com/regorxxx/World-Map-SMP): Script required if region related statistics/playlists are desired.
+3. [ListenBrainz token](https://listenbrainz.org/settings/import/): To get playlists suggestions, with it will be less probably to reach rate limits using the public API.
 4. [ExifTool](https://exiftool.org): Binary used to clean all metadata from images used on report.
-2. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
+5. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
 
 ##  Installation
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
