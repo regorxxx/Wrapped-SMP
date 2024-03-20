@@ -7,9 +7,13 @@
 
 ## [Unreleased][]
 ### Added
+- Report: new report based on entire listening history. Works for tracks being played before [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount) was installed too, therefore is not a requisite for this single report type (still a requisite for the rest). Any time specific stat is skipped on this report though.
 ### Changed
+- Tags: skip count now uses tags from [foo_skip](https://www.foobar2000.org/components/view/foo_skip) from [foo_skipcount](https://hydrogenaud.io/index.php/topic,124742), i.e. the greater one, for total skip counts. For time specific skips, only the latest.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Tags: workaround for a tag retrieval bug introduced on later versions by [foo_skipcount](https://hydrogenaud.io/index.php/topic,124742).
 
 ## [1.1.0] - 2024-03-14
 ### Added
