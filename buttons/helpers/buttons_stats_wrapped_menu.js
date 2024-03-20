@@ -1,5 +1,5 @@
 'use strict';
-//27/02/24
+//20/03/24
 
 /* exported wrappedMenu */
 
@@ -79,6 +79,12 @@ function wrappedMenu({ bSimulate = false } = {}) {
 			const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
 			if (input === null) { return; }
 			runWrapped(input, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
+		}
+	});
+	menu.newEntry({ entryText: 'sep' });
+	menu.newEntry({
+		entryText: 'Entire listening history', func: () => {
+			runWrapped(null, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
 		}
 	});
 	return menu;

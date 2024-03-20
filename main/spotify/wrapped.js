@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/02/24
+//20/03/24
 
 /* exported wrapped */
 
@@ -54,7 +54,7 @@ const wrapped = {
 		bOffline: false,
 		bFilterGenresGraph: true,
 		bSuggestions: true,
-		bDebug: false,
+		bDebug: true,
 		bDebugQuery: false,
 		tokens: { listenBrainz: '' },
 
@@ -126,7 +126,25 @@ const wrapped = {
 			happy: { listens: 0 },
 			energetic: { listens: 0 },
 		},
-		time: { minutes: 0, days: 0, most: { date: new Date(), minutes: 0, track: { title: '', artist: '', handle: null } } },
+		time: {
+			minutes: 0,
+			days: 0,
+			most: {
+				date: new Date(),
+				minutes: 0,
+				track: { title: '', artist: '', handle: null }
+			},
+			first: {
+				date: new Date(),
+				minutes: 0,
+				track: { title: '', artist: '', handle: null }
+			},
+			last: {
+				date: new Date(),
+				minutes: 0,
+				track: { title: '', artist: '', handle: null }
+			}
+		},
 		character: {
 			list: [
 				{ name: 'Roboticist', score: 0, description: 'You like to hit play, kick back, and let the clever algorithms work their magic, track after track. Oh look, that rhymes.' },
@@ -197,6 +215,21 @@ const wrapped = {
 			}
 		});
 	},
+	getDataQueryParam: function (timePeriod, timeKey) {
+		return timePeriod
+			? timeKey
+				? 'DURING LAST ' + timePeriod + ' ' + timeKey
+				: 'SINCE ' + timePeriod
+			: null;
+	},
+	getDataQuery: function (queryParam, extraQuery = '') {
+		return queryJoin([
+			queryParam
+				? '%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				: null,
+			extraQuery || ''
+		].filter(Boolean), 'AND');
+	},
 	/**
 	 * Retrieves Artist stats in a promise that resolves to an array of artist data.
 	 *
@@ -210,16 +243,11 @@ const wrapped = {
 	 * @returns {promise.<{artist:string, listens:number}[]>}
 	*/
 	getArtistsData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
-				query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
@@ -257,16 +285,11 @@ const wrapped = {
 	 * @returns {promise.<{genre:string, listens:number}[]>}
 	*/
 	getGenresData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.genre,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
-				query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true
 		})
@@ -306,13 +329,11 @@ const wrapped = {
 	 * @returns {promise.<{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]>}
 	*/
 	getTracksData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate, bSkipCount: isSkipCount },
 			x: 'TITLE',
-			query: queryJoin(['%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam, query || ''].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: true
 		})
@@ -353,16 +374,11 @@ const wrapped = {
 	 * @returns {promise.<{bpm:number, listens:number}[]>}
 	*/
 	getBpmsData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.bpm,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam,
-				query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -394,16 +410,11 @@ const wrapped = {
 	 * @returns {promise.<{key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]>}
 	*/
 	getKeyData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.key,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				, query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -437,16 +448,11 @@ const wrapped = {
 	 * @returns {promise.<{key:string, listens:number}[]>}
 	*/
 	getMoodsData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.mood,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				, query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
 		})
@@ -478,16 +484,11 @@ const wrapped = {
 	 * @returns {promise.<{album:string, listens:number}[]>}
 	*/
 	getAlbumsData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount', optionArg: { timePeriod, timeKey, fromDate },
 			x: 'ALBUM',
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				, query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -519,16 +520,11 @@ const wrapped = {
 	 * @returns {promise.<{name:string, listens:number}[]>}
 	*/
 	getCountriesData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount wordlmap', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				, query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -564,16 +560,11 @@ const wrapped = {
 	 * @returns {promise.<{city:string, listens:number, artists:{artist:string, listens:number}[]}[]>}
 	*/
 	getCitiesData: function (timePeriod, query, timeKey, fromDate) {
-		const queryParam = timeKey
-			? 'DURING LAST ' + timePeriod + ' ' + timeKey
-			: 'SINCE ' + timePeriod;
+		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
 			option: 'playcount wordlmap city', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
-			query: queryJoin([
-				'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				, query || ''
-			].filter(Boolean), 'AND'),
+			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true, bIncludeHandles: false
 		})
@@ -755,36 +746,64 @@ const wrapped = {
 		// Time
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
-		const tracks = tracksData.map((track) => track.handle.map((handle) => {
-			return { handle, title: track.title, artist: track.artist };
-		})).flat(Infinity);
-		const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), timePeriod, timeKey, fromDate).map((track) => track.listens);
-		const days = new Map();
-		listens.forEach((listenArr, i) => {
-			const listenCount = listenArr.length;
-			this.stats.listens.total += listenCount;
-			listenArr.forEach((listen) => {
-				const dateStr = listen.toString();
-				const old = days.get(dateStr) || {
-					date: listen,
-					time: 0,
-					track: { listens: 0, handle: null, title: '', artist: '' }
-				};
-				old.time += tracks[i].handle.Length;
-				if (listenCount > old.track.listens) {
-					old.track.listens = listenCount;
-					old.track.handle = tracks[i].handle;
-					old.track.title = tracks[i].title;
-					old.track.artist = tracks[i].artist;
-				}
-				days.set(dateStr, old);
+		if (timePeriod) {
+			const tracks = tracksData.map((track) => track.handle.map((handle) => {
+				return { handle, title: track.title, artist: track.artist };
+			})).flat(Infinity);
+			const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), timePeriod, timeKey, fromDate).map((track) => track.listens);
+			const days = new Map();
+			listens.forEach((listenArr, i) => {
+				const listenCount = listenArr.length;
+				this.stats.listens.total += listenCount;
+				listenArr.forEach((listen) => {
+					const dateStr = listen.toString();
+					const old = days.get(dateStr) || {
+						date: listen,
+						time: 0,
+						track: { listens: 0, handle: null, title: '', artist: '' }
+					};
+					old.time += tracks[i].handle.Length;
+					if (listenCount > old.track.listens) {
+						old.track.listens = listenCount;
+						old.track.handle = tracks[i].handle;
+						old.track.title = tracks[i].title;
+						old.track.artist = tracks[i].artist;
+					}
+					days.set(dateStr, old);
+				});
 			});
-		});
-		/** @type {{date:Date, time:number, track:{handle:FbMetadbHandle, title:string, artist:string}}} */
-		const max = [...days.values()].reduce((acc, curr) => curr.time > acc.time ? curr : acc, { time: 0 });
-		this.stats.time.most.date = max.date;
-		this.stats.time.most.minutes = round(max.time / 60, 0);
-		this.stats.time.most.track = max.track;
+			/** @type {{date:Date, time:number, track:{handle:FbMetadbHandle, title:string, artist:string}}} */
+			const max = [...days.values()].reduce((acc, curr) => curr.time > acc.time ? curr : acc, { time: 0 });
+			this.stats.time.most.date = max.date;
+			this.stats.time.most.minutes = round(max.time / 60, 0);
+			this.stats.time.most.track = max.track;
+		} else {
+			const tracks = tracksData.map((track) => {
+				this.stats.listens.total += track.listens;
+				return track.handle.map((handle) => {
+					return { handle, title: track.title, artist: track.artist };
+				});
+			}).flat(Infinity);
+			const handleList = new FbMetadbHandleList(tracks.map((track) => track.handle));
+			// Tracks never played break the sorting with N/A
+			const tfFirst = fb.TitleFormat('$if3(%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)');
+			handleList.OrderByFormat(tfFirst, 1);
+			const first = handleList[0];
+			const tfLast = fb.TitleFormat('$if3(%2003_LAST_PLAYED%,%LAST_PLAYED%,0)');
+			handleList.OrderByFormat(tfLast, -1);
+			const last = handleList[0];
+			this.stats.time.first.date = new Date(tfFirst.EvalWithMetadb(first));
+			this.stats.time.first.handle = first;
+			this.stats.time.last.date = new Date(tfLast.EvalWithMetadb(last));
+			this.stats.time.last.handle = last;
+			['first', 'last'].some((k) => {
+				if (this.stats.time[k].date.toString() === 'Invalid Date') {
+					console.log('computeListensStats: ' + k + ' track played reports an invalid date.');
+					console.log(this.stats.time[k].handle);
+					return true;
+				}
+			});
+		}
 		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.listens); console.log('computeListensStats:', this.stats.time); }
 		return this.stats;
 	},
@@ -1072,30 +1091,32 @@ const wrapped = {
 			if (topTrack) { this.stats.artists.top.topTrack = topTrack; }
 			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
 			// By month
-			wrappedData.artists.slice(0, 5).forEach((artist) => {
-				const listens = getPlayCount(
-					new FbMetadbHandleList(
-						wrappedData.tracks.filter((track) => track.artist === artist.artist)
-							.map((track) => track.handle[0])
-					), timePeriod, timeKey, fromDate
-				).map((track) => track.listens);
-				const months = new Map();
-				listens.forEach((listenArr) => {
-					listenArr.forEach((listen) => {
-						const dateStr = listen.getMonth();
-						months.set(dateStr, (months.get(dateStr) || 0));
+			if (timePeriod) {
+				wrappedData.artists.slice(0, 5).forEach((artist) => {
+					const listens = getPlayCount(
+						new FbMetadbHandleList(
+							wrappedData.tracks.filter((track) => track.artist === artist.artist)
+								.map((track) => track.handle[0])
+						), timePeriod, timeKey, fromDate
+					).map((track) => track.listens);
+					const months = new Map();
+					listens.forEach((listenArr) => {
+						listenArr.forEach((listen) => {
+							const dateStr = listen.getMonth();
+							months.set(dateStr, (months.get(dateStr) || 0));
+						});
+					});
+					const max = [...months.entries()].sort((a, b) => b[1] - a[1])[0];
+					const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+					this.stats.artists.byMonth.push({
+						artist: artist.artist,
+						month: max[0],
+						listens: max[1],
+						monthName: monthNames[max[0]]
 					});
 				});
-				const max = [...months.entries()].sort((a, b) => b[1] - a[1])[0];
-				const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-				this.stats.artists.byMonth.push({
-					artist: artist.artist,
-					month: max[0],
-					listens: max[1],
-					monthName: monthNames[max[0]]
-				});
-			});
-			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
+				if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
+			}
 		}
 		// Top artist by Country
 		if (wrappedData.countries.length && wrappedData.artists.length) {
@@ -1143,14 +1164,16 @@ const wrapped = {
 	 * @returns {FbMetadbHandleList}
 	*/
 	computeDiscoverPlaylist: function (tracksData, timePeriod, size = 100) {
-		let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
-		const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
-		if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
-		handleList = fb.GetQueryItemsCheck(handleList, query);
-		if (handleList) {
-			handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
-			({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
-			this.playlists.discover = handleList;
+		if (timePeriod) {
+			let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
+			const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
+			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
+			handleList = fb.GetQueryItemsCheck(handleList, query);
+			if (handleList) {
+				handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
+				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+				this.playlists.discover = handleList;
+			}
 		}
 		return this.playlists.discover;
 	},
@@ -1271,7 +1294,7 @@ const wrapped = {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
 					queryJoin(queryCombinations(genres, this.tags.genre.split(', '), 'OR'), 'OR'),
-					'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+					this.getDataQuery(queryParam)
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -1399,7 +1422,7 @@ const wrapped = {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([
 					queryCombinations(artists, _t(this.tags.artist), 'OR'),
-					'%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+					this.getDataQuery(queryParam)
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
@@ -1940,28 +1963,28 @@ const wrapped = {
 	},
 	createPlaylists: function (timePeriod) {
 		if (this.playlists.top.Count) {
-			sendToPlaylist(this.playlists.top, 'Top Favourite Songs ' + timePeriod);
+			sendToPlaylist(this.playlists.top, 'Top Favourite Songs' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		if (this.playlists.discover.Count) {
-			sendToPlaylist(this.playlists.discover, 'Discovered Songs ' + timePeriod);
+			sendToPlaylist(this.playlists.discover, 'Discovered Songs' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		if (this.playlists.topArtists.Count) {
-			sendToPlaylist(this.playlists.topArtists, 'Top Artists ' + timePeriod);
+			sendToPlaylist(this.playlists.topArtists, 'Top Artists' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		if (this.playlists.topGenres.Count) {
-			sendToPlaylist(this.playlists.topGenres, 'Top Genres ' + timePeriod);
+			sendToPlaylist(this.playlists.topGenres, 'Top Genres' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		if (this.playlists.topCountries.Count) {
-			sendToPlaylist(this.playlists.topCountries, 'Top Countries ' + timePeriod);
+			sendToPlaylist(this.playlists.topCountries, 'Top Countries' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		this.playlists.suggestions.genres.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
-				sendToPlaylist(pls, 'Suggested Genres ' + timePeriod);
+				sendToPlaylist(pls, 'Suggested Genres' + (timePeriod ? ' ' + timePeriod : ''));
 			}
 		});
 		this.playlists.suggestions.artists.then((pls) => {
 			if (pls && (Array.isArray(pls) && pls.length || pls.Count)) {
-				sendToPlaylist(pls, 'Suggested Artists ' + timePeriod);
+				sendToPlaylist(pls, 'Suggested Artists' + (timePeriod ? ' ' + timePeriod : ''));
 			}
 		});
 	},
@@ -1973,7 +1996,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ timePeriod: number; timeKey?: string; fromDate?: Date; query?: string latexCmd: string root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, root }
+	 * @param {{ timePeriod?: number; timeKey?: string; fromDate?: Date; query?: string latexCmd: string root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, root }
 	 * @returns {any}
 	*/
 	createPdfReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', latexCmd, root = this.basePath }) {
@@ -2017,6 +2040,10 @@ const wrapped = {
 			});
 		}
 		// Helpers
+		const [firstYear, lastYear] = !year
+			? [this.stats.time.first.date, this.stats.time.last.date].map((d) => d.getFullYear().toString())
+			: [null, null];
+		const period = !year ? firstYear + ' - ' + lastYear : null;
 		const topDay = this.stats.time.most.date
 			? this.stats.time.most.date.toLocaleDateString('en-us', { month: 'long', day: 'numeric' })
 			: '- no date -';
@@ -2087,14 +2114,21 @@ const wrapped = {
 			'\\begin{document}\n';
 		// Front
 		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{part}{Wrapped ' + year + '}\n';
+		report += '\\addcontentsline{toc}{part}{Wrapped ' + (year || period) + '}\n';
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\begin{tikzpicture}[remember picture,overlay]\n';
 		report += '\t\\node [fill, rectangle, top color=RedViolet, middle color=Goldenrod, bottom color=Emerald, anchor=north, minimum width=\\paperwidth, minimum height=\\paperheight] (box) at (current page.north){};\n';
 		report += '\\end{tikzpicture}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\fontsize{100}{80}\\selectfont {\\color{Turquoise}W}{\\color{CarnationPink}r}{\\color{Yellow}a}{\\color{Cerulean}p}{\\color{SpringGreen}p}{\\color{YellowOrange}e}{\\color{OrangeRed}d}\\\\' + year.toString().split('').map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}').join('') + '}\n';
+		report += '{\\fontsize{100}{80}\\selectfont {\\color{Turquoise}W}{\\color{CarnationPink}r}{\\color{Yellow}a}{\\color{Cerulean}p}{\\color{SpringGreen}p}{\\color{YellowOrange}e}{\\color{OrangeRed}d}\\\\' + (year
+			? year.toString().split('')
+				.map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}')
+				.join('')
+			: period.toString().split(' - ')
+				.map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}')
+				.join('{\\color{Yellow}-}')
+		) + '}\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		report += '\n';
@@ -2146,7 +2180,7 @@ const wrapped = {
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\Huge ' + year + ' has been great...}\\\\\n';
+		report += '{\\Huge ' + (year || period) + ' has been great...}\\\\\n';
 		report += '\\vspace{15mm}\n';
 		report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.genres.total + '}} genres.}\n';
 		report += '\\end{center}\n';
@@ -2210,7 +2244,7 @@ const wrapped = {
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + year + '.}\\\\\n';
+		report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
 		report += '\\vspace{15mm}\n';
 		report += '{\\Large But there is one special track for you...}\n';
 		report += '\\end{center}\n';
@@ -2230,7 +2264,7 @@ const wrapped = {
 			report += '\t\\includegraphics[width=400px]{' + getImage(wrappedData.tracks[0].albumImg) + '}\n';
 			report += '\t\\label{fig:' + getUniqueLabel(wrappedData.tracks[0].title) + '}\n';
 			report += '\\end{figure}\n';
-			report += '{\\Large You have played it \\textbf{\\textit{' + wrappedData.tracks[0].listens + '}} times this year.}\n\n';
+			report += '{\\Large You have played it \\textbf{\\textit{' + wrappedData.tracks[0].listens + '}} times ' + (year ? 'this year' : 'since ' + firstYear) + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 		}
@@ -2255,54 +2289,58 @@ const wrapped = {
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		// Day with more listening time
-		report += '\\pagebreak\n';
-		report += '\\pagecolor{red}\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\begin{center}\n';
-		report += '{\\Large \\textbf{\\textit{' +
-			topDay +
-			'}} was a special day for you, listening during \\textbf{\\textit{' +
-			this.stats.time.most.minutes +
-			'}} minutes to your favourite music.}\\\\\n';
-		report += '\\vspace{10mm}\n';
-		report += '{\\large Your most listened track was \\textbf{\\textit{' +
-			this.stats.time.most.track.title.replace(latex, '\\$&') +
-			'}} by \\textbf{\\textit{' +
-			this.stats.time.most.track.artist.replace(latex, '\\$&') + '}}.}\\\\\n';
-		report += '\\end{center}\n';
-		report += '\\vfill %\n\n';
-		// Artist by month
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{part}{Artists statistics}\n';
-		wrappedData.artists.forEach((artist, i) => {
-			const month = this.stats.artists.byMonth[i].month;
-			const monthName = this.stats.artists.byMonth[i].monthName;
+		if (this.stats.time.most.minutes) {
 			report += '\\pagebreak\n';
-			if (i === 0) { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by month}\n'; }
-			report += '\\pagecolor{teal}\n';
+			report += '\\pagecolor{red}\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge \\textbf{N\u00BA' + (i + 1) + '}}\\\\\n';
-			report += '\\vspace{2mm}\n';
-			report += '{\\Huge \\textbf{' + cut(artist.artist, 40) + '}}\n';
-			report += '\\begin{figure}[H]\n';
-			report += '\t\\centering\n';
-			report += '\t\\setbox1=\\hbox{\\includegraphics[width=400px]{' +
-				getImage('img\\month\\' + month + '.png') + '}}\n	';
-			report += '\t\\includegraphics[width=400px]{' +
-				getImage('img\\month\\' + month + '.png') +
-				'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
-				getImage(wrappedData.artists[i].artistImg) +
-				'}}}}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
-			report += '\\end{figure}\n';
-			report += '{\\Large Month with more listens:\\\\\n';
-			report += '\\textbf{' + monthName + '}}\n';
+			report += '{\\Large \\textbf{\\textit{' +
+				topDay +
+				'}} was a special day for you, listening during \\textbf{\\textit{' +
+				this.stats.time.most.minutes +
+				'}} minutes to your favourite music.}\\\\\n';
+			report += '\\vspace{10mm}\n';
+			report += '{\\large Your most listened track was \\textbf{\\textit{' +
+				this.stats.time.most.track.title.replace(latex, '\\$&') +
+				'}} by \\textbf{\\textit{' +
+				this.stats.time.most.track.artist.replace(latex, '\\$&') + '}}.}\\\\\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
-		});
+		}
+		// Artist by month
+		if (this.stats.artists.byMonth.length) {
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Artists statistics}\n';
+			wrappedData.artists.forEach((artist, i) => {
+				const month = this.stats.artists.byMonth[i].month;
+				const monthName = this.stats.artists.byMonth[i].monthName;
+				report += '\\pagebreak\n';
+				if (i === 0) { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by month}\n'; }
+				report += '\\pagecolor{teal}\n';
+				report += '\\clearpage \\vspace*{\\fill}\n';
+				report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+				report += '\\begin{center}\n';
+				report += '{\\Huge \\textbf{N\u00BA' + (i + 1) + '}}\\\\\n';
+				report += '\\vspace{2mm}\n';
+				report += '{\\Huge \\textbf{' + cut(artist.artist, 40) + '}}\n';
+				report += '\\begin{figure}[H]\n';
+				report += '\t\\centering\n';
+				report += '\t\\setbox1=\\hbox{\\includegraphics[width=400px]{' +
+					getImage('img\\month\\' + month + '.png') + '}}\n	';
+				report += '\t\\includegraphics[width=400px]{' +
+					getImage('img\\month\\' + month + '.png') +
+					'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
+					getImage(wrappedData.artists[i].artistImg) +
+					'}}}}\n';
+				report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
+				report += '\\end{figure}\n';
+				report += '{\\Large Month with more listens:\\\\\n';
+				report += '\\textbf{' + monthName + '}}\n';
+				report += '\\end{center}\n';
+				report += '\\vfill %\n\n';
+			});
+		}
 		// Artists
 		report += '\\pagebreak\n';
 		report += '\\pagecolor{teal!70}\n';
@@ -2314,7 +2352,7 @@ const wrapped = {
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\Huge You didn\'t waste your time in ' + year + '...}\\\\\n';
+		report += '{\\Huge You didn\'t waste your time in ' + (year || period) + '...}\\\\\n';
 		report += '\\vspace{15mm}\n';
 		report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.artists.total + '}} artists.}\n';
 		report += '\\end{center}\n';
@@ -2333,7 +2371,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{5mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top.tracks + '}} different tracks played this year.}\n\n';
+			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top.tracks + '}} different tracks played ' + (year ? 'this year' : 'these years') + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top artist's track
@@ -2347,11 +2385,11 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times this year.}';
+			report += '{\\Large Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
-				report += '\\textbf{\\textit{\\Large It\'s also your overall most listened track this year!}}\n';
+				report += '\\textbf{\\textit{\\Large It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
 			} else {
 				report += '\n';
 			}
@@ -2395,12 +2433,14 @@ const wrapped = {
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=500px]{img/soundcity/travel}};\n';
-			report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont{\\Large ' +
-				topDay + ' ' + year + '\\hspace{' + (78 + Math.max(topDay.length - 10, 0) * 2) + 'mm}}}};\n';
+			report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont{\\Large ' + (year
+				? topDay + ' ' + year + '\\hspace{' + (78 + Math.max(topDay.length - 10, 0) * 2)
+				: period + '\\hspace{78'
+			) + 'mm}}}};\n';
 			report += '\\vspace{139mm}\n';
 			report += '\\begin{center}\n';
 			report += '{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont\n';
-			report += '\t{\\Large This year, your listening took you places...\\\\\n';
+			report += '\t{\\Large ' + (year ? 'This year' : 'These years') + ', your listening took you places...\\\\\n';
 			report += '\tAnd one place listened just like you.}\n';
 			report += '}\n';
 			report += '\\end{center}\n';
@@ -2432,7 +2472,7 @@ const wrapped = {
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 		}
-		// Moods
+		// Moods, BPM and Keys
 		const bMoods = ['calm', 'energetic', 'happy', 'sad'].some((key) => this.stats.moods[key].listens > 0);
 		const bBpms = wrappedData.bpms.length && this.stats.bpms.histogram.length > 1;
 		const bKeys = wrappedData.keys.length && this.stats.keys.histogram.length > 1;
@@ -2509,7 +2549,7 @@ const wrapped = {
 								? 'Goldenrod!65'
 								: 'VioletRed!80'
 					) +
-					'}\\textbf{\\textit{' + this.stats.bpms.mean.val + '} beats/min}}, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks this year.}\n';
+					'}\\textbf{\\textit{' + this.stats.bpms.mean.val + '} beats/min}}, with up to \\textbf{\\textit{' + this.stats.bpms.mean.listens + '}} listened tracks ' + (year ? 'this year' : 'these years') + '.}\n';
 				report += '\t\\vspace{10mm}\\\\\n';
 				report += '\t{\\LARGE ' + (this.stats.bpms.high.listens > this.stats.bpms.low.listens
 					? '{\\color{Goldenrod!65}\\textbf{Light and Ubpeat}} tracks are your thing, with {\\color{Goldenrod!65}\\textbf{\\textit{' + this.stats.bpms.high.listens + '} High BPM}} listens on your record.'
@@ -2592,15 +2632,18 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {string} report - LaTeX formatted text from {@link wrapped.formatLatexReport}
-	 * @param {number} year - Used for formatting purposes
+	 * @param {number|string} timePeriod - Used for formatting purposes
 	 * @param {string|null} latexCmd - Command used to convert LaTeX files to PDF format
 	 * @param {?string} root - Optional parameter that specifies the root directory for the report
 	 * @returns {boolean}
 	 */
-	compileLatexReport: function compileLatexReport(report, year, latexCmd, root = this.basePath) {
+	compileLatexReport: function compileLatexReport(report, timePeriod, latexCmd, root = this.basePath) {
 		console.log('Wrapped: compiling LaTeX report...');
+		const period = !timePeriod
+			? this.stats.time.first.date.getFullYear().toString() + '_' + this.stats.time.last.date.getFullYear().toString()
+			: null;
 		// Save report
-		const fileName = 'Wrapped_' + year;
+		const fileName = 'Wrapped_' + (timePeriod || period);
 		const input = root + fileName + '.tex';
 		const output = root + fileName + '.pdf';
 		console.log('Wrapped: saving .tex file to\n\t' + input);
@@ -2614,7 +2657,7 @@ const wrapped = {
 			.replace(/%1/gi, _q(input))
 			.replace(/%2/gi, _q(output))
 			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
-			.replace(/%4/gi, year);
+			.replace(/%4/gi, (timePeriod || period));
 		console.log('Wrapped: processing latex\n\t' + latexCmd);
 		if (latexCmd.indexOf('lualatex') !== -1) {
 			console.log('Wrapped: double compilation required');
