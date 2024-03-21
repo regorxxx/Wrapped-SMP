@@ -1,5 +1,6 @@
 ﻿Creates a report of user listening habits during the selected year
-as a PDF and outputs some playlists recommendations.
+or the entire listening history as a PDF and outputs some playlists 
+recommendations using these stats.
 	- Computes statistics from the library by:
 		* Listening behavior (character)
 		* Genres/styles
@@ -49,13 +50,17 @@ as a PDF and outputs some playlists recommendations.
 		  (0ffline mode may be set to only use queries)
 		* Suggested Artists (you make like) (ListenBrainz)
 		  (0ffline mode may be set to only use queries)
+	
+	- Year and Entire listening history reports may differ in
+	  since the latter does not use time-related stats (from
+	  Enhanced Playback Statistics plugin).
 
 Requirements:
 -------------
-	- Playback Statistics:
+	- Playback Statistics: For any report.
 	https://www.foobar2000.org/components/view/foo_playcount
 
-	- Enhanced Playback Statistics:
+	- Enhanced Playback Statistics: For year reports.
 	https://www.foobar2000.org/components/view/foo_enhanced_playcount
 
 	- LaTeX: Recommended LuaLaTeX via MiKTeX. Any version works.
@@ -81,7 +86,7 @@ Optional:
 	Find artists without locale tags...').
 	https://github.com/regorxxx/World-Map-SMP
 
-	- Biography (Wil-B):
+	- Biography (Wil-B): To be used along World-Map-SMP.
 	https://github.com/Wil-B/Biography
 
 	- ListenBrainz token: It's not a requisite to get
@@ -89,7 +94,7 @@ Optional:
 	but it will be less probably to reach rate limits with it.
 	https://listenbrainz.org/settings/import/
 
-	- TeXstudio: To compile manually (if desired), can also be
+	- TeXstudio: To compile manually (if desired); can also be
 	configured to use LuaLaTeX engine, giving identical results
 	to the automated CMD build.
 	https://github.com/texstudio-org/texstudio
@@ -111,12 +116,11 @@ LaTeX compilation:
 The default installation uses LuaLaTeX via CMD:
 lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1
 
-This command may be changed at the settings menu, in case other
-other engine or format is preferred (any layout problems is your
-responsibility though).
+This command may be changed at the settings menu, in case other engine 
+or format is preferred (any layout problems is your responsibility though).
 
-The CMD expression allows these numbered arguments which
-are replaced at execution:
+The CMD expression allows these numbered arguments which are replaced at 
+execution:
 	- %1: input .tex file path
 	- %2: output .pdf file path
 	- %3: output directory path
