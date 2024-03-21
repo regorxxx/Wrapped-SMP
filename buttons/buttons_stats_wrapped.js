@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/24
+//21/03/24
 
 /*
 	Wrapped
@@ -66,7 +66,7 @@ addButton({
 	'Wrapped': new ThemedButton({ x: 0, y: 0, w: _gr.CalcTextWidth('Wrapped', _gdiFont(globFonts.button.name, globFonts.button.size * buttonsBar.config.scale)) + 25 * _scale(1, false) / _scale(buttonsBar.config.scale), h: 22 }, 'Wrapped', function (mask) {
 		if (mask === MK_SHIFT) {
 			const menu = settingsMenu(
-				this, true, ['buttons_others_wrapped.js'],
+				this, true, ['buttons_stats_wrapped.js'],
 				{
 					bDynamicMenus:
 						{ popup: 'Remember to set different panel names to every buttons toolbar, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)' }
