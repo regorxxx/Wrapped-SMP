@@ -2,10 +2,17 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.2.0](#120---2024-03-21)
 - [1.1.0](#110---2024-03-14)
 - [1.0.0](#100---2024-02-28)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.2.0] - 2024-03-21
 ### Added
 - Report: new report based on entire listening history. Works for tracks being played before [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount) was installed too, therefore is not a requisite for this single report type (still a requisite for the rest). Any time specific stat is skipped on this report though.
 ### Changed
@@ -35,6 +42,7 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.1.0....v1.2.0
 [1.1.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.0.0....v1.1.0
 [1.0.0]: https://github.com/regorxxx/World-Map-SMP/compare/7d0ed7e....v1.0.0
