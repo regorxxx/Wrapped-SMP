@@ -1,10 +1,10 @@
 'use strict';
-//20/03/24
+//21/03/24
 
 /* exported wrappedMenu */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_GRAYED:readable, VK_SHIFT:readable, VK_CONTROL:readable */
+/* global MF_GRAYED:readable, VK_SHIFT:readable, VK_CONTROL:readable, isEnhPlayCount:readable, isPlayCount:readable, MF_STRING:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable  */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -68,22 +68,22 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	const years = range(currentYear - 4, currentYear, 1).reverse();
 	years.forEach((year) => {
 		menu.newEntry({
-			entryText: 'From ' + year, func: () => {
+			entryText: 'From ' + year + (isEnhPlayCount ? '' : '\t[missing plugin]'), func: () => {
 				runWrapped(year, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
 			}
 		});
 	});
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
-		entryText: 'From year...', func: () => {
+		entryText: 'From year...' + (isEnhPlayCount ? '' : '\t[missing plugin]'), func: () => {
 			const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
 			if (input === null) { return; }
 			runWrapped(input, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
-		}
+		}, flags: isEnhPlayCount ? MF_STRING : MF_GRAYED
 	});
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
-		entryText: 'Entire listening history', func: () => {
+		entryText: 'Entire listening history' + (isPlayCount ? '' : '\t[missing plugin]'), func: () => {
 			runWrapped(null, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
 		}
 	});
