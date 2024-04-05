@@ -9,6 +9,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: json button files are now saved with Windows EOL for compatibility improvements with Windows text editors.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
