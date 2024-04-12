@@ -13,6 +13,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Tags: removed workaround for [foo_skipcount's](https://hydrogenaud.io/index.php/topic,124742) tag retrieval bug added at [1.1.0](#110---2024-03-14), since it is not longer needed with newer versions. Note versions previous to 2.0.4c-beta will crash, so update the component as soon as possible.
 
 ## [1.2.0] - 2024-03-21
 ### Added
