@@ -8,6 +8,7 @@
 
 ## [Unreleased][]
 ### Added
+- Readmes: added readme for global settings found at 'foobar2000\js_data\presets\global' .json files.
 ### Changed
 - Helpers: json button files are now saved with Windows EOL for compatibility improvements with Windows text editors.
 - Helpers: updated helpers.
