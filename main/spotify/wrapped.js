@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/24
+//07/05/24
 
 /* exported wrapped */
 
@@ -36,7 +36,7 @@ include('..\\sort\\scatter_by_tags.js');
 include('..\\playlist_manager\\playlist_manager_youtube.js');
 /* global youTube:readable */
 include('..\\filter_and_query\\remove_duplicates.js');
-/* global removeDuplicatesV2:readable */
+/* global removeDuplicates:readable */
 include('..\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable */
 
@@ -1300,7 +1300,7 @@ const wrapped = {
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
-					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
+					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
 					return handleList.Convert().slice(0, size);
 				}
@@ -1357,8 +1357,8 @@ const wrapped = {
 						catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; }
 						// Filter
 						if (itemHandleList.Count) {
-							itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
-							itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
+							itemHandleList = removeDuplicates({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
+							itemHandleList = removeDuplicates({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
 							return itemHandleList[0];
 						}
 						notFound.push({ creator: tags.ARTIST[i], title: tags.TITLE[i], tags: { MUSICBRAINZ_TRACKID: mbids[i], MUSICBRAINZ_ALBUMARTISTID: mbidsAlt[i][0], MUSICBRAINZ_ARTISTID: mbidsAlt[i] } });
@@ -1428,7 +1428,7 @@ const wrapped = {
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
-					handleList = removeDuplicatesV2({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
+					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
 					return handleList.Convert().slice(0, size);
 				}
@@ -1542,8 +1542,8 @@ const wrapped = {
 							const title = tags[i].TITLE[j];
 							// Filter
 							if (itemHandleList.Count) {
-								itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
-								itemHandleList = removeDuplicatesV2({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
+								itemHandleList = removeDuplicates({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
+								itemHandleList = removeDuplicates({ handleList: itemHandleList, checkKeys: [globTags.title, 'ARTIST'], bAdvTitle: true });
 								if (!title) { tags[i].TITLE[j] = tfo.EvalWithMetadb(itemHandleList[0]) || '  \u2715  '; }
 								return itemHandleList[0];
 							}
@@ -2029,7 +2029,7 @@ const wrapped = {
 		console.log('Wrapped: creating LaTeX report...');
 		const latex = /[&#%$_^{}]/gi;
 		const illegalChars = /[\\&#%$_^{}!]/gi;
-		const sanitizeCut = new RegExp('\\s?\\\\\u2026$', 'gi'); // \...
+		const sanitizeCut = new RegExp('\\s?\\\\\u2026$', 'gi'); // NOSONAR [\...]
 		for (const type in wrappedData) {
 			wrappedData[type].forEach((item) => {
 				['artist', 'title', 'genre', 'name', 'city', 'album', 'mood'].forEach((key) => {

@@ -1,7 +1,7 @@
 ﻿'use strict';
-//21/03/24
+//09/05/24
 
-/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist */
+/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -682,7 +682,7 @@ function getRelPath(itemPath, relPathSplit) {
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDupl = []/*['title','artist','date']*/, bAdvTitle = true) {
+function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDupl = []/*['title','artist','date']*/, bAdvTitle = true, bMultiple = true) {
 	let bDone = false;
 	if (!playlistPath || !playlistPath.length) {
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
@@ -701,7 +701,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
-		const { handlePlaylist, pathsNotFound, locationsByOrder } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle });
+		const { handlePlaylist, pathsNotFound, locationsByOrder } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle, bMultiple });
 		if (handlePlaylist) {
 			if (pathsNotFound && pathsNotFound.length) {
 				if (extension === '.xspf') {
@@ -725,55 +725,46 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bLog = true } = {}) {
+function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true } = {}) {
 	const test = bLog ? new FbProfiler('getHandlesFromPlaylist') : null;
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	let handlePlaylist = null, pathsNotFound = null, locationsByOrder = [];
 	if (extension === '.xsp') {
-		const bCache = xspCache.has(playlistPath);
-		let playlistText;
-		if (!bCache) {
-			playlistText = _open(playlistPath);
-			if (typeof playlistText !== 'undefined' && playlistText.length) {
-				// Safe checks to ensure proper encoding detection
-				const codePage = checkCodePage(playlistText, extension);
-				if (codePage !== -1) { playlistText = _open(playlistPath, codePage); }
-			} else { return; }
-		}
-		const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
-		if (!xmlDomCache.has(playlistPath)) { xmlDomCache.set(playlistPath, xmldom); }
-		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
-		if (!bCache) { xspCache.set(playlistPath, jsp); }
-		const query = XSP.getQuery(jsp, true);
-		const sort = XSP.getSort(jsp);
-		if (XSP.hasQueryPlaylists(jsp)) { // Uses playlists as sources
-			const queryPlaylists = XSP.getQueryPlaylists(jsp);
-			// From playlist manager or loaded playlists
-			const toIncludeHandle = typeof list !== 'undefined'
-				? list.getHandleFromPlaylists(queryPlaylists.is, void(0), bLog) // eslint-disable-line no-undef
-				: getHandlesFromUIPlaylists(queryPlaylists.is);
-			const toExcludeHandle = typeof list !== 'undefined'
-				? list.getHandleFromPlaylists(queryPlaylists.isnot, void(0), bLog) // eslint-disable-line no-undef
-				: getHandlesFromUIPlaylists(queryPlaylists.isnot);
-			// Difference
-			toIncludeHandle.Sort();
-			toExcludeHandle.Sort();
-			toIncludeHandle.MakeDifference(toExcludeHandle);
-			// Filter if needed
-			handlePlaylist = toIncludeHandle;
-			if (query.length) { handlePlaylist = checkQuery(query, false) ? fb.GetQueryItems(handlePlaylist, query) : null; }
-		} else if (checkQuery(query, false)) { handlePlaylist = fb.GetQueryItems(fb.GetLibraryItems(), query); }
-		else { console.log('Error on XSP Playlist: ' + query); }
-		if (handlePlaylist) {
-			handlePlaylist.Sort();
-			const sortObj = sort.length ? getSortObj(sort) : null;
-			if (remDupl && remDupl.length && typeof removeDuplicatesV2 !== 'undefined') {
-				handlePlaylist = removeDuplicatesV2({ handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle }); // eslint-disable-line no-undef
+		const jsp = loadXspPlaylist(playlistPath);
+		if (jsp) {
+			const query = XSP.getQuery(jsp, true);
+			const sort = XSP.getSort(jsp);
+			if (XSP.hasQueryPlaylists(jsp)) { // Uses playlists as sources
+				const queryPlaylists = XSP.getQueryPlaylists(jsp);
+				// From playlist manager or loaded playlists
+				const toIncludeHandle = typeof list !== 'undefined'
+					? list.getHandleFromPlaylists(queryPlaylists.is, void(0), bLog) // eslint-disable-line no-undef
+					: getHandlesFromUIPlaylists(queryPlaylists.is);
+				const toExcludeHandle = typeof list !== 'undefined'
+					? list.getHandleFromPlaylists(queryPlaylists.isnot, void(0), bLog) // eslint-disable-line no-undef
+					: getHandlesFromUIPlaylists(queryPlaylists.isnot);
+				// Difference
+				toIncludeHandle.Sort();
+				toExcludeHandle.Sort();
+				toIncludeHandle.MakeDifference(toExcludeHandle);
+				// Filter if needed
+				handlePlaylist = toIncludeHandle;
+				if (query.length) { handlePlaylist = checkQuery(query, false) ? fb.GetQueryItems(handlePlaylist, query) : null; }
+			} else if (checkQuery(query, false)) { handlePlaylist = fb.GetQueryItems(fb.GetLibraryItems(), query); }
+			else { console.log('Error on XSP Playlist: ' + query); }
+			if (handlePlaylist) {
+				handlePlaylist.Sort();
+				const sortObj = sort.length ? getSortObj(sort) : null;
+				if (remDupl && remDupl.length && typeof removeDuplicates !== 'undefined') {
+					handlePlaylist = removeDuplicates({ handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); // eslint-disable-line no-undef
+				}
+				if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
+				const limit = XSP.getLimit(jsp);
+				if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count); }
+				if (bLog) { console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort); }
 			}
-			if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
-			const limit = XSP.getLimit(jsp);
-			if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count); }
-			if (bLog) { console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort); }
+		} else {
+			console.log(playlistPath.split('\\').pop() + ': playlist can not be loaded or parsed'); // DEBUG
 		}
 	} else {
 		const filePathsNoFormat = getFilePathsFromPlaylist(playlistPath);
@@ -993,4 +984,22 @@ function loadPlaylists(playlistArray) {
 		i++;
 	}
 	return i; // Number of playlists loaded
+}
+
+function loadXspPlaylist(playlistPath, bSaveCache = true) {
+	const bCache = xspCache.has(playlistPath);
+	let playlistText = '';
+	if (!bCache) {
+		playlistText = _open(playlistPath);
+		if (playlistText && playlistText.length) {
+			// Safe checks to ensure proper encoding detection
+			const codePage = checkCodePage(playlistText, '.xsp');
+			if (codePage !== -1) { playlistText = _open(playlistPath, codePage); if (!playlistText.length) { return null; } }
+		} else { return null; }
+	}
+	const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
+	if (bSaveCache && (!bCache || !xmlDomCache.has(playlistPath))) { xmlDomCache.set(playlistPath, xmldom); }
+	const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
+	if (bSaveCache && !bCache) { xspCache.set(playlistPath, jsp); }
+	return jsp;
 }
