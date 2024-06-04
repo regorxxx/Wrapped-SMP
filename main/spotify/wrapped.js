@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//03/06/24
 
 /* exported wrapped */
 
@@ -2647,7 +2647,7 @@ const wrapped = {
 		const input = root + fileName + '.tex';
 		const output = root + fileName + '.pdf';
 		console.log('Wrapped: saving .tex file to\n\t' + input);
-		_recycleFile(input);
+		_recycleFile(input, true);
 		_save(input, report, false);
 		// Parse cmd
 		if (!latexCmd || !latexCmd.length) {
@@ -2665,8 +2665,8 @@ const wrapped = {
 		}
 		_runCmd(latexCmd, true);
 		if (_isFile(output)) {
-			_recycleFile(root + fileName + '.aux');
-			_recycleFile(root + fileName + '.log');
+			_recycleFile(root + fileName + '.aux', true);
+			_recycleFile(root + fileName + '.log', true);
 			console.log('Wrapped: opening .pdf file at\n\t' + input);
 			_run(output);
 			return true;
