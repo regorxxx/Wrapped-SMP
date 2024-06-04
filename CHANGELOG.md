@@ -15,6 +15,7 @@
 - Helpers: json button files are now saved with Windows EOL for compatibility improvements with Windows text editors.
 - Helpers: improved performance of duplicates removal in multiple places.
 - Helpers: updated helpers.
+- Improved compatibility when running foobar2000 on drives without recycle bin.
 ### Removed
 ### Fixed
 - Tags: removed workaround for [foo_skipcount's](https://hydrogenaud.io/index.php/topic,124742) tag retrieval bug added at [1.1.0](#110---2024-03-14), since it is not longer needed with newer versions. Note versions previous to 2.0.4c-beta will crash, so update the component as soon as possible.
