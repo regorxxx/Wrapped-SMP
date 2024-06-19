@@ -31,6 +31,7 @@
 ### Fixed
 - Tags: workaround for a tag retrieval bug introduced on later versions by [foo_skipcount](https://hydrogenaud.io/index.php/topic,124742).
 - UI: readme not working at first init.
+- Configuration: .json files at 'foobar2000\js_data\presets\global' not being saved with the calculated properties based on user values from other files.
 - Fixed possible crash handling web request while closing foobar2000. See [this](https://hydrogenaud.io/index.php/topic,121047.msg1044579.html#msg1044579), although current methods don't use 'WinHttp.WinHttpRequest.5.1' but 'Microsoft.XMLHTTP' which hasn't given any problems yet.
 
 ## [1.1.0] - 2024-03-14
