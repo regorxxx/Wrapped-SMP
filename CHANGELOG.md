@@ -8,6 +8,7 @@
 
 ## [Unreleased][]
 ### Added
+- Tags: added a correction for high BPM tracks count, set to 30% by default, to account for tracks which are reported with double the real BPM. i.e. X% of tracks over a threshold (currently 130 BPM) will be counted as if they had half BPM value. This correction may require tweaking for different music libraries (or if the user manually added BPM tags to every track), so adjust accordingly. For ex. if you create a playlist with 100 random high BPM tracks and 1/4 of them have double BPM, set the correction to 25% (we expect the proportion is uniform across all library).
 - Readmes: added readme for global settings found at 'foobar2000\js_data\presets\global' .json files.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for console logging to file. Disabled by default. Now this is a change from the previous behavior, where console was always logged to 'console.log' file at the [FOOBAR PROFILE FOLDER]. It can now be switched, but since it's probably not useful for most users is disabled by default.
 ### Changed
@@ -18,6 +19,7 @@
 - Improved compatibility when running foobar2000 on drives without recycle bin.
 ### Removed
 ### Fixed
+- ListenBrainz: updated with latest ListenBrainz API changes (for recommendations).
 - Tags: removed workaround for [foo_skipcount's](https://hydrogenaud.io/index.php/topic,124742) tag retrieval bug added at [1.1.0](#110---2024-03-14), since it is not longer needed with newer versions. Note versions previous to 2.0.4c-beta will crash, so update the component as soon as possible.
 
 ## [1.2.0] - 2024-03-21

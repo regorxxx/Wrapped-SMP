@@ -1,5 +1,5 @@
 'use strict';
-//21/03/24
+//22/07/24
 
 /* exported wrappedMenu */
 
@@ -22,7 +22,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	if (!wrapped.settings.tokens.listenBrainz && this.buttonsProperties.lBrainzToken[1]) {
 		wrapped.settings.tokens.listenBrainz = listenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
 	}
-	['bFilterGenresGraph', 'bOffline']
+	['bFilterGenresGraph', 'bOffline', 'highBpmHalveFactor']
 		.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
 	Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
 		if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }

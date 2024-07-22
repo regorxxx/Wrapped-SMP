@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/03/24
+//22/07/24
 
 /*
 	Wrapped
@@ -16,7 +16,7 @@ include('..\\helpers\\helpers_xxx_input.js');
 include('..\\helpers\\buttons_xxx_menu.js');
 /* global settingsMenu:readable, MF_GRAYED:readable */
 include('..\\helpers\\helpers_xxx_prototypes.js');
-/* global isBoolean:readable, isStringWeak:readable, _p:readable, isJSON:readable, capitalizeAll:readable, _b:readable */
+/* global isBoolean:readable, isStringWeak:readable, _p:readable, isJSON:readable, capitalizeAll:readable, _b:readable, isInt:readable */
 include('..\\helpers\\helpers_xxx_UI.js');
 /* global _gdiFont:readable, _gr:readable, _scale:readable, chars:readable */
 include('..\\helpers\\helpers_xxx_properties.js');
@@ -41,6 +41,7 @@ var newButtonsProperties = { // NOSONAR[global]
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
 	bFilterGenresGraph: ['Filter genres with Graph exclusions', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],
+	highBpmHalveFactor: ['% of high BPM tracks to halve', 30, { func: isInt, range: [[0, 100]] }, 30],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
 	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
 	latexCmd: ['LaTeX cmd for compiling into PDF', 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1', { func: isStringWeak }, 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1'],

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/06/24
+//22/07/24
 
 /* exported wrapped */
 
@@ -54,8 +54,9 @@ const wrapped = {
 		bOffline: false,
 		bFilterGenresGraph: true,
 		bSuggestions: true,
-		bDebug: true,
+		bDebug: false,
 		bDebugQuery: false,
+		highBpmHalveFactor: 30, // [0, 100]
 		tokens: { listenBrainz: '' },
 
 	},
@@ -836,24 +837,31 @@ const wrapped = {
 	*/
 	computeBpmsStats: function (bpmData) {
 		this.stats.bpms.min.val = Infinity;
-		let sum = 0, sumQuad = 0, listens = 0;
+		let sum = 0, sumQuad = 0, listens = 0, bpm = 0;
 		const histogram = [];
 		bpmData.forEach((p) => {
+			bpm = p.bpm;
+			// A portion of high BPM tracks are in fact tracks with half BPM
+			if (this.settings.highBpmHalveFactor > 0 && bpm > this.stats.bpms.high.val) {
+				if (Math.random() <= Math.min(this.settings.highBpmHalveFactor, 100) / 100) {
+					bpm = Math.round(bpm / 2);
+				}
+			}
 			['max', 'min'].forEach((key) => {
-				if (this.stats.bpms[key].val === p.bpm) {
+				if (this.stats.bpms[key].val === bpm) {
 					this.stats.bpms[key].listens += p.listens;
 				} else {
-					this.stats.bpms[key].val = Math[key](this.stats.bpms[key].val, p.bpm);
-					if (this.stats.bpms[key].val === p.bpm) { this.stats.bpms[key].listens = p.listens; }
+					this.stats.bpms[key].val = Math[key](this.stats.bpms[key].val, bpm);
+					if (this.stats.bpms[key].val === bpm) { this.stats.bpms[key].listens = p.listens; }
 				}
 			});
-			sum += p.bpm * p.listens;
-			sumQuad += p.bpm ** 2 * p.listens;
+			sum += bpm * p.listens;
+			sumQuad += bpm ** 2 * p.listens;
 			listens += p.listens;
-			this.stats.bpms.high.listens += (p.bpm > this.stats.bpms.high.val ? p.listens : 0);
-			this.stats.bpms.low.listens += (p.bpm < this.stats.bpms.low.val ? p.listens : 0);
+			this.stats.bpms.high.listens += (bpm > this.stats.bpms.high.val ? p.listens : 0);
+			this.stats.bpms.low.listens += (bpm < this.stats.bpms.low.val ? p.listens : 0);
 			let i = p.listens;
-			while (i--) { histogram.push(p.bpm); }
+			while (i--) { histogram.push(bpm); }
 		});
 		let binSize = 1;
 		if (listens >= 1) {
