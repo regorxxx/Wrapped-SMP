@@ -2,11 +2,18 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.3.0](#120---2024-07-24)
 - [1.2.0](#120---2024-03-21)
 - [1.1.0](#110---2024-03-14)
 - [1.0.0](#100---2024-02-28)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.3.0] - 2024-07-24
 ### Added
 - Tags: added a correction for high BPM tracks count, set to 30% by default, to account for tracks which are reported with double the real BPM. i.e. X% of tracks over a threshold (currently 130 BPM) will be counted as if they had half BPM value. This correction may require tweaking for different music libraries (or if the user manually added BPM tags to every track), so adjust accordingly. For ex. if you create a playlist with 100 random high BPM tracks and 1/4 of them have double BPM, set the correction to 25% (we expect the proportion is uniform across all library).
 - Readmes: added readme for global settings found at 'foobar2000\js_data\presets\global' .json files.
@@ -54,7 +61,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.2.0....v1.3.0
 [1.2.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.1.0....v1.2.0
 [1.1.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.0.0....v1.1.0
 [1.0.0]: https://github.com/regorxxx/World-Map-SMP/compare/7d0ed7e....v1.0.0
