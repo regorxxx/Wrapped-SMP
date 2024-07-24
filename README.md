@@ -5,7 +5,7 @@
 ![GitHub](https://img.shields.io/github/license/regorxxx/Wrapped-SMP)  
 User listening statistics for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel). Analyzes user listening habits and outputs a report similar to Spotify's wrapped and personalized playlists. **To get statistics for previous years, Enhanced Playback Statistics and Playback Statistics must have been installed on that period.**
 
-            ![wp_1](https://github.com/user-attachments/assets/79a5b152-3259-4778-b76a-091ba7885a0c)
+    ![wp_1](https://github.com/user-attachments/assets/79a5b152-3259-4778-b76a-091ba7885a0c)
 
 ## Features
 
@@ -61,7 +61,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 	* Suggested Artists (you make like) (ListenBrainz)
 	  (0ffline mode may be set to only use queries)
    
-            ![wp_2](https://github.com/user-attachments/assets/ad335e65-a4a9-445e-a485-43df39ee8f65)
+    ![wp_2](https://github.com/user-attachments/assets/ad335e65-a4a9-445e-a485-43df39ee8f65)
 
 ## Compatible with (toolbar)
 1. [Search-by-Distance-SMP](https://github.com/regorxxx/Search-by-Distance-SMP): creates intelligent "spotify-like" playlist using high-level data from tracks and computing their similarity using genres/styles.
