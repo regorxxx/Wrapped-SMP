@@ -12,6 +12,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Auto-update: update checking not working.
 
 ## [1.3.0] - 2024-07-24
 ### Added
