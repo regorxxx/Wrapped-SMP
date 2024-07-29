@@ -10,6 +10,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - Auto-update: update checking not working.
