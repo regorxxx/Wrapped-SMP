@@ -11,8 +11,10 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: updated helpers
 ### Removed
 ### Fixed
+- API: updated with latest ListenBrainz API changes.
 
 ## [1.3.1] - 2024-07-30
 ### Added
