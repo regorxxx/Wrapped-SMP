@@ -11,7 +11,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
-- Helpers: updated helpers
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - API: updated with latest ListenBrainz API changes.
