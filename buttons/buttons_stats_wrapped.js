@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/07/24
+//13/08/24
 
 /*
 	Wrapped
@@ -31,7 +31,7 @@ include('..\\main\\spotify\\wrapped.js');
 /* global wrapped:readable */
 
 var prefix = 'wp'; // NOSONAR[global]
-var version = '1.3.1'; // NOSONAR[global]
+var version = '1.3.2'; // NOSONAR[global]
 
 try { window.DefineScript('Wrapped button', { author: 'regorxxx', version, features: { drag_n_drop: false } }); } catch (e) {  /* May be loaded along other buttons */ }
 prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'

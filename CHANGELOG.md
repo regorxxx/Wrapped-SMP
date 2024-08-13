@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.3.2](#132---2024-08-13)
 - [1.3.1](#131---2024-07-30)
 - [1.3.0](#130---2024-07-24)
 - [1.2.0](#120---2024-03-21)
@@ -9,6 +10,12 @@
 - [1.0.0](#100---2024-02-28)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.3.2] - 2024-08-13
 ### Added
 ### Changed
 - Helpers: updated helpers.
@@ -72,7 +79,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/regorxxx/World-Map-SMP/compare/v1.3.1....v1.3.2
 [1.3.1]: https://github.com/regorxxx/World-Map-SMP/compare/v1.3.0....v1.3.1
 [1.3.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.2.0....v1.3.0
 [1.2.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.1.0....v1.2.0
