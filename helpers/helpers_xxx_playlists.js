@@ -1,7 +1,7 @@
 ﻿'use strict';
 //30/10/24
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
@@ -193,4 +193,22 @@ function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/
 		return true;
 	}
 	return false;
+}
+
+function getPlaylistSelectedIndexes(playlistIndex) {
+	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return null; }
+	return range(0, plman.PlaylistItemCount(playlistIndex) - 1, 1)
+		.map((idx) => plman.IsPlaylistItemSelected(playlistIndex, idx) ? idx : null).filter((n) => n !== null);
+}
+
+function getPlaylistSelectedIndexFirst(playlistIndex) {
+	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return -1; }
+	return range(0, plman.PlaylistItemCount(playlistIndex) - 1, 1)
+		.findIndex((idx) => plman.IsPlaylistItemSelected(playlistIndex, idx));
+}
+
+function getPlaylistSelectedIndexLast(playlistIndex) {
+	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return -1; }
+	return range(plman.PlaylistItemCount(playlistIndex) - 1, 0, -1)
+		.findIndex((idx) => plman.IsPlaylistItemSelected(playlistIndex, idx));
 }
