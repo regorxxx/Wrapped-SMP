@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/10/24
+//03/11/24
 
 /*
 	Wrapped
@@ -8,7 +8,7 @@
 
 /* global menu_panelProperties:readable */
 include('..\\helpers\\helpers_xxx.js');
-/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable */
+/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable */
 include('..\\helpers\\buttons_xxx.js');
 /* global getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
 include('..\\helpers\\helpers_xxx_input.js');
@@ -37,7 +37,7 @@ try { window.DefineScript('Wrapped button', { author: 'regorxxx', version, featu
 prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
 
 var newButtonsProperties = { // NOSONAR[global]
-	queryFilter: ['Library query filter', '%RATING% MISSING OR %RATING% GREATER 2', { func: isStringWeak }, '%RATING% MISSING OR %RATING% GREATER 2'],
+	queryFilter: ['Library query filter', globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', { func: isStringWeak }, globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2'],
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
 	bFilterGenresGraph: ['Filter genres with Graph exclusions', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],

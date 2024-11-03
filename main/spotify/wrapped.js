@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/24
+//03/11/24
 
 /* exported wrapped */
 
@@ -1200,7 +1200,7 @@ const wrapped = {
 	computeTopArtistsPlaylist: function (artistsData, size = 100) {
 		const artists = artistsData.slice(0, 100).map((artist) => artist.artist).filter(Boolean);
 		const query = queryJoin([
-			'%RATING% MISSING OR %RATING% GREATER 2',
+			globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 			queryCombinations(artists, _t(this.tags.artist), 'OR')
 		], 'AND');
 		if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist: ' + query); }
@@ -1229,8 +1229,8 @@ const wrapped = {
 		const genres = genresData.slice(0, 5).map((genre) => genre.genre).filter(Boolean);
 		if (genres.length) {
 			const query = queryJoin([
-				'%RATING% MISSING OR %RATING% GREATER 2',
-				queryJoin(queryCombinations(genres, ['GENRE', 'STYLE'], 'OR'), 'OR')
+				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
+				queryJoin(queryCombinations(genres, [globTags.genre, globTags.style], 'OR'), 'OR')
 			], 'AND');
 			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist: ' + query); }
 			/** @type {FbMetadbHandleList} */
@@ -1259,7 +1259,7 @@ const wrapped = {
 		const ISO = this.stats.countries.byISO.map((country) => country.iso).filter(Boolean);
 		if (ISO.length) {
 			const filters = ISO.map((iso) => getZoneArtistFilter(iso, 'country')).filter(Boolean)
-				.map((filter) => queryJoin(['%RATING% MISSING OR %RATING% GREATER 2', filter.query], 'AND'));
+				.map((filter) => queryJoin([globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', filter.query], 'AND'));
 			const count = filters.length;
 			if (count) {
 				/** @type {FbMetadbHandleList} */
@@ -1353,7 +1353,7 @@ const wrapped = {
 						const bMeta = tagArr.every((tag) => { return tag.val.length > 0; });
 						const query = queryJoin(
 							[
-								bMeta ? tagArr.map((tag) => { return tag.key + ' IS ' + tag.val; }).join(' AND ') + ' AND NOT GENRE IS live AND NOT STYLE IS live' : '',
+								bMeta ? tagArr.map((tag) => { return tag.key + ' IS ' + tag.val; }).join(' AND ') + ' AND ' + globTags.noLiveNone : '',
 								'MUSICBRAINZ_TRACKID IS ' + mbid
 							].filter(Boolean)
 							, 'OR');
@@ -1520,7 +1520,7 @@ const wrapped = {
 										(bMeta
 											? tagArr.map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
 											: tagArr.slice(0, 1).map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
-										) + ' AND NOT GENRE IS live AND NOT STYLE IS live',
+										) + ' AND ' + globTags.noLiveNone,
 										'MUSICBRAINZ_TRACKID IS ' + mbid
 									].filter(Boolean)
 									, 'OR'
@@ -1531,12 +1531,12 @@ const wrapped = {
 								[
 									queryJoin(
 										[
-											'ARTIST IS ' + suggestedArtists[i] + ' AND NOT GENRE IS live AND NOT STYLE IS live',
+											'ARTIST IS ' + suggestedArtists[i] + ' AND ' + globTags.noLiveNone,
 											'MUSICBRAINZ_ARTISTID IS ' + mbid + ' OR MUSICBRAINZ_ALBUMARTISTID IS ' + mbid
 										].filter(Boolean)
 										, 'OR'
 									),
-									'NOT (%RATING% IS 1 OR %RATING% IS 2)'
+									'NOT (' + globTags.rating + ' IS 1 OR ' + globTags.rating + ' IS 2)'
 								]
 								, 'AND')];
 						}

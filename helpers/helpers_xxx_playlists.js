@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/24
+//30/10/24
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks */
 
@@ -165,7 +165,7 @@ function getLocks(plsName) {
 	const index = plman.FindPlaylist(plsName);
 	const types = index !== -1 ? [...new Set(plman.GetPlaylistLockedActions(index))] : [];
 	const name = index !== -1 ? plman.GetPlaylistLockName(index) : '';
-	const isSMPLock = name === 'foo_spider_monkey_panel' || name === 'foo_uie_jsplitter' || !name;
+	const isSMPLock = name === window.Parent || !name;
 	const isLocked = !!types.length;
 	return { isLocked, isSMPLock, name, types, index };
 }
@@ -174,7 +174,7 @@ function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/
 	if (playlistIndex === -1) { return false; }
 	let newLocks = new Set(plman.GetPlaylistLockedActions(playlistIndex) || []);
 	const lockName = plman.GetPlaylistLockName(playlistIndex);
-	if (lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName) {
+	if (lockName === window.Parent || !lockName) {
 		switch (logic.toLowerCase()) {
 			case 'switch':
 				lockTypes.forEach((lock) => {
