@@ -357,7 +357,7 @@ if (!window.Parent) {
 		enumerable: false,
 		configurable: false,
 		writable: false,
-		value: utils.CheckComponent('foo_uie_jsplitter') && window.GetPanel && window.GetPanelByIndex
+		value: fb.ComponentPath.includes('foo_uie_jsplitter')
 			? 'foo_uie_jsplitter'
 			: 'foo_spider_monkey_panel'
 	});
