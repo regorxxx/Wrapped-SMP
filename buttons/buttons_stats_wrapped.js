@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/11/24
+//15/11/24
 
 /*
 	Wrapped
@@ -89,10 +89,10 @@ addButton({
 				},
 				(menu) => { // Append this menu entries to the config menu
 					const menuName = menu.getMainMenuName();
-					menu.newEntry({ menuName: menu.getMainMenuName(), entryText: 'sep' });
+					menu.newSeparator(menuName);
 					const subMenuName = menu.newMenu('Tag remap...', menuName);
 					menu.newEntry({ menuName: subMenuName, entryText: 'Tags used on report:', flags: MF_GRAYED });
-					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+					menu.newSeparator(subMenuName);
 					const tags = JSON.parse(this.buttonsProperties.tags[1]);
 					Object.keys(tags).forEach((key) => {
 						menu.newEntry({

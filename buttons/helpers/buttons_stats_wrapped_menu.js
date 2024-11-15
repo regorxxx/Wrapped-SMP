@@ -63,7 +63,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	// Menu
 	const menu = new _menu();
 	menu.newEntry({ entryText: 'Shift/Ctrl skips report/playlists:', flags: MF_GRAYED });
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	const currentYear = new Date().getFullYear();
 	const years = range(currentYear - 4, currentYear, 1).reverse();
 	years.forEach((year) => {
@@ -73,7 +73,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 			}
 		});
 	});
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'From year...' + (isEnhPlayCount ? '' : '\t[missing plugin]'), func: () => {
 			const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
@@ -81,7 +81,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 			runWrapped(input, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
 		}, flags: isEnhPlayCount ? MF_STRING : MF_GRAYED
 	});
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Entire listening history' + (isPlayCount ? '' : '\t[missing plugin]'), func: () => {
 			runWrapped(null, this.buttonsProperties.queryFilter[1] || '', this.buttonsProperties.latexCmd[1] || null);
