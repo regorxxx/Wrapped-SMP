@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/11/24
+//25/11/24
 
 /* exported wrapped */
 
@@ -2667,7 +2667,7 @@ const wrapped = {
 			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
 			.replace(/%4/gi, (timePeriod || period));
 		console.log('Wrapped: processing latex\n\t' + latexCmd);
-		if (latexCmd.indexOf('lualatex') !== -1) {
+		if (latexCmd.includes('lualatex')) {
 			console.log('Wrapped: double compilation required');
 			_runCmd(latexCmd, true);
 		}
