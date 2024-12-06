@@ -1,5 +1,5 @@
 'use strict';
-//22/07/24
+//04/12/24
 
 /* exported wrappedMenu */
 
@@ -14,13 +14,13 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\main\\spotify\\wrapped.js');
 /* global wrapped:readable */
 include('..\\..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
-/* global listenBrainz:readable */
+/* global ListenBrainz:readable */
 
 function wrappedMenu({ bSimulate = false } = {}) {
 	if (bSimulate) { return wrappedMenu.bind({ buttonsProperties: this.buttonsProperties, prefix: this.prefix })(false); }
 	// Settings
 	if (!wrapped.settings.tokens.listenBrainz && this.buttonsProperties.lBrainzToken[1]) {
-		wrapped.settings.tokens.listenBrainz = listenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
+		wrapped.settings.tokens.listenBrainz = ListenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
 	}
 	['bFilterGenresGraph', 'bOffline', 'highBpmHalveFactor']
 		.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);

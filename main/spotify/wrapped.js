@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//04/12/24
 
 /* exported wrapped */
 
@@ -38,7 +38,7 @@ include('..\\playlist_manager\\playlist_manager_youtube.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 /* global removeDuplicates:readable */
 include('..\\playlist_manager\\playlist_manager_listenbrainz.js');
-/* global listenBrainz:readable */
+/* global ListenBrainz:readable */
 
 
 const wrapped = {
@@ -1297,7 +1297,7 @@ const wrapped = {
 		const mbids = [];
 		const mbidsAlt = [];
 		const tags = { TITLE: [], ARTIST: [] };
-		const lb = listenBrainz;
+		const lb = ListenBrainz;
 		if (this.settings.bOffline) {
 			this.playlists.suggestions.genres = Promise.resolve((() => {
 				const query = queryJoin([
@@ -1425,7 +1425,7 @@ const wrapped = {
 		*/
 	computeSuggestedArtistsPlaylist: function (artistsData, queryParam, size = 100) {
 		const artists = artistsData.slice(0, 5).map((artist) => artist.artist);
-		const lb = listenBrainz;
+		const lb = ListenBrainz;
 		if (this.settings.bOffline) {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
 				const query = queryJoin([

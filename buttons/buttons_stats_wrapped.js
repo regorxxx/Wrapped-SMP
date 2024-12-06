@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/24
+//04/12/24
 
 /*
 	Wrapped
@@ -26,7 +26,7 @@ include('..\\main\\main_menu\\main_menu_custom.js');
 include('helpers\\buttons_stats_wrapped_menu.js');
 /* global wrappedMenu:readable */
 include('..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
-/* global listenBrainz:readable */
+/* global ListenBrainz:readable */
 include('..\\main\\spotify\\wrapped.js');
 /* global wrapped:readable */
 
@@ -138,7 +138,7 @@ addButton({
 						parent.buttonsProperties.lBrainzToken[1] = info.lBrainzToken;
 						parent.buttonsProperties.lBrainzEncrypt[1] = info.lBrainzEncrypt;
 						overwriteProperties(parent.buttonsProperties);
-						listenBrainz.cache.key = null;
+						ListenBrainz.cache.key = null;
 						parent.lBrainzTokenListener = false;
 					}
 					break;
