@@ -1353,7 +1353,7 @@ const wrapped = {
 						const bMeta = tagArr.every((tag) => { return tag.val.length > 0; });
 						const query = queryJoin(
 							[
-								bMeta ? tagArr.map((tag) => { return tag.key + ' IS ' + tag.val; }).join(' AND ') + ' AND ' + globTags.noLiveNone : '',
+								bMeta ? tagArr.map((tag) => { return tag.key + ' IS ' + tag.val; }).join(' AND ') + ' AND ' + globQuery.noLiveNone : '',
 								'MUSICBRAINZ_TRACKID IS ' + mbid
 							].filter(Boolean)
 							, 'OR');
@@ -1520,7 +1520,7 @@ const wrapped = {
 										(bMeta
 											? tagArr.map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
 											: tagArr.slice(0, 1).map((tag) => { return _q(sanitizeTagIds(_t(tag.key))) + ' IS ' + tag.val; }).join(' AND ')
-										) + ' AND ' + globTags.noLiveNone,
+										) + ' AND ' + globQuery.noLiveNone,
 										'MUSICBRAINZ_TRACKID IS ' + mbid
 									].filter(Boolean)
 									, 'OR'
@@ -1531,7 +1531,7 @@ const wrapped = {
 								[
 									queryJoin(
 										[
-											'ARTIST IS ' + suggestedArtists[i] + ' AND ' + globTags.noLiveNone,
+											'ARTIST IS ' + suggestedArtists[i] + ' AND ' + globQuery.noLiveNone,
 											'MUSICBRAINZ_ARTISTID IS ' + mbid + ' OR MUSICBRAINZ_ALBUMARTISTID IS ' + mbid
 										].filter(Boolean)
 										, 'OR'
