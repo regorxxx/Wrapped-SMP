@@ -93,6 +93,19 @@ Additional Tips:
 	containing an array of listen objects must be present at:
 	'[foobar profile]\js_data\listenbrainz_listens_[user].json'
 
+	- There is a setting to halve reported BPMs by tracks with a high
+	value (> 130) because automatic BPM analysis tools usually fail
+	reporting double the real BPM. Since the report doesn't care about
+	specific track values, only the total BPM count on library, this
+	can be used to rectify the histogram a bit by a specific proportion
+	(which should be similar to the error rate of the analysis tool).
+	By default is set to 30% (i.e. 30% random tracks with high BMP will
+	be halved), which is a conservative estimation for tools like
+	Essentia or foo_bpm. You can find the right propertion by yourself
+	in your	library by selecting X random tracks -and different genres-
+	with high BPM and checking how many of them have doubled values
+	(the proportion should be uniform across the entire library).
+
 Requirements:
 -------------
 	- Playback Statistics: For any report.

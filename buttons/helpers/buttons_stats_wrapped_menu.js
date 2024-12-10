@@ -1,12 +1,14 @@
 'use strict';
-//09/12/24
+//10/12/24
 
 /* exported wrappedMenu */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_GRAYED:readable, isEnhPlayCount:readable, isPlayCount:readable, isPlayCount2003:readable, MF_STRING:readable */
+/* global MF_GRAYED:readable, isEnhPlayCount:readable, isPlayCount:readable, isPlayCount2003:readable, MF_STRING:readable, folders:readable, MK_SHIFT:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable  */
+include('..\\..\\helpers\\helpers_xxx_file.js');
+/* global _open:readable, utf8:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global range:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -20,12 +22,6 @@ include('..\\..\\main\\playlist_manager\\playlist_manager_listenbrainz.js');
 
 function wrappedMenu({ bSimulate = false } = {}) {
 	if (bSimulate) { return wrappedMenu.bind({ buttonsProperties: this.buttonsProperties, prefix: this.prefix })(false); }
-	// Settings
-	['bFilterGenresGraph', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
-		.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
-	Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
-		if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
-	});
 	// ListenBrainz token
 	if (!wrapped.settings.tokens.listenBrainz && this.buttonsProperties.lBrainzToken[1]) {
 		wrapped.settings.tokens.listenBrainz = ListenBrainz.decryptToken({ lBrainzToken: this.buttonsProperties.lBrainzToken[1], bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] });
@@ -90,55 +86,66 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	};
 	// Menu
 	const menu = new _menu();
-	const currentYear = new Date().getFullYear();
-	const years = range(currentYear - 4, currentYear, 1).reverse();
-	[
-		{menu: 'Wrapped & Recommendations', mode: 'all', descr: 'Outputs the report & playlists:'},
-		{menu: 'Wrapped (only)', mode: 'report', descr: 'Outputs only the report:'},
-		{menu: 'Recommendations (only)', mode: 'recommendations', descr: 'Outputs only the playlists:'},
-	].forEach((opt) => {
-		const menuName = menu.findOrNewMenu(opt.menu);
-		menu.newEntry({ menuName, entryText: opt.descr, flags: MF_GRAYED });
-		menu.newSeparator(menuName);
-		years.forEach((year) => {
+	{	// Report
+		const currentYear = new Date().getFullYear();
+		const years = range(currentYear - 4, currentYear, 1).reverse();
+		[
+			{ menu: 'Wrapped & Recommendations', mode: 'all', descr: 'Outputs the report & playlists:' },
+			{ menu: 'Wrapped (only)', mode: 'report', descr: 'Outputs only the report:' },
+			{ menu: 'Recommendations (only)', mode: 'recommendations', descr: 'Outputs only the playlists:' },
+		].forEach((opt) => {
+			const menuName = menu.findOrNewMenu(opt.menu);
+			menu.newEntry({ menuName, entryText: opt.descr, flags: MF_GRAYED });
+			menu.newSeparator(menuName);
+			years.forEach((year) => {
+				menu.newEntry({
+					menuName,
+					entryText: 'From ' + year + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+						runWrapped(
+							year,
+							this.buttonsProperties.queryFilter[1] || '',
+							this.buttonsProperties.latexCmd[1] || null,
+							opt.mode
+						);
+					}
+				});
+			});
+			menu.newSeparator(menuName);
 			menu.newEntry({
 				menuName,
-				entryText: 'From ' + year + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+				entryText: 'From year...' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+					const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
+					if (input === null) { return; }
 					runWrapped(
-						year,
+						input,
 						this.buttonsProperties.queryFilter[1] || '',
 						this.buttonsProperties.latexCmd[1] || null,
 						opt.mode
 					);
-				}
+				}, flags: hasListens ? MF_STRING : MF_GRAYED
+			});
+			menu.newSeparator(menuName);
+			menu.newEntry({
+				menuName,
+				entryText: 'Entire listening history' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+					runWrapped(
+						null,
+						this.buttonsProperties.queryFilter[1] || '',
+						this.buttonsProperties.latexCmd[1] || null,
+						opt.mode
+					);
+				}, flags: hasListens ? MF_STRING : MF_GRAYED
 			});
 		});
-		menu.newSeparator(menuName);
-		menu.newEntry({
-			menuName,
-			entryText: 'From year...' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
-				const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
-				if (input === null) { return; }
-				runWrapped(
-					input,
-					this.buttonsProperties.queryFilter[1] || '',
-					this.buttonsProperties.latexCmd[1] || null,
-					opt.mode
-				);
-			}, flags: hasListens ? MF_STRING : MF_GRAYED
-		});
-		menu.newSeparator(menuName);
-		menu.newEntry({
-			menuName,
-			entryText: 'Entire listening history' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
-				runWrapped(
-					null,
-					this.buttonsProperties.queryFilter[1] || '',
-					this.buttonsProperties.latexCmd[1] || null,
-					opt.mode
-				);
-			}, flags: hasListens ? MF_STRING : MF_GRAYED
-		});
+	}
+	menu.newSeparator();
+	menu.newEntry({ entryText: 'Configuration...', func: () => this.onClick(MK_SHIFT) });
+	menu.newEntry({
+		entryText: 'Readme...', func: () => {
+			const readme = _open(folders.xxx + 'helpers\\readme\\wrapped.txt', utf8);
+			if (readme.length) { fb.ShowPopupMessage(readme, 'Wrapped'); }
+			else { console.log(folders.xxx + 'helpers\\readme\\wrapped.txt not found.'); }
+		}
 	});
 	return menu;
 }

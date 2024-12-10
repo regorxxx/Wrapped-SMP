@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/24
+//10/12/24
 
 /*
 	Wrapped
@@ -8,7 +8,7 @@
 
 /* global menu_panelProperties:readable */
 include('..\\helpers\\helpers_xxx.js');
-/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable */
+/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable, isPlayCount:readable, isEnhPlayCount:readable, isPlayCount2003:readable */
 include('..\\helpers\\buttons_xxx.js');
 /* global getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
 include('..\\helpers\\helpers_xxx_input.js');
@@ -95,16 +95,30 @@ addButton({
 								});
 							} else { deleteMainMenuDynamic('Wrapped'); }
 						},
-					bServicesListens: (value) => {
-						wrapped.settings.bServicesListens = value;
-					},
-					lBrainzToken: (value) => {
-						if (!value || !this.buttonsProperties.lBrainzEncrypt[1]) {
-							wrapped.settings.tokens.listenBrainz = value;
+					'*': (value, key) => {
+						const settingsKeys = ['bFilterGenresGraph', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath'];
+						if (settingsKeys.includes(key)) {
+							wrapped.settings[key] = value;
+						} else if (['tags'].includes(key)) {
+							Object.entries(value).forEach((pair) => {
+								if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
+							});
+						} else if ('lBrainzToken' === key) {
+							wrapped.settings.tokens.listenBrainz = value
+								? ListenBrainz.decryptToken({ lBrainzToken: value, bEncrypted: this.buttonsProperties.lBrainzEncrypt[1] })
+								: '';
+							if (wrapped.settings.tokens.listenBrainz) {
+								ListenBrainz.retrieveUser(wrapped.settings.tokens.listenBrainz, false)
+									.then((user) => {
+										if (user) {
+											wrapped.settings.tokens.listenBrainzUser = this.buttonsProperties.lBrainzUser[1] = user;
+											overwriteProperties(this.buttonsProperties);
+										}
+									});
+							}
+						} else if ('lBrainzUser' === key) {
+							wrapped.settings.tokens.listenBrainzUser = value;
 						}
-					},
-					lBrainzUser: (value) => {
-						wrapped.settings.tokens.listenBrainzUser = value;
 					}
 				},
 				(menu) => { // Append this menu entries to the config menu
@@ -135,17 +149,17 @@ addButton({
 		const bShift = utils.IsKeyPressed(VK_SHIFT);
 		const bInfo = typeof menu_panelProperties === 'undefined' || menu_panelProperties.bTooltipInfo[1];
 		let info = '';
+		info += 'Playback Statistics:\t' + (isPlayCount ? '\u2713' : '\u2717');
+		info += '\nEnh. Playback Statistics:\t' + (isEnhPlayCount ? '\u2713' : '\u2717');
+		info += '\nPlaycount 2003:\t\t' + (isPlayCount2003 ? '\u2713' : '\u2717');
+		info += '\nExternal listens:\t\t' + (wrapped.settings.bServicesListens ? '\u2713' : '\u2717');
+		info += '\nOffline mode:\t\t' + (wrapped.settings.bOffline ? '\u2713' : '\u2717');
 		if (wrapped.settings.bServicesListens) {
 			if (!wrapped.settings.bOffline) {
-				info += 'ListenBrainz Token:\t' + (wrapped.settings.tokens.listenBrainz ? 'Ok' : ' -missing token-');
-				info += '\n';
+				info += '\nListenBrainz Token:\t' + (wrapped.settings.tokens.listenBrainz ? 'Ok' : ' -missing token-');
 			}
-			info += 'ListenBrainz User:\t' + (wrapped.settings.tokens.listenBrainzUser || ' -missing user-');
-			info += '\n';
+			info += '\nListenBrainz User:\t' + (wrapped.settings.tokens.listenBrainzUser || ' -missing user-');
 		}
-		info += wrapped.settings.bOffline
-			? 'Offline mode'
-			: '';
 		if (bShift || bInfo) {
 			info += '\n-----------------------------------------------------';
 			info += '\n(Shift + L. Click to open config menu)';
@@ -185,9 +199,12 @@ addButton({
 			setTimeout(() => { parent.lBrainzTokenListener = false; }, 6000);
 			overwriteProperties(parent.buttonsProperties);
 		}
-		// Init relevant settings for tooltip
-		['bOffline', 'bServicesListens']
+		// Init wrapped settings
+		['bFilterGenresGraph', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
 			.forEach((key) => wrapped.settings[key] = parent.buttonsProperties[key][1]);
+		Object.entries(JSON.parse(parent.buttonsProperties.tags[1])).forEach((pair) => {
+			if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
+		});
 		// ListenBrainz token
 		if (parent.buttonsProperties.lBrainzToken[1] && !parent.buttonsProperties.lBrainzEncrypt[1]) {
 			wrapped.settings.tokens.listenBrainz = parent.buttonsProperties.lBrainzToken[1];

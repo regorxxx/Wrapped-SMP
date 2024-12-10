@@ -1,12 +1,12 @@
 ﻿'use strict';
-//09/12/24
+//10/12/24
 
 /* exported wrapped */
 
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable, isSkipCount:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable */
+/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, toType:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -22,7 +22,7 @@ include('..\\..\\helpers\\camelot_wheel_xxx.js');
 include('..\\timeline\\timeline_helpers.js');
 /* global getDataAsync:readable */
 include('..\\search\\top_tracks_from_date.js');
-/* global getPlayCountV2:readable */
+/* global getPlayCountV2:readable, timeOnPeriod:readable */
 include('spotify.js');
 /* global spotify:readable */
 include('..\\search_by_distance\\search_by_distance_genres.js');
@@ -67,6 +67,8 @@ const wrapped = {
 	stats: {
 		genres: {
 			total: 0,
+			/** @type {{genres:string[], listens:number, score:number}} */
+			mean: { genres: [], listens: 0 },
 			/** @type {{genre:string, listens:number, score:number}[]} */
 			byScore: [],
 			/** @type {{name:string}[]} */
@@ -132,20 +134,24 @@ const wrapped = {
 		time: {
 			minutes: 0,
 			days: 0,
+			/** @type {{listensPerDay:number, minutesPerDay:number}} */
+			mean: { listensPerDay: 0, minutesPerDay: 0 },
+			/** @type {{days:number, minutes:number, seconds:number}} */
+			range: { days: 0, hours: 0, minutes: 0, seconds: 0 },
 			most: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null }
+				track: { title: '', artist: '', handle: null, albumImg: null  }
 			},
 			first: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null }
+				track: { title: '', artist: '', handle: null, albumImg: null  }
 			},
 			last: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null }
+				track: { title: '', artist: '', handle: null, albumImg: null  }
 			}
 		},
 		character: {
@@ -814,8 +820,13 @@ const wrapped = {
 	*/
 	computeListensStats: async function (tracksData, timePeriod, timeKey, fromDate) {
 		// Time
+		Object.entries(timeOnPeriod(timePeriod, timeKey)).forEach(([key, val]) => this.stats.time.range[key] = val);
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
+		this.stats.time.mean.minutesPerDay = this.stats.time.minutes / this.stats.time.range.days;
+		this.stats.time.mean.minutesPerDay = this.stats.time.mean.minutesPerDay > 1
+			? Math.round(this.stats.time.mean.minutesPerDay)
+			: round(this.stats.time.mean.minutesPerDay, 1);
 		if (timePeriod) {
 			const tracks = tracksData.map((track) => track.handle.map((handle) => {
 				return { handle, title: track.title, artist: track.artist };
@@ -881,6 +892,10 @@ const wrapped = {
 				}
 			});
 		}
+		this.stats.time.mean.listensPerDay = Math.round(this.stats.listens.total / this.stats.time.range.days);
+		this.stats.time.mean.listensPerDay = this.stats.time.mean.listensPerDay > 1
+			? Math.round(this.stats.time.mean.listensPerDay)
+			: round(this.stats.time.mean.listensPerDay, 1);
 		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.listens); console.log('computeListensStats:', this.stats.time); }
 		return this.stats;
 	},
@@ -1758,11 +1773,11 @@ const wrapped = {
 	 * @name getTracksImgs
 	 * @kind method
 	 * @memberof wrapped
-	 * @param {{title: string, listens: number}[]} tracksData
+	 * @param {{title: string, listens: number, handle: FbMetadbHandle|FbMetadbHandle[]}[]} tracksData
 	 * @param {string} root - Path to save the images at '.\\img\\albums\\'
 	 * @param {boolean} bRelative - Wether to use relative or absolute paths
 	 * @param {boolean} bFormat - Use nconvert.exe to batch process DPI values
-	 * @returns {promise.<{title:string, listens:number, albumImg:string|null}[]>}
+	 * @returns {promise.<{title:string, listens:number, handle: FbMetadbHandle|FbMetadbHandle[], albumImg:string|null}[]>}
 	*/
 	saveTracksImgs: function (tracksData, root = this.basePath, bRelative = true, bFormat = true) {
 		if (tracksData.length > 30) { throw new Error('saveTracksImgs: tracksData is too large'); }
@@ -1770,14 +1785,15 @@ const wrapped = {
 		if (!_isFolder(path)) { _createFolder(path); }
 		return Promise.parallel(
 			tracksData,
-			(track) => this.getTrackImg(track.handle[0]).then((artPromise) => {
-				if (artPromise.image) {
-					const imgPath = path + _asciify(sanitize(track.title)).replace(/ /g, '').slice(0, 10) + '.jpg';
-					artPromise.image.SaveAs(imgPath, 'image/jpeg');
-					track.albumImg = bRelative ? imgPath.replace(root, '') : imgPath;
-				} else { track.albumImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
-				return Promise.resolve(track.albumImg);
-			})
+			(track) => this.getTrackImg(toType(track.handle) === 'FbMetadbHandle' ? track.handle : track.handle[0])
+				.then((artPromise) => {
+					if (artPromise.image) {
+						const imgPath = path + _asciify(sanitize(track.title)).replace(/ /g, '').slice(0, 10) + '.jpg';
+						artPromise.image.SaveAs(imgPath, 'image/jpeg');
+						track.albumImg = bRelative ? imgPath.replace(root, '') : imgPath;
+					} else { track.albumImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
+					return Promise.resolve(track.albumImg);
+				})
 		).then(() => {
 			if (bFormat) {
 				console.log('Wrapped: processing track images with nconvert.exe');
@@ -2088,6 +2104,7 @@ const wrapped = {
 			.then(() => !!wrappedData.cities[0] && this.downloadArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
 			.then(() => this.saveTracksImgs(wrappedData.tracks))
 			.then(() => this.saveTracksImgs([this.stats.artists.top.topTrack]))
+			.then(() => this.saveTracksImgs([this.stats.time.most.track]))
 			.then(() => !!wrappedData.cities[0] && this.getCityImg(wrappedData.cities[0]))
 			.then(() => this.downloadCityImgs(wrappedData.cities))
 			.then(() => wrappedData);
@@ -2231,6 +2248,7 @@ const wrapped = {
 			'\\usepackage{pgfplots} % Graphs\n' +
 			'\\pgfplotsset{compat=1.18} % Graphs\n' +
 			'\\usepackage{pgf-pie} % Graphs\n' +
+			'\\usepackage{pdfrender} % Outline fonts\n' +
 			'\\renewcommand{\\familydefault}{\\sfdefault}\n\n' +
 			'\\newsavebox{\\picbox}\n' +
 			'\\newcommand{\\cutpic}[3]{\n' +
@@ -2252,14 +2270,22 @@ const wrapped = {
 		report += '\\end{tikzpicture}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\fontsize{100}{80}\\selectfont {\\color{Turquoise}W}{\\color{CarnationPink}r}{\\color{Yellow}a}{\\color{Cerulean}p}{\\color{SpringGreen}p}{\\color{YellowOrange}e}{\\color{OrangeRed}d}\\\\' + (year
-			? year.toString().split('')
-				.map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}')
-				.join('')
-			: period.toString().split(' - ')
-				.map((c, i) => '{\\color{' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + '}' + c + '}')
-				.join('{\\color{Yellow}-}')
-		) + '}\n';
+		report += '{\\fontsize{100}{80}\\selectfont\n' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=Turquoise, FillColor=White}{W}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=CarnationPink, FillColor=White}{r}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=Yellow, FillColor=White}{a}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=Cerulean, FillColor=White}{p}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=SpringGreen, FillColor=White}{p}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=YellowOrange, FillColor=White}{e}' +
+			'\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=OrangeRed, FillColor=White}{d}\\\\' +
+			(year
+				? year.toString().split('')
+					.map((c, i) => '\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + ', FillColor=White}{' + c + '}')
+					.join('')
+				: period.toString().split(' - ')
+					.map((c, i) => '\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + ', FillColor=White}{' + c + '}')
+					.join('\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=Yellow, FillColor=White}{-}')
+			) + '}}\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		report += '\n';
@@ -2377,6 +2403,8 @@ const wrapped = {
 		report += '\\begin{center}\n';
 		report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
 		report += '\\vspace{15mm}\n';
+		report += '{\\huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
+		report += '\\vspace{15mm}\n';
 		report += '{\\Large But there is one special track for you...}\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
@@ -2414,9 +2442,11 @@ const wrapped = {
 		report += '\\clearpage \\vspace*{\\fill}\n';
 		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 		report += '\\begin{center}\n';
-		report += '{\\Large In total, \\textbf{\\textit{' + this.stats.time.minutes + '}} minutes of music.}\\\\\n';
+		report += '{\\Huge In total, you have listened to \\textbf{\\textit{' + this.stats.time.minutes + '}} minutes of music.}\\\\\n';
 		report += '\\vspace{15mm}\n';
 		report += '{\\Large That\'s \\textbf{\\textit{' + this.stats.time.days + '}} days non-stop.}\\\\\n';
+		report += '\\vspace{20mm}\n';
+		report += '{\\Huge Aproximately \\textbf{\\textit{' + this.stats.time.mean.minutesPerDay + '}} minutes per day.}\\\\\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		// Day with more listening time
@@ -2426,13 +2456,17 @@ const wrapped = {
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large \\textbf{\\textit{' +
+			report += '{\\Huge \\textbf{\\textit{' +
 				topDay +
 				'}} was a special day for you, listening during \\textbf{\\textit{' +
 				this.stats.time.most.minutes +
 				'}} minutes to your favourite music.}\\\\\n';
-			report += '\\vspace{10mm}\n';
-			report += '{\\large Your most listened track was \\textbf{\\textit{' +
+			report += '\\begin{figure}[H]\n';
+			report += '\t\\centering\n';
+			report += '\t\\includegraphics[width=400px]{' + getImage(this.stats.time.most.track.albumImg) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(this.stats.time.most.track.title) + '}\n';
+			report += '\\end{figure}\n';
+			report += '{\\Large Your most listened track was \\textbf{\\textit{' +
 				this.stats.time.most.track.title.replace(latex, '\\$&') +
 				'}} by \\textbf{\\textit{' +
 				this.stats.time.most.track.artist.replace(latex, '\\$&') + '}}.}\\\\\n';

@@ -12,13 +12,20 @@
 
 ## [Unreleased][]
 ### Added
+
 - Data: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags to check if a source needs to be auto-updated. i.e. '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%','%2003_LAST_PLAYED_AGO%' and '%2003_LAST_PLAYED_AGO2%'.
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
 - UI: toolbar tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
+- UI: tooltip now shows the most relevant settings.
+- Report: added listens per day and minutes per day stats.
+- Report: added album art for the most listened track on the day with most listens.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).
 ### Changed
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Images: it uses now Biography images found at '.foobarProfilePath\yttm\art_img\$lower($cut(artist),1))\artist\' before trying to download them from Spotify. TF is configurable.
+- Report: differentiates now between [different] tracks and listens.
+- UI: modified layout of all menu entries, now split to make usage easier. Added configuration submenu and readme entries.
+- Readme: revised the entire readme with more detailed instructions, requisites, features and tips.
 - Helpers: updated helpers.
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 ### Removed
