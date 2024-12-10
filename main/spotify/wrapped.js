@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/24
+//09/12/24
 
 /* exported wrapped */
 
@@ -22,7 +22,7 @@ include('..\\..\\helpers\\camelot_wheel_xxx.js');
 include('..\\timeline\\timeline_helpers.js');
 /* global getDataAsync:readable */
 include('..\\search\\top_tracks_from_date.js');
-/* global getPlayCount:readable */
+/* global getPlayCountV2:readable */
 include('spotify.js');
 /* global spotify:readable */
 include('..\\search_by_distance\\search_by_distance_genres.js');
@@ -57,7 +57,9 @@ const wrapped = {
 		bDebug: false,
 		bDebugQuery: false,
 		highBpmHalveFactor: 30, // [0, 100]
-		tokens: { listenBrainz: '' },
+		bServicesListens: false,
+		tokens: { listenBrainz: '', listenBrainzUser: '' },
+		imageStubPath: '.\\yttm\\art_img\\$lower($cut(%1,1))\\%1\\',
 
 	},
 	isWorking: [],
@@ -216,6 +218,9 @@ const wrapped = {
 			}
 		});
 	},
+	isServicesListens: function () {
+		return this.settings.bServicesListens && (this.settings.tokens.listenBrainzUser.length || this.settings.tokens.listenBrainz.length);
+	},
 	getDataQueryParam: function (timePeriod, timeKey) {
 		return timePeriod
 			? timeKey
@@ -225,9 +230,9 @@ const wrapped = {
 	},
 	getDataQuery: function (queryParam, extraQuery = '') {
 		return queryJoin([
-			queryParam
+			queryParam && !this.isServicesListens()
 				? '%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
-				: null,
+				: '',
 			extraQuery || ''
 		].filter(Boolean), 'AND');
 	},
@@ -250,10 +255,17 @@ const wrapped = {
 			x: this.tags.artist,
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true
+			bRemoveDuplicates: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x: string, y: number}[]]*/ data) => {
 				data = data[0];
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((artist) => {
 					artist.artistImg = this.basePath + 'img\\untitled.jpg';
@@ -292,10 +304,17 @@ const wrapped = {
 			x: this.tags.genre,
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true
+			bRemoveDuplicates: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				if (this.settings.bFilterGenresGraph) {
 					data = data.filter((g) => !music_graph_descriptors.map_distance_exclusions.has(g.x));
 				}
@@ -336,13 +355,21 @@ const wrapped = {
 			x: 'TITLE',
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true, bIncludeHandles: true
+			bRemoveDuplicates: true, bIncludeHandles: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
-			.then((/** @type [{x:string, y:number, skipCount:number, handle:FbMetadbHandle[]}[]] */ data) => {
-				data = data[0]; // There is only a single serie
+			.then(async (/** @type [{x:string, y:number, skipCount:number, handle:FbMetadbHandle[]}[]] */ data) => {
+				data = data[0];
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((track) => {
-					track.artist = fb.TitleFormat(_bt(this.tags.artist)).EvalWithMetadbs(new FbMetadbHandleList(track.handle))
+					track.artist = fb.TitleFormat(_bt(this.tags.artist))
+						.EvalWithMetadbs(new FbMetadbHandleList(track.handle))
 						.flat(Infinity).join(', ');
 					track.title = track.x;
 					track.listens = track.y;
@@ -352,7 +379,7 @@ const wrapped = {
 				data.sort((a, b) => b.listens - a.listens);
 				// Stats
 				this.computeTracksStats(data);
-				this.computeListensStats(data, timePeriod, timeKey, fromDate);
+				await this.computeListensStats(data, timePeriod, timeKey, fromDate);
 				this.computeSkipsStats(data);
 				// Playlist
 				if (this.settings.bSuggestions) {
@@ -382,9 +409,16 @@ const wrapped = {
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x: number, y: number}[]] */ data) => {
-				data = data[0].filter((bpm) => bpm.x); // There is only a single serie
+				data = data[0].filter((bpm) => bpm.x);
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((bpm) => {
 					bpm.bpm = Number(bpm.x);
@@ -418,9 +452,16 @@ const wrapped = {
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
-				data = data[0].filter((key) => key.x); // There is only a single serie
+				data = data[0].filter((key) => key.x);
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((key) => {
 					key.key = camelotWheel.getKeyNotationObjectOpen(key.x);
@@ -456,9 +497,16 @@ const wrapped = {
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
 			bRemoveDuplicates: true,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
-				data = data[0].filter((key) => key.x); // There is only a single serie
+				data = data[0].filter((key) => key.x);
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((mood) => {
 					mood.mood = mood.x;
@@ -491,10 +539,17 @@ const wrapped = {
 			x: 'ALBUM',
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true, bIncludeHandles: false
+			bRemoveDuplicates: true, bIncludeHandles: false,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
-				data = data[0]; // There is only a single serie
+				data = data[0];
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((album) => {
 					album.title = album.x;
@@ -523,14 +578,21 @@ const wrapped = {
 	getCountriesData: function (timePeriod, query, timeKey, fromDate) {
 		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
-			option: 'playcount wordlmap', optionArg: { timePeriod, timeKey, fromDate },
+			option: 'playcount worldmap', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true, bIncludeHandles: false
+			bRemoveDuplicates: true, bIncludeHandles: false,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
-				data = data[0]; // There is only a single serie
+				data = data[0];
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((country) => {
 					country.name = country.x;
@@ -563,14 +625,21 @@ const wrapped = {
 	getCitiesData: function (timePeriod, query, timeKey, fromDate) {
 		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
 		return getDataAsync({
-			option: 'playcount wordlmap city', optionArg: { timePeriod, timeKey, fromDate },
+			option: 'playcount worldmap city', optionArg: { timePeriod, timeKey, fromDate },
 			x: this.tags.artist,
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true, bIncludeHandles: false
+			bRemoveDuplicates: true, bIncludeHandles: false,
+			listenBrainz: {
+				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+				bOffline: true
+			}
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
-				data = data[0]; // There is only a single serie
+				data = data[0];
+				if (this.isServicesListens()) {
+					data = data.filter((artist) => artist.y !== 0);
+				}
 				// Process
 				data.forEach((city) => {
 					city.name = city.x;
@@ -743,7 +812,7 @@ const wrapped = {
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {{listens, time}}
 	*/
-	computeListensStats: function (tracksData, timePeriod, timeKey, fromDate) {
+	computeListensStats: async function (tracksData, timePeriod, timeKey, fromDate) {
 		// Time
 		this.stats.time.minutes = round(tracksData.reduce((prev, track) => prev + track.handle[0].Length * track.listens, 0) / 60, 0);
 		this.stats.time.days = round(this.stats.time.minutes / 60 / 24, 1);
@@ -751,13 +820,20 @@ const wrapped = {
 			const tracks = tracksData.map((track) => track.handle.map((handle) => {
 				return { handle, title: track.title, artist: track.artist };
 			})).flat(Infinity);
-			const listens = getPlayCount(new FbMetadbHandleList(tracks.map((track) => track.handle)), timePeriod, timeKey, fromDate).map((track) => track.listens);
+			const listens = (await getPlayCountV2(
+				new FbMetadbHandleList(tracks.map((track) => track.handle)),
+				timePeriod, timeKey, fromDate, true,
+				{
+					user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+					bOffline: true
+				}
+			)).map((track) => track.listens);
 			const days = new Map();
 			listens.forEach((listenArr, i) => {
 				const listenCount = listenArr.length;
 				this.stats.listens.total += listenCount;
 				listenArr.forEach((listen) => {
-					const dateStr = listen.toString();
+					const dateStr = listen.toDateString();
 					const old = days.get(dateStr) || {
 						date: listen,
 						time: 0,
@@ -787,10 +863,10 @@ const wrapped = {
 			}).flat(Infinity);
 			const handleList = new FbMetadbHandleList(tracks.map((track) => track.handle));
 			// Tracks never played break the sorting with N/A
-			const tfFirst = fb.TitleFormat('$if3(%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)');
+			const tfFirst = fb.TitleFormat('$if3(%2003_FIRST_PLAYED%,%FIRST_PLAYED_ENHANCED%,%FIRST_PLAYED%,99999)');
 			handleList.OrderByFormat(tfFirst, 1);
 			const first = handleList[0];
-			const tfLast = fb.TitleFormat('$if3(%2003_LAST_PLAYED%,%LAST_PLAYED%,0)');
+			const tfLast = fb.TitleFormat('$if3(%2003_LAST_PLAYED%,%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,0)');
 			handleList.OrderByFormat(tfLast, -1);
 			const last = handleList[0];
 			this.stats.time.first.date = new Date(tfFirst.EvalWithMetadb(first));
@@ -999,10 +1075,15 @@ const wrapped = {
 				}
 			}
 			// Mastermind: listen too many different genres
-			if (this.stats.genres.total > 10) {
-				const meanListens = this.stats.listens.total / this.stats.genres.total;
-				findChar('mastermind').score = wrappedData.genres
-					.reduce((acc, genre) => acc + (genre.listens > meanListens ? 1 : 0), 0) / this.stats.genres.total * 100;
+			const graphNodes = 848; // Hardcoded value from music_graph #nodes
+			if (this.stats.genres.total > graphNodes / 10) {
+				const coef = this.stats.genres.total * (1 + Math.log(graphNodes / this.stats.genres.total));
+				const meanListens = wrappedData.genres.reduce((acc, genre) => acc + genre.listens, 0) / this.stats.genres.total;
+				findChar('mastermind').score = Math.max(
+					wrappedData.genres
+						.reduce((acc, genre) => acc + genre.listens / meanListens - 0.35, 0) / coef * 100,
+					0
+				);
 			}
 		}
 		/*  TODO add statistics
@@ -1089,7 +1170,7 @@ const wrapped = {
 	 * @param {number} year
 	 * @returns {{character}}
 	*/
-	computeGlobalStats: function (wrappedData, timePeriod, timeKey, fromDate) {
+	computeGlobalStats: async function (wrappedData, timePeriod, timeKey, fromDate) {
 		// Top artists
 		if (wrappedData.artists.length && wrappedData.tracks.length) {
 			// Top artist
@@ -1100,13 +1181,18 @@ const wrapped = {
 			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
 			// By month
 			if (timePeriod) {
-				wrappedData.artists.slice(0, 5).forEach((artist) => {
-					const listens = getPlayCount(
+				const topArtists = wrappedData.artists.slice(0, 5);
+				for (const artist of topArtists) {
+					const listens = (await getPlayCountV2(
 						new FbMetadbHandleList(
 							wrappedData.tracks.filter((track) => track.artist === artist.artist)
 								.map((track) => track.handle[0])
-						), timePeriod, timeKey, fromDate
-					).map((track) => track.listens);
+						), timePeriod, timeKey, fromDate, void (0),
+						{
+							user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
+							bOffline: true
+						}
+					)).map((track) => track.listens);
 					const months = new Map();
 					listens.forEach((listenArr) => {
 						listenArr.forEach((listen) => {
@@ -1122,7 +1208,7 @@ const wrapped = {
 						listens: max[1],
 						monthName: monthNames[max[0]]
 					});
-				});
+				}
 				if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
 			}
 		}
@@ -1153,6 +1239,7 @@ const wrapped = {
 	 * @returns {FbMetadbHandleList}
 	*/
 	computeTopTracksPlaylist: function (tracksData, size = 100) {
+		console.log('Wrapped: creating top songs playlist...');
 		let handleList = new FbMetadbHandleList(tracksData.slice(0, size).map((track) => track.handle[0]));
 		({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
 		this.playlists.top = handleList;
@@ -1173,6 +1260,7 @@ const wrapped = {
 	*/
 	computeDiscoverPlaylist: function (tracksData, timePeriod, size = 100) {
 		if (timePeriod) {
+			console.log('Wrapped: creating discovered songs playlist...');
 			let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
 			const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
 			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
@@ -1199,17 +1287,20 @@ const wrapped = {
 	*/
 	computeTopArtistsPlaylist: function (artistsData, size = 100) {
 		const artists = artistsData.slice(0, 100).map((artist) => artist.artist).filter(Boolean);
-		const query = queryJoin([
-			globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
-			queryCombinations(artists, _t(this.tags.artist), 'OR')
-		], 'AND');
-		if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist: ' + query); }
-		/** @type {FbMetadbHandleList} */
-		let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-		if (handleList) {
-			handleList = new FbMetadbHandleList(handleList.Convert().shuffle().slice(0, size));
-			({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
-			this.playlists.topArtists = handleList;
+		if (artists.length) {
+			console.log('Wrapped: creating top artists playlist...');
+			const query = queryJoin([
+				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
+				queryCombinations(artists, _t(this.tags.artist), 'OR')
+			], 'AND');
+			if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist: ' + query); }
+			/** @type {FbMetadbHandleList} */
+			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
+			if (handleList) {
+				handleList = new FbMetadbHandleList(handleList.Convert().shuffle().slice(0, size));
+				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+				this.playlists.topArtists = handleList;
+			}
 		}
 		return this.playlists.topArtists;
 	},
@@ -1228,6 +1319,7 @@ const wrapped = {
 	computeTopGenresPlaylist: function (genresData, size = 100) {
 		const genres = genresData.slice(0, 5).map((genre) => genre.genre).filter(Boolean);
 		if (genres.length) {
+			console.log('Wrapped: creating top genres playlist...');
 			const query = queryJoin([
 				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 				queryJoin(queryCombinations(genres, [globTags.genre, globTags.style], 'OR'), 'OR')
@@ -1258,6 +1350,7 @@ const wrapped = {
 	computeTopCountriesPlaylist: function (countriesData, size = 100) {
 		const ISO = this.stats.countries.byISO.map((country) => country.iso).filter(Boolean);
 		if (ISO.length) {
+			console.log('Wrapped: creating top countries playlist...');
 			const filters = ISO.map((iso) => getZoneArtistFilter(iso, 'country')).filter(Boolean)
 				.map((filter) => queryJoin([globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', filter.query], 'AND'));
 			const count = filters.length;
@@ -1294,6 +1387,7 @@ const wrapped = {
 	 * @returns {(FbMetadbHandle|String)[]}
 	*/
 	computeSuggestedGenresPlaylist: function (genres, queryParam, size = 100) {
+		console.log('Wrapped: creating similar genres playlist...');
 		const mbids = [];
 		const mbidsAlt = [];
 		const tags = { TITLE: [], ARTIST: [] };
@@ -1424,6 +1518,7 @@ const wrapped = {
 		 * @returns {(FbMetadbHandle|String)[]}
 		*/
 	computeSuggestedArtistsPlaylist: function (artistsData, queryParam, size = 100) {
+		console.log('Wrapped: creating similar artists playlist...');
 		const artists = artistsData.slice(0, 5).map((artist) => artist.artist);
 		const lb = ListenBrainz;
 		if (this.settings.bOffline) {
@@ -1611,6 +1706,14 @@ const wrapped = {
 	 * @returns {string}
 	*/
 	getArtistImg: function (artist) {
+		const stubPath = fb.TitleFormat(
+			(this.settings.imageStubPath.startsWith('.\\')
+				? fb.ProfilePath + this.settings.imageStubPath.replace(/\.\\/, '')
+				: this.settings.imageStubPath
+			).replace(/%1/gi, artist)
+		).Eval(true);
+		const files = getFiles(stubPath, new Set(['.jpg', '.png']));
+		if (files && files.length) { return Promise.resolve(files.shuffle()[0]); }
 		return this.settings.bOffline
 			? Promise.resolve(null)
 			: spotify.searchArtistInfo(artist)
@@ -1621,7 +1724,7 @@ const wrapped = {
 				});
 	},
 	/**
-	 * Takes the 'artistsData' from {@link wrapped.getArtistsData} or 'tracksData' from {@link wrapped.getTracksData} and mutates it to include an img property witht the URL.
+	 * Takes the 'artistsData' from {@link wrapped.getArtistsData} or 'tracksData' from {@link wrapped.getTracksData} and mutates it to include an img property with the URL.
 	 *
 	 * @name getArtistsImgs
 	 * @kind method
@@ -1669,7 +1772,7 @@ const wrapped = {
 			tracksData,
 			(track) => this.getTrackImg(track.handle[0]).then((artPromise) => {
 				if (artPromise.image) {
-					const imgPath = path + _asciify(sanitize(track.title)).replace(/ /, '').slice(0, 10) + '.jpg';
+					const imgPath = path + _asciify(sanitize(track.title)).replace(/ /g, '').slice(0, 10) + '.jpg';
 					artPromise.image.SaveAs(imgPath, 'image/jpeg');
 					track.albumImg = bRelative ? imgPath.replace(root, '') : imgPath;
 				} else { track.albumImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
@@ -1685,7 +1788,7 @@ const wrapped = {
 		});
 	},
 	/**
-	 * Takes the 'artistsData' or 'tracksData' from {@link wrapped.getArtistsImgs}, downloads the images and and mutates it to change the img path.
+	 * Takes the 'artistsData' or 'tracksData' from {@link wrapped.getArtistsImgs}, downloads the images and and mutates it to change the img path. If there image already exists or there is a match at the image stub folder, that will be used instead.
 	 *
 	 * @name downloadArtistsImgs
 	 * @kind method
@@ -1701,13 +1804,20 @@ const wrapped = {
 		return Promise.parallel(
 			dataArr,
 			(data) => {
-				if (data.artistImg && !this.settings.bOffline) {
-					const imgPath = path + _asciify(sanitize(data.artist)).replace(/ /, '').slice(0, 10) + '.jpg';
+				let bFallback = false;
+				let imgPath = path + _asciify(sanitize(data.artist)).replace(/ /g, '').slice(0, 10).toLowerCase() + '.jpg';
+				if (_isFile(imgPath)) {
+					data.artistImg = bRelative ? imgPath.replace(root, '') : imgPath;
+				} else if (data.artistImg && _isFile(data.artistImg)) {
+					imgPath = imgPath.replace(/\.jpg$/i, '.' + data.artistImg.split('.').pop().toLowerCase());
+					if (_copyFile(data.artistImg, imgPath)) {
+						data.artistImg = bRelative ? imgPath.replace(root, '') : imgPath;
+					} else { bFallback = true; }
+				} else if (data.artistImg && !this.settings.bOffline) {
 					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe --connect-timeout 5 --max-time 5 --retry 3 --retry-max-time 5 -L -o ' + _q(imgPath) + ' ' + data.artistImg, false);
 					data.artistImg = bRelative ? imgPath.replace(root, '') : imgPath;
-				} else {
-					data.artistImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png';
-				}
+				} else { bFallback = true; }
+				if (bFallback) { data.artistImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
 				return Promise.resolve(data.artistImg);
 			}
 		).then(() => dataArr);
@@ -1830,13 +1940,13 @@ const wrapped = {
 	/**
 	 * Retrieves a city image from wikimedia.org
 	 *
-	 @property
-	 @name getCityImg
-	 @kind method
-	 @memberof wrapped
-	 @type {function}
-	 @param {{name:string, listens:number}} cityData
-	 @returns {Promise<string>}
+	 * @property
+	 * @name getCityImg
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{name:string, listens:number}} cityData
+	 * @returns {Promise<string>}
 	*/
 	getCityImg: function (cityData) {
 		cityData.img = null;
@@ -1875,15 +1985,15 @@ const wrapped = {
 			.catch(() => null);
 	},
 	/**
-	 * Downloads a city image from
+	 * Downloads the city image
 	 *
-	 @property
-	 @name downloadCityImg
-	 @kind method
-	 @memberof wrapped
-	 @type {function}
-	 @param {{name:string, listens:number, img:string}} cityData
-	 @returns {Promise<string>}
+	 * @property
+	 * @name downloadCityImg
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{name:string, listens:number, img:string}} cityData
+	 * @returns {Promise<string>}
 	*/
 	downloadCityImgs: function (citiesData, root = this.basePath, bRelative = true) {
 		const path = root + 'img\\cities\\';
@@ -1892,7 +2002,7 @@ const wrapped = {
 			citiesData,
 			(data) => {
 				if (data.img && !this.settings.bOffline) {
-					const imgPath = path + _asciify(sanitize(data.name)).replace(/ /, '').slice(0, 10) + '.jpg';
+					const imgPath = path + _asciify(sanitize(data.name)).replace(/ /g, '').slice(0, 10).toLowerCase() + '.jpg';
 					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(imgPath) + ' ' + data.img, false);
 					data.img = bRelative ? imgPath.replace(root, '') : imgPath;
 				} else {
@@ -1916,10 +2026,23 @@ const wrapped = {
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
 	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
-	getData: function (timePeriod, query, timeKey = null, fromDate = null) {
+	getData: async function (timePeriod, query, timeKey = null, fromDate = null) {
 		console.log('Wrapped: retrieving listening stats...');
 		this.resetStats();
 		this.resetPlaylists();
+		if (this.isServicesListens() && !this.settings.bOffline) {
+			if (this.settings.tokens.listenBrainz.length) {
+				if (!this.settings.tokens.listenBrainzUser) {
+					this.settings.tokens.listenBrainzUser = await ListenBrainz.retrieveUser(this.settings.tokens.listenBrainz, false);
+				}
+				await ListenBrainz.retrieveListens(
+					this.settings.tokens.listenBrainzUser,
+					{ max_ts: Math.round(Date.now() / 1000) },
+					this.settings.tokens.listenBrainz,
+					true, true
+				);
+			}
+		}
 		return Promise.all([
 			this.getGenresData(timePeriod, query, timeKey, fromDate),
 			this.getTracksData(timePeriod, query, timeKey, fromDate),
@@ -1931,10 +2054,10 @@ const wrapped = {
 			this.getKeyData(timePeriod, query, timeKey, fromDate),
 			this.getMoodsData(timePeriod, query, timeKey, fromDate),
 		])
-			.then((data) => {
+			.then(async (data) => {
 				data = { genres: data[0], tracks: data[1], artists: data[2], albums: data[3], countries: data[4], cities: data[5], bpms: data[6], keys: data[7], moods: data[8] };
 				this.computeCharacterStats(data);
-				this.computeGlobalStats(data, timePeriod, timeKey, fromDate);
+				await this.computeGlobalStats(data, timePeriod, timeKey, fromDate);
 				Object.keys(data).forEach((key) => {
 					if (this.stats[key].total > 5) { data[key].length = 5; }
 					if (this.settings.bDebug) { console.log('getData[' + key + ']:', data[key]); }
@@ -1971,7 +2094,7 @@ const wrapped = {
 	},
 	createPlaylists: function (timePeriod) {
 		if (this.playlists.top.Count) {
-			sendToPlaylist(this.playlists.top, 'Top Favourite Songs' + (timePeriod ? ' ' + timePeriod : ''));
+			sendToPlaylist(this.playlists.top, 'Top Songs' + (timePeriod ? ' ' + timePeriod : ''));
 		}
 		if (this.playlists.discover.Count) {
 			sendToPlaylist(this.playlists.discover, 'Discovered Songs' + (timePeriod ? ' ' + timePeriod : ''));
@@ -2719,7 +2842,10 @@ const wrapped = {
 	 * @param {?string} root - Optional parameter that specifies the root directory for the report
 	 */
 	cleanRoot: function (root = this.basePath) {
-		['img\\albums', 'img\\artists'].forEach((folder) => _deleteFolder(root + folder));
+		const folders = this.settings.bOffline
+			? ['img\\albums']
+			: ['img\\albums', 'img\\artists'];
+		folders.forEach((folder) => _deleteFolder(root + folder));
 	},
 	/**
 	 * Cleans exif data from all images on temp folder, requires exiftool to be present at 'helpers-external\exiftool', otherwise it is skipped.

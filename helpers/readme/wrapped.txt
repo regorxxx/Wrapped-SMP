@@ -1,6 +1,16 @@
 ﻿Creates a report of user listening habits during the selected year
-or the entire listening history as a PDF and outputs some playlists 
+or the entire listening history as a PDF and outputs some playlists
 recommendations using these stats.
+	- Downloads listens from external services (if enabled):
+		* ListenBrainz: match by MUSICBRAINZ_TRACKID.
+
+	- Retrieves listens from components:
+		* Playback Statistics
+		* Enhanced Playback Statistics
+		* Playcount 2003
+
+	- Deduplicates all listens retrieved (local or online).
+
 	- Computes statistics from the library by:
 		* Listening behavior (character)
 		* Genres/styles
@@ -30,17 +40,16 @@ recommendations using these stats.
 		* Key stats (chart)
 
 	- Downloads artist and city images.
+	  (Tries to use first image stub from WilB's Biography)
 	  (Offline mode may be set to skip image downloading)
 
-	- Retrieves album covers.
+	- Retrieves album covers from tracks.
 
 	- Generates random backgrounds (which can be customized by user).
 
 	- Outputs a report in Latex format. Compilation in PDF.
-          (skipped with Shift + L. Click)
 
-	- Playlists recommendations: 
-	  (skipped with Ctrl + L. Click)
+	- Playlists recommendations:
 		* Top Favourite Songs
 		* Discovered Songs (during the year)
 		* Top Artists
@@ -50,10 +59,39 @@ recommendations using these stats.
 		  (0ffline mode may be set to only use queries)
 		* Suggested Artists (you make like) (ListenBrainz)
 		  (0ffline mode may be set to only use queries)
-	
-	- Year and Entire listening history reports may differ in
-	  since the latter does not use time-related stats (from
-	  Enhanced Playback Statistics plugin).
+
+	- Year and Entire listening history reports may differ since
+	the latter does not use time-related stats (from Enhanced
+	Playback Statistics plugin).
+
+Additional Tips:
+----------------
+	- You can use your own images in offline mode by putting them
+	at '[foobar profile]\js_data\temp\wrapped\img\' subfolders. All
+	(artist, album & cities) image file names must be lower case,
+	without spaces, limited to 10 chars and jpg. Ex: 'fleetwoodm.jpg'
+
+	- The stub image path is used wether offline mode is enabled or
+	not, and these images are always preferred to downloaded ones.
+	These images are automatically retrieved by TF expression (only
+	applicable for artist images) and they are selected randomly
+	from all images available at the matched folder.
+
+	- In offline mode the artists images subfolder is not cleaned
+	on every run (so any images present are kept indefinitely),
+
+	- Listens are downloaded once before run (not on offline mode)
+	and cached for 10 days. They are also re-downloaded if it detects
+	some listens are missing. Note it will take some time since it
+	will retrieve the entire listening history from external services.
+	This database (to be reused offline) will be saved at:
+	'[foobar profile]\js_data\listenbrainz_listens_[user].json'
+
+	- In offline mode external listens may also be used as long as
+	the user name associated have been provided (since the listening
+	history is saved on JSON by username). Database as a single file
+	containing an array of listen objects must be present at:
+	'[foobar profile]\js_data\listenbrainz_listens_[user].json'
 
 Requirements:
 -------------
@@ -62,6 +100,12 @@ Requirements:
 
 	- Enhanced Playback Statistics: For year reports.
 	https://www.foobar2000.org/components/view/foo_enhanced_playcount
+							OR
+	- Playcount 2003: For year reports.
+	https://marc2k3.github.io/component/playcount-2003/
+
+	Note stats will be available only for dates posterior to the
+	date the components were installed.
 
 	- LaTeX: Recommended LuaLaTeX via MiKTeX. Any version works.
 		* Win 10+: any version
@@ -78,7 +122,7 @@ Optional:
 
 	- World-Map-SMP: To get country stats. Tags must be written
 	to the JSON database. If locale tags are already present
-	on tracks, use 'Database...\Merge file tags with JSON...'; 
+	on tracks, use 'Database...\Merge file tags with JSON...';
 	otherwise you will need to retrieve tags using the Bio panel.
 	Note artists without a country on the JSON database will
 	not be used on the country/city stats, so be sure to get
@@ -92,6 +136,10 @@ Optional:
 	- ListenBrainz token: It's not a requisite to get
 	playlists suggestions, since it will use the public API,
 	but it will be less probably to reach rate limits with it.
+	Aditionally, the script may retrieve all listening history
+	from the server and try to match listens with tracks from
+	library (only by MBID), these will be deduplicated and used
+	in addition to local playcount stats. To get a token visit:
 	https://listenbrainz.org/settings/import/
 
 	- TeXstudio: To compile manually (if desired); can also be
@@ -106,7 +154,7 @@ Optional:
 		* 64 bit: https://exiftool.org/
 		* 32 bit: https://oliverbetz.de/pages/Artikel/ExifTool-for-Windows
 
-	- Pingo: To optimize images used on report (will greatly reduce file size).
+	- Pingo: To optimize images used (will greatly reduce file size).
 	Binaries must be put at: .\helpers_external\pingo\pingo.exe
 		* 64 bit: https://css-ig.net/pingo
 		* 32 bit: not available
@@ -116,14 +164,14 @@ LaTeX compilation:
 The default installation uses LuaLaTeX via CMD:
 lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1
 
-This command may be changed at the settings menu, in case other engine 
+This command may be changed at the settings menu, in case other engine
 or format is preferred (any layout problems is your responsibility though).
 
-The CMD expression allows these numbered arguments which are replaced at 
+The CMD expression allows these numbered arguments which are replaced at
 execution:
-	- %1: input .tex file path
-	- %2: output .pdf file path
-	- %3: output directory path
+	- %1: input .tex file path (with quotes)
+	- %2: output .pdf file path (with quotes)
+	- %3: output directory path (with quotes)
 	- %4: year
 
 Ex:

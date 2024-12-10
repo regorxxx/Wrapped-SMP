@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/24
+//09/12/24
 
 /*
 	Wrapped
@@ -41,12 +41,15 @@ var newButtonsProperties = { // NOSONAR[global]
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
 	bFilterGenresGraph: ['Filter genres with Graph exclusions', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],
+	bServicesListens: ['Use external listens', false, { func: isBoolean }, false],
 	highBpmHalveFactor: ['% of high BPM tracks to halve', 30, { func: isInt, range: [[0, 100]] }, 30],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
-	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
+	lBrainzUser: ['ListenBrainz user', '', { func: isStringWeak }, ''],
+	lBrainzEncrypt: ['Encrypt ListenBrainz user token', false, { func: isBoolean }, false],
+	imageStubPath: ['Artists images stub path', '.\\yttm\\art_img\\$lower($cut(%1,1))\\%1\\', { func: isStringWeak }, false],
 	latexCmd: ['LaTeX cmd for compiling into PDF', 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1', { func: isStringWeak }, 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1'],
-	bDynamicMenus: ['Expose menus at  \'File\\Spider Monkey Panel\\Script commands\'', false, { func: isBoolean }, false],
-	bIconMode: ['Icon-only mode?', false, { func: isBoolean }, false],
+	bDynamicMenus: ['Menus at  \'File\\Spider Monkey Panel\\...\'', false, { func: isBoolean }, false],
+	bIconMode: ['Icon-only mode', false, { func: isBoolean }, false],
 };
 setProperties(newButtonsProperties, prefix, 0); //This sets all the panel properties at once
 newButtonsProperties = getPropertiesPairs(newButtonsProperties, prefix, 0);
@@ -70,7 +73,13 @@ addButton({
 				this, true, ['buttons_stats_wrapped.js'],
 				{
 					bDynamicMenus:
-						{ popup: 'Remember to set different panel names to every buttons toolbar, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)' }
+						{ popup: 'Remember to set different panel names to every buttons toolbar, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)' },
+					bOffline:
+						{ popup: 'On offline mode, no images will be downloaded from the web (but already existing images or local stub images will be used).' },
+					bServicesListens:
+						{ popup: 'Listens will be downloaded from server (ListenBrainz) and merged with local playback statistics. Don\'t forget to set the relevant tokens for those services.\n\nThese listens may also be used on offline mode as long as they have been downloaded at least once (and the associated user name has been set -token is not needed-).' },
+					imageStubPath:
+						{ input: 'Artists images stub path (.jpg or .png). If it starts with .\\, will be relative to foobar profile folder.\n\nEnter TF expression:\n(\'%1\' will be replaced internally with the artist name)' }
 				},
 				{
 					bDynamicMenus:
@@ -85,7 +94,18 @@ addButton({
 									}
 								});
 							} else { deleteMainMenuDynamic('Wrapped'); }
+						},
+					bServicesListens: (value) => {
+						wrapped.settings.bServicesListens = value;
+					},
+					lBrainzToken: (value) => {
+						if (!value || !this.buttonsProperties.lBrainzEncrypt[1]) {
+							wrapped.settings.tokens.listenBrainz = value;
 						}
+					},
+					lBrainzUser: (value) => {
+						wrapped.settings.tokens.listenBrainzUser = value;
+					}
 				},
 				(menu) => { // Append this menu entries to the config menu
 					const menuName = menu.getMainMenuName();
@@ -99,7 +119,7 @@ addButton({
 							menuName: subMenuName, entryText: capitalizeAll(key) + '\t' + _b(tags[key]), func: () => {
 								const input = Input.string('string', tags[key], 'Enter tag(s):\n\nSingle tags may be written with/without %.\nEx.: ARTIST\n\nMultiple tags must be separated by \', \' and must include %.\nEx.: %GENRE%, %STYLE%', 'Wrapped', 'ALBUM ARTIST');
 								if (input === null) { return; }
-								tags[key]= input;
+								tags[key] = input;
 								this.buttonsProperties.tags[1] = JSON.stringify(tags);
 								overwriteProperties(this.buttonsProperties);
 							}
@@ -114,7 +134,18 @@ addButton({
 	}, null, void (0), () => {
 		const bShift = utils.IsKeyPressed(VK_SHIFT);
 		const bInfo = typeof menu_panelProperties === 'undefined' || menu_panelProperties.bTooltipInfo[1];
-		let info = 'Foobar2000 Wrapped:';
+		let info = '';
+		if (wrapped.settings.bServicesListens) {
+			if (!wrapped.settings.bOffline) {
+				info += 'ListenBrainz Token:\t' + (wrapped.settings.tokens.listenBrainz ? 'Ok' : ' -missing token-');
+				info += '\n';
+			}
+			info += 'ListenBrainz User:\t' + (wrapped.settings.tokens.listenBrainzUser || ' -missing user-');
+			info += '\n';
+		}
+		info += wrapped.settings.bOffline
+			? 'Offline mode'
+			: '';
 		if (bShift || bInfo) {
 			info += '\n-----------------------------------------------------';
 			info += '\n(Shift + L. Click to open config menu)';
@@ -153,6 +184,16 @@ addButton({
 			setTimeout(() => window.NotifyOthers('xxx-scripts: lb token', null), 3000);
 			setTimeout(() => { parent.lBrainzTokenListener = false; }, 6000);
 			overwriteProperties(parent.buttonsProperties);
+		}
+		// Init relevant settings for tooltip
+		['bOffline', 'bServicesListens']
+			.forEach((key) => wrapped.settings[key] = parent.buttonsProperties[key][1]);
+		// ListenBrainz token
+		if (parent.buttonsProperties.lBrainzToken[1] && !parent.buttonsProperties.lBrainzEncrypt[1]) {
+			wrapped.settings.tokens.listenBrainz = parent.buttonsProperties.lBrainzToken[1];
+		}
+		if (parent.buttonsProperties.lBrainzUser[1]) {
+			wrapped.settings.tokens.listenBrainzUser = parent.buttonsProperties.lBrainzUser[1];
 		}
 	},
 	{ scriptName: 'Wrapped-SMP', version }),
