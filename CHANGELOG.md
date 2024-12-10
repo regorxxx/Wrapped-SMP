@@ -17,6 +17,7 @@
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
 - UI: toolbar tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: tooltip now shows the most relevant settings.
+- Report: general layout improvements.
 - Report: added listens per day and minutes per day stats.
 - Report: added album art for the most listened track on the day with most listens.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).
