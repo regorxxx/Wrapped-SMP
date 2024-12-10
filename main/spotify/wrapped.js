@@ -14,7 +14,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_statistics.js');
 /* global calcHistogram:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global queryCombinations:readable, queryJoin:readable, sanitizeQueryVal:readable, sanitizeTagIds:readable, sanitizeTagValIds:readable */
+/* global queryCombinations:readable, queryJoin:readable, sanitizeQueryVal:readable, sanitizeTagIds:readable, sanitizeTagValIds:readable, sanitizeTagTfo:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
 /* global send:readable */
 include('..\\..\\helpers\\camelot_wheel_xxx.js');
@@ -1725,7 +1725,7 @@ const wrapped = {
 			(this.settings.imageStubPath.startsWith('.\\')
 				? fb.ProfilePath + this.settings.imageStubPath.replace(/\.\\/, '')
 				: this.settings.imageStubPath
-			).replace(/%1/gi, artist)
+			).replace(/%1/gi, sanitizeTagTfo(artist.replace(/,.*$/, '')))
 		).Eval(true);
 		const files = getFiles(stubPath, new Set(['.jpg', '.png']));
 		if (files && files.length) { return Promise.resolve(files.shuffle()[0]); }
