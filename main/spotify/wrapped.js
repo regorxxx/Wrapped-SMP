@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/12/24
+//11/12/24
 
 /* exported wrapped */
 
@@ -8,7 +8,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, toType:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable */
+/* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable, _deleteFile:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global sendToPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_statistics.js');
@@ -134,24 +134,22 @@ const wrapped = {
 		time: {
 			minutes: 0,
 			days: 0,
-			/** @type {{listensPerDay:number, minutesPerDay:number}} */
 			mean: { listensPerDay: 0, minutesPerDay: 0 },
-			/** @type {{days:number, minutes:number, seconds:number}} */
 			range: { days: 0, hours: 0, minutes: 0, seconds: 0 },
 			most: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null, albumImg: null  }
+				track: { title: '', artist: '', handle: null, albumImg: null }
 			},
 			first: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null, albumImg: null  }
+				track: { title: '', artist: '', handle: null, albumImg: null }
 			},
 			last: {
 				date: new Date(),
 				minutes: 0,
-				track: { title: '', artist: '', handle: null, albumImg: null  }
+				track: { title: '', artist: '', handle: null, albumImg: null }
 			}
 		},
 		character: {
@@ -2144,10 +2142,10 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ timePeriod?: number; timeKey?: string; fromDate?: Date; query?: string latexCmd: string root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, root }
+	 * @param {{ timePeriod?: number; timeKey?: string; fromDate?: Date; query?: string; latexCmd?: string; extraCmd:string[]; root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, extraCmd, root }
 	 * @returns {any}
 	*/
-	createPdfReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', latexCmd, root = this.basePath }) {
+	createPdfReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', latexCmd, extraCmd = [], root = this.basePath }) {
 		if (this.settings.bOffline) { console.log('Wrapped: offline mode'); }
 		this.cleanRoot(root);
 		this.copyDependencies(root);
@@ -2158,7 +2156,7 @@ const wrapped = {
 				this.compressImgs();
 				return this.formatLatexReport(wrappedData, timePeriod, root);
 			})
-			.then((report) => this.compileLatexReport(report, timePeriod, latexCmd, root));
+			.then((report) => this.compileLatexReport(report, timePeriod, latexCmd, extraCmd, root));
 	},
 	/**
 	 * Gives format in LaTeX to data retrieved {@link wrapped.getData} for a given year
@@ -2235,7 +2233,23 @@ const wrapped = {
 			});
 		};
 		// Report
-		let report = '\\documentclass[12pt]{article}\n' +
+		let report =
+			'\\documentclass[12pt]{article}\n' +
+			'\\usepackage{ifluatex}\n' +
+			'\\ifluatex\n' +
+			'\t\\directlua{\n' +
+			'\t\tpdf.setminorversion(5)\n' +
+			'\t\tpdf.setcompresslevel(9)\n' +
+			'\t\tpdf.setobjcompresslevel(9)\n' +
+			'\t\tpdf.setdecimaldigits(1)\n' +
+			'\t\tpdf.setimageresolution(50)\n' +
+			'\t}\n' +
+			'\\else\n' +
+			'\t\\pdfcompresslevel=9\n' +
+			'\t\\pdfminorversion=5\n' +
+			'\t\\pdfobjcompresslevel=3\n' +
+			'\t\\pdfdecimaldigits=1\n' +
+			'\\fi\n' +
 			'\\usepackage[a4paper,left=1in,right=1in,top=0.75in,bottom=0in]{geometry} % margins\n' +
 			'\\usepackage{graphicx} % figures\n' +
 			'\\usepackage{float} % [H]\n' +
@@ -2249,6 +2263,7 @@ const wrapped = {
 			'\\pgfplotsset{compat=1.18} % Graphs\n' +
 			'\\usepackage{pgf-pie} % Graphs\n' +
 			'\\usepackage{pdfrender} % Outline fonts\n' +
+			'\\usepackage{anyfontsize} % Font size fixes\n' +
 			'\\renewcommand{\\familydefault}{\\sfdefault}\n\n' +
 			'\\newsavebox{\\picbox}\n' +
 			'\\newcommand{\\cutpic}[3]{\n' +
@@ -2285,7 +2300,7 @@ const wrapped = {
 				: period.toString().split(' - ')
 					.map((c, i) => '\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=' + (i % 2 === 0 ? 'Turquoise' : 'RubineRed') + ', FillColor=White}{' + c + '}')
 					.join('\\textpdfrender{TextRenderingMode=FillStroke, LineWidth=5pt, LineCapStyle=Round, StrokeColor=Yellow, FillColor=White}{-}')
-			) + '}}\n';
+			) + '}\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		report += '\n';
@@ -2303,78 +2318,80 @@ const wrapped = {
 		report += '\\end{center}\n\n';
 		report += '\n';
 		// Burger genres
-		report += '\\pagebreak\n';
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{part}{Genre statistics}\n';
-		report += '\\pagecolor{lime!70}\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\begin{figure}[H]\n';
-		report += '\t\\centering\n';
-		report += '\\begin{center}';
-		report += '\t{\\Huge Your most listened genres}\\\\\n';
-		report += '\t{\\large \u00D1am.}\n';
-		report += '\\end{center}';
-		report += '\\vspace{30mm}';
-		{
-			report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
-			report += '\t\\begin{tikzpicture}\n';
-			report += '\t\t\\filldraw [draw=lime!70, ultra thick,draw opacity=0,fill opacity=0] (0,0) rectangle ++(14cm,0);\n';
-			let y = 9.5;
-			const burguerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
-			this.stats.genres.byScore.forEach((genre, i) => {
-				const iH = i === 0 ? 2.5 : round(6 * (genre.score + this.stats.genres.byScore[0].score / 4) / 100, 2);
-				y -= iH;
-				report += '\t\t\\filldraw [fill=' + burguerColors[i] + ', draw=' + burguerColors[i] + '] (-1,' + y + ') rectangle ++(14cm,' + iH + ');\n';
-				report += '\t\t\\node[rectangle] (a) at (6,' + round(y + iH / 2, 1) + ') {\\Large \\textbf{' + genre.genre.replace(latex, '\\$&') + '}};\n';
+		if (this.stats.genres.total) {
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Genre statistics}\n';
+			report += '\\pagecolor{lime!70}\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\begin{figure}[H]\n';
+			report += '\t\\centering\n';
+			report += '\\begin{center}';
+			report += '\t{\\Huge Your most listened genres}\\\\\n';
+			report += '\t{\\large \u00D1am.}\n';
+			report += '\\end{center}';
+			report += '\\vspace{30mm}';
+			{
+				report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
+				report += '\t\\begin{tikzpicture}\n';
+				report += '\t\t\\filldraw [draw=lime!70, ultra thick,draw opacity=0,fill opacity=0] (0,0) rectangle ++(14cm,0);\n';
+				let y = 9.5;
+				const burguerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
+				this.stats.genres.byScore.forEach((genre, i) => {
+					const iH = i === 0 ? 2.5 : round(6 * (genre.score + this.stats.genres.byScore[0].score / 4) / 100, 2);
+					y -= iH;
+					report += '\t\t\\filldraw [fill=' + burguerColors[i] + ', draw=' + burguerColors[i] + '] (-1,' + y + ') rectangle ++(14cm,' + iH + ');\n';
+					report += '\t\t\\node[rectangle] (a) at (6,' + round(y + iH / 2, 1) + ') {\\Large \\textbf{' + genre.genre.replace(latex, '\\$&') + '}};\n';
+				});
+				report += '\t\\end{tikzpicture}\\llap{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
+				report += '\\end{figure}\n';
+			}
+			report += '\\vfill %\n\n';
+			// Total genres
+			report += '\\pagebreak\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\begin{center}\n';
+			report += '{\\Huge ' + (year || period) + ' has been great...}\\\\\n';
+			report += '\\vspace{15mm}\n';
+			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.genres.total + '}} genres.}\n';
+			report += '\\end{center}\n';
+			report += '\\vfill %\n\n';
+			// Genre groups
+			report += '\\pagebreak\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{section}{Top music categories}\n';
+			report += '\\begin{center}\n';
+			report += '\\textit{\\Huge Your listening habits are specially identified with the following musical groups...}\\\\\n';
+			report += '\\end{center}\n';
+			report += '\\vspace{15mm}\n';
+			report += '\\begin{center}\n';
+			report += '\\begin{tikzpicture}[node distance={22mm},minimum size=2cm,main/.style = {draw,circle,fill opacity=0.75,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.4}}]\n';
+			const colors = ['Aquamarine!85', 'Aquamarine!70', 'BlueGreen!60', 'BlueGreen!50'];
+			this.stats.genres.groups.scores.slice(0, 4).forEach((group, i) => {
+				const name = group.name.replace(/dance_cluster|music_cluster|cluster/gi, '')
+					.replace(/[ _]/gi, ' ').replace(latex, '\\$&');
+				report += '\t\\node[main,scale=' + Math.max((4 - i), 1) + ',align=center,fill=' + colors[i] + '] (' + (i + 1) + ') ' +
+					(i > 0 ? '[below right of=' + i + ']' : '') +
+					'{' + name + '\\\\{\\scriptsize' + _p(group.score + '\\%') + '}};\n';
 			});
-			report += '\t\\end{tikzpicture}\\llap{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
-			report += '\\end{figure}\n';
+			report += '\\end{tikzpicture}\n';
+			report += '\\end{center}\n';
+			report += '\\vspace{20mm}\n';
+			report += '\\vfill %\n\n';
+			// Genres
+			report += '\\pagebreak\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Your top 5 Genres]{Your top 5 Genres:}\n';
+			report += '\\begin{enumerate}\n';
+			wrappedData.genres.forEach((genre) => {
+				report += '\t\\item \\textbf{\\textit{' + genre.genre + '}} with \\textit{' + genre.listens + ' listens}.\n';
+			});
+			report += '\\end{enumerate}\n';
 		}
-		report += '\\vfill %\n\n';
-		// Total genres
-		report += '\\pagebreak\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\begin{center}\n';
-		report += '{\\Huge ' + (year || period) + ' has been great...}\\\\\n';
-		report += '\\vspace{15mm}\n';
-		report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.genres.total + '}} genres.}\n';
-		report += '\\end{center}\n';
-		report += '\\vfill %\n\n';
-		// Genre groups
-		report += '\\pagebreak\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{section}{Top music categories}\n';
-		report += '\\begin{center}\n';
-		report += '\\textit{\\Huge Your listening habits are specially identified with the following musical groups...}\\\\\n';
-		report += '\\end{center}\n';
-		report += '\\vspace{15mm}\n';
-		report += '\\begin{center}\n';
-		report += '\\begin{tikzpicture}[node distance={22mm},minimum size=2cm,main/.style = {draw,circle,fill opacity=0.75,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.4}}]\n';
-		const colors = ['Aquamarine!85', 'Aquamarine!70', 'BlueGreen!60', 'BlueGreen!50'];
-		this.stats.genres.groups.scores.slice(0, 4).forEach((group, i) => {
-			const name = group.name.replace(/dance_cluster|music_cluster|cluster/gi, '')
-				.replace(/[ _]/gi, ' ').replace(latex, '\\$&');
-			report += '\t\\node[main,scale=' + Math.max((4 - i), 1) + ',align=center,fill=' + colors[i] + '] (' + (i + 1) + ') ' +
-				(i > 0 ? '[below right of=' + i + ']' : '') +
-				'{' + name + '\\\\{\\scriptsize' + _p(group.score + '\\%') + '}};\n';
-		});
-		report += '\\end{tikzpicture}\n';
-		report += '\\end{center}\n';
-		report += '\\vspace{20mm}\n';
-		report += '\\vfill %\n\n';
-		// Genres
-		report += '\\pagebreak\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\section[Your top 5 Genres]{Your top 5 Genres:}\n';
-		report += '\\begin{enumerate}\n';
-		wrappedData.genres.forEach((genre) => {
-			report += '\t\\item \\textbf{\\textit{' + genre.genre + '}} with \\textit{' + genre.listens + ' listens}.\n';
-		});
-		report += '\\end{enumerate}\n';
 		if (this.stats.genres.groups.main.name) {
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
@@ -2393,23 +2410,24 @@ const wrapped = {
 			report += '\\end{multicols}\n';
 			report += '\n';
 		}
-		// Total tracks
-		report += '\\pagebreak\n';
-		report += '\\phantomsection\n';
-		report += '\\addcontentsline{toc}{part}{Tracks statistics}\n';
-		report += '\\pagecolor{purple}\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\begin{center}\n';
-		report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
-		report += '\\vspace{15mm}\n';
-		report += '{\\huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
-		report += '\\vspace{15mm}\n';
-		report += '{\\Large But there is one special track for you...}\n';
-		report += '\\end{center}\n';
-		report += '\\vfill %\n\n';
-		// Top track
+		// Tracks
 		if (this.stats.tracks.total > 0) {
+			// Total tracks
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Tracks statistics}\n';
+			report += '\\pagecolor{purple}\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\begin{center}\n';
+			report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
+			report += '\\vspace{15mm}\n';
+			report += '{\\huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
+			report += '\\vspace{15mm}\n';
+			report += '{\\Large But there is one special track for you...}\n';
+			report += '\\end{center}\n';
+			report += '\\vfill %\n\n';
+			// Top track
 			report += '\\pagebreak\n';
 			report += '\\pagecolor{purple}\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
@@ -2426,14 +2444,14 @@ const wrapped = {
 			report += '{\\Large You have played it \\textbf{\\textit{' + wrappedData.tracks[0].listens + '}} times ' + (year ? 'this year' : 'since ' + firstYear) + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
+			// Top 5 Tracks
+			report += '\\pagebreak\n';
+			report += '\\pagecolor{purple}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Your top 5 Tracks]{Your top 5 Tracks:}\n';
+			enumerate(wrappedData, 'tracks');
+			report += '\n';
 		}
-		// Tracks
-		report += '\\pagebreak\n';
-		report += '\\pagecolor{purple}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\section[Your top 5 Tracks]{Your top 5 Tracks:}\n';
-		enumerate(wrappedData, 'tracks');
-		report += '\n';
 		// Total listening time
 		report += '\\pagebreak\n';
 		report += '\\phantomsection\n';
@@ -2473,57 +2491,58 @@ const wrapped = {
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 		}
-		// Artist by month
-		if (this.stats.artists.byMonth.length) {
+		// Artists
+		if (this.stats.artists.total > 0) {
+			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Artists statistics}\n';
-			wrappedData.artists.forEach((artist, i) => {
-				const month = this.stats.artists.byMonth[i].month;
-				const monthName = this.stats.artists.byMonth[i].monthName;
-				report += '\\pagebreak\n';
-				if (i === 0) { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by month}\n'; }
-				report += '\\pagecolor{teal}\n';
-				report += '\\clearpage \\vspace*{\\fill}\n';
-				report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-				report += '\\begin{center}\n';
-				report += '{\\Huge \\textbf{N\u00BA' + (i + 1) + '}}\\\\\n';
-				report += '\\vspace{2mm}\n';
-				report += '{\\Huge \\textbf{' + cut(artist.artist, 40) + '}}\n';
-				report += '\\begin{figure}[H]\n';
-				report += '\t\\centering\n';
-				report += '\t\\setbox1=\\hbox{\\includegraphics[width=400px]{' +
-					getImage('img\\month\\' + month + '.png') + '}}\n	';
-				report += '\t\\includegraphics[width=400px]{' +
-					getImage('img\\month\\' + month + '.png') +
-					'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
-					getImage(wrappedData.artists[i].artistImg) +
-					'}}}}\n';
-				report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
-				report += '\\end{figure}\n';
-				report += '{\\Large Month with more listens:\\\\\n';
-				report += '\\textbf{' + monthName + '}}\n';
-				report += '\\end{center}\n';
-				report += '\\vfill %\n\n';
-			});
-		}
-		// Artists
-		report += '\\pagebreak\n';
-		report += '\\pagecolor{teal!70}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\section[Your top 5 Artists]{Your top 5 Artists:}\n';
-		enumerate(wrappedData, 'artists');
-		// Total artists
-		report += '\\pagebreak\n';
-		report += '\\clearpage \\vspace*{\\fill}\n';
-		report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
-		report += '\\begin{center}\n';
-		report += '{\\Huge You didn\'t waste your time in ' + (year || period) + '...}\\\\\n';
-		report += '\\vspace{15mm}\n';
-		report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.artists.total + '}} artists.}\n';
-		report += '\\end{center}\n';
-		report += '\\vfill %\n\n';
-		// Top artist
-		if (this.stats.artists.total > 0) {
+			// Artist by month
+			if (this.stats.artists.byMonth.length) {
+				wrappedData.artists.forEach((artist, i) => {
+					const month = this.stats.artists.byMonth[i].month;
+					const monthName = this.stats.artists.byMonth[i].monthName;
+					if (i !== 0) { report += '\\pagebreak\n'; }
+					else { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by month}\n'; }
+					report += '\\pagecolor{teal}\n';
+					report += '\\clearpage \\vspace*{\\fill}\n';
+					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+					report += '\\begin{center}\n';
+					report += '{\\Huge \\textbf{N\u00BA' + (i + 1) + '}}\\\\\n';
+					report += '\\vspace{2mm}\n';
+					report += '{\\Huge \\textbf{' + cut(artist.artist, 40) + '}}\n';
+					report += '\\begin{figure}[H]\n';
+					report += '\t\\centering\n';
+					report += '\t\\setbox1=\\hbox{\\includegraphics[width=400px]{' +
+						getImage('img\\month\\' + month + '.png') + '}}\n	';
+					report += '\t\\includegraphics[width=400px]{' +
+						getImage('img\\month\\' + month + '.png') +
+						'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
+						getImage(wrappedData.artists[i].artistImg) +
+						'}}}}\n';
+					report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
+					report += '\\end{figure}\n';
+					report += '{\\Large Month with more listens:\\\\\n';
+					report += '\\textbf{' + monthName + '}}\n';
+					report += '\\end{center}\n';
+					report += '\\vfill %\n\n';
+				});
+			}
+			report += '\\pagebreak\n';
+			report += '\\pagecolor{teal!70}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Your top 5 Artists]{Your top 5 Artists:}\n';
+			enumerate(wrappedData, 'artists');
+			// Total artists
+			report += '\\pagebreak\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\begin{center}\n';
+			report += '{\\Huge You didn\'t waste your time in ' + (year || period) + '...}\\\\\n';
+			report += '\\vspace{15mm}\n';
+			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.artists.total + '}} artists.}\n';
+			report += '\\end{center}\n';
+			report += '\\vfill %\n\n';
+			// Top artist
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{section}{Top Artist}\n';
@@ -2598,13 +2617,13 @@ const wrapped = {
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=500px]{img/soundcity/travel}};\n';
-			report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont{\\Large ' + (year
+			report += '\\tikz[remember picture,overlay] \\node at (current page.45){\\raisebox{-40mm}{\\fontencoding{T1}\\fontfamily{qzc}\\fontshape{it}\\selectfont{\\Large ' + (year
 				? topDay + ' ' + year + '\\hspace{' + (78 + Math.max(topDay.length - 10, 0) * 2)
 				: period + '\\hspace{78'
 			) + 'mm}}}};\n';
 			report += '\\vspace{139mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\fontencoding{T1}\\fontfamily{qzc}\\selectfont\n';
+			report += '{\\fontencoding{T1}\\fontfamily{qzc}\\fontshape{it}\\selectfont\n';
 			report += '\t{\\Large ' + (year ? 'This year' : 'These years') + ', your listening took you places...\\\\\n';
 			report += '\tAnd one place listened just like you.}\n';
 			report += '}\n';
@@ -2798,11 +2817,12 @@ const wrapped = {
 	 * @type {function}
 	 * @param {string} report - LaTeX formatted text from {@link wrapped.formatLatexReport}
 	 * @param {number|string} timePeriod - Used for formatting purposes
-	 * @param {string|null} latexCmd - Command used to convert LaTeX files to PDF format
-	 * @param {?string} root - Optional parameter that specifies the root directory for the report
+	 * @param {string?} latexCmd - Command used to convert LaTeX files to PDF format
+	 * @param {string[]?} extraCmd - Commands applied to output pdf
+	 * @param {string?} root - Optional parameter that specifies the root directory for the report
 	 * @returns {boolean}
 	 */
-	compileLatexReport: function compileLatexReport(report, timePeriod, latexCmd, root = this.basePath) {
+	compileLatexReport: function compileLatexReport(report, timePeriod, latexCmd, extraCmd, root = this.basePath) {
 		console.log('Wrapped: compiling LaTeX report...');
 		const period = !timePeriod
 			? this.stats.time.first.date.getFullYear().toString() + '_' + this.stats.time.last.date.getFullYear().toString()
@@ -2811,6 +2831,10 @@ const wrapped = {
 		const fileName = 'Wrapped_' + (timePeriod || period);
 		const input = root + fileName + '.tex';
 		const output = root + fileName + '.pdf';
+		const parseCmd = (cmd) => cmd.replace(/%1/gi, _q(input))
+			.replace(/%2/gi, _q(output))
+			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
+			.replace(/%4/gi, (timePeriod || period));
 		console.log('Wrapped: saving .tex file to\n\t' + input);
 		_recycleFile(input, true);
 		_save(input, report, false);
@@ -2818,21 +2842,19 @@ const wrapped = {
 		if (!latexCmd || !latexCmd.length) {
 			latexCmd = 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1';
 		}
-		latexCmd = latexCmd
-			.replace(/%1/gi, _q(input))
-			.replace(/%2/gi, _q(output))
-			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
-			.replace(/%4/gi, (timePeriod || period));
+		latexCmd = parseCmd(latexCmd);
 		console.log('Wrapped: processing latex\n\t' + latexCmd);
 		if (latexCmd.includes('lualatex')) {
 			console.log('Wrapped: double compilation required');
 			_runCmd(latexCmd, true);
 		}
 		_runCmd(latexCmd, true);
+		if (_isFile(output)) { this.compressPDF(output); }
 		if (_isFile(output)) {
+			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
 			_recycleFile(root + fileName + '.aux', true);
 			_recycleFile(root + fileName + '.log', true);
-			console.log('Wrapped: opening .pdf file at\n\t' + input);
+			console.log('Wrapped: opening .pdf file at\n\t' + output);
 			_run(output);
 			return true;
 		}
@@ -2896,8 +2918,9 @@ const wrapped = {
 	cleanExif: function (root = this.basePath) {
 		const exifTool = folders.xxx + 'helpers-external\\exiftool\\exiftool.exe';
 		if (_isFile(exifTool)) {
-			console.log('Wrapped: processing images with exiftool.exe');
-			_runCmd('CMD /C "' + exifTool + '" -overwrite_original -r -ext jpg -ext gif -ext png -EXIF= "' + root + 'img"', false);
+			const command = ' -overwrite_original -r -ext jpg -ext gif -ext png -EXIF= ' + _q(root + 'img');
+			console.log('Wrapped: processing images with exiftool\n\texiftool.exe ' + command);
+			_runCmd('CMD /C ' + _q(exifTool) + command, false);
 		}
 	},
 	/**
@@ -2915,11 +2938,41 @@ const wrapped = {
 	compressImgs: function (root = this.basePath) {
 		const pingo = folders.xxx + 'helpers-external\\pingo\\pingo.exe';
 		if (_isFile(pingo)) {
-			console.log('Wrapped: processing images with pingo.exe');
-			_runCmd('CMD /C "' + pingo + '" -quiet"' + root + 'img\\albums"', false);
-			_runCmd('CMD /C "' + pingo + '" -quiet"' + root + 'img\\artists"', false);
-			_runCmd('CMD /C "' + pingo + '" -quiet"' + root + 'img\\bg"', false);
-			_runCmd('CMD /C "' + pingo + '" -quiet"' + root + 'img\\char"', false);
+			console.log('Wrapped: processing images with pingo\n\tpingo.exe -quiet ' + _q(root + 'img\\'));
+			_runCmd('CMD /C ' + _q(pingo) + ' -quiet ' + _q(root + 'img\\albums'), false);
+			_runCmd('CMD /C ' + _q(pingo) + ' -quiet ' + _q(root + 'img\\artists'), false);
+			_runCmd('CMD /C ' + _q(pingo) + ' -quiet ' + _q(root + 'img\\bg'), false);
+			_runCmd('CMD /C ' + _q(pingo) + ' -quiet ' + _q(root + 'img\\char'), false);
 		}
+	},
+	/**
+	 * Compress pdf output, requires ghostscript to be present at 'helpers-external\ghostscript', otherwise it is skipped.
+	 *
+	 * See {@link https://ghostscript.com/releases/gsdnld.html}
+	 *
+	 * @property
+	 * @name compressPDF
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {?string} root - Optional parameter that specifies the root directory for the report
+	 */
+	compressPDF: function (input) {
+		const ghostscript = [
+			folders.xxx + 'helpers-external\\ghostscript\\gswin64c.exe',
+			folders.xxx + 'helpers-external\\ghostscript\\gswin32c.exe'
+		];
+		ghostscript.some((gs) => {
+			if (_isFile(gs)) {
+				const command = ' -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dQUIET -sDEVICE=pdfwrite -o ' + _q(input + '_') + ' ' + _q(input);
+				console.log('Wrapped: processing pdf with ghostscript\n\t' + gs.split('\\').pop() + command);
+				_runCmd('CMD /C ' + _q(gs) + command, true);
+				if (_isFile(input + '_')) {
+					_copyFile(input + '_', input);
+					_deleteFile(input + '_', true);
+				}
+				return _isFile(input);
+			}
+		});
 	}
 };

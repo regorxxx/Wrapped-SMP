@@ -20,6 +20,8 @@
 - Report: general layout improvements.
 - Report: added listens per day and minutes per day stats.
 - Report: added album art for the most listened track on the day with most listens.
+- Post-Processing: added support for [ghostscript](https://ghostscript.com/) post-processing to optimize the pdf size. Executable (gswin64c.exe or gswin32c.exe) and DLL (gsdll64.dll or gsdll32.dll) must be placed at '.'.\xxx-scripts\helpers-external\ghostscript\'.
+- Post-Processing: added support for configurable CMD commands which are applied to output pdf.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).
 ### Changed
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
@@ -31,6 +33,7 @@
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 ### Removed
 ### Fixed
+- Report: multiple layout fixes and improvements according to latex engine used.
 - UI: '&' being displayed as '_' on tooltips.
 
 ## [1.4.0] - 2024-10-09

@@ -1,5 +1,5 @@
 'use strict';
-//10/12/24
+//11/12/24
 
 /* exported wrappedMenu */
 
@@ -49,12 +49,12 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	}
 	// Globals
 	const hasListens = isPlayCount && (isEnhPlayCount || isPlayCount2003);
-	const runWrapped = (timePeriod, query = '', latexCmd = null, mode = 'all') => {
+	const runWrapped = (timePeriod, query = '', latexCmd = null, extraCmd = [], mode = 'all') => {
 		this.switchAnimation('Wrapped stats retrieval', true);
 		if (mode === 'report') { wrapped.settings.bSuggestions = false; }
 		(
 			mode === 'all' || mode === 'report'
-				? wrapped.createPdfReport({ timePeriod, query, latexCmd })
+				? wrapped.createPdfReport({ timePeriod, query, latexCmd, extraCmd })
 				: wrapped.getData(timePeriod, query)
 		)
 			.then((bDone) => {
@@ -105,6 +105,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 							year,
 							this.buttonsProperties.queryFilter[1] || '',
 							this.buttonsProperties.latexCmd[1] || null,
+							this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
 							opt.mode
 						);
 					}
@@ -120,6 +121,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 						input,
 						this.buttonsProperties.queryFilter[1] || '',
 						this.buttonsProperties.latexCmd[1] || null,
+						this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
 						opt.mode
 					);
 				}, flags: hasListens ? MF_STRING : MF_GRAYED
@@ -132,6 +134,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 						null,
 						this.buttonsProperties.queryFilter[1] || '',
 						this.buttonsProperties.latexCmd[1] || null,
+						this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
 						opt.mode
 					);
 				}, flags: hasListens ? MF_STRING : MF_GRAYED
