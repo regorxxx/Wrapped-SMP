@@ -19,6 +19,7 @@
 - UI: tooltip now shows the most relevant settings.
 - Report: general layout improvements.
 - Report: added listens per day and minutes per day stats.
+- Report: added album stats; top 5 albums and most listened album info.
 - Report: added album art for the most listened track on the day with most listens.
 - Post-Processing: added support for [ghostscript](https://ghostscript.com/) post-processing to optimize the pdf size. Executable (gswin64c.exe or gswin32c.exe) and DLL (gsdll64.dll or gsdll32.dll) must be placed at '.'.\xxx-scripts\helpers-external\ghostscript\'.
 - Post-Processing: added support for configurable CMD commands which are applied to output pdf.

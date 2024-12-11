@@ -97,7 +97,14 @@ const wrapped = {
 			/** @type {{artist:string, month:number, listens:number, monthName:string}[]} */
 			byMonth: []
 		},
-		albums: { total: 0 },
+		albums: {
+			total: 0,
+			top: {
+				artist: '',
+				album: '',
+				topTrack: { title: '', listens: 0, artist: '', album:'', handle: null, albumImg: null }
+			},
+		},
 		countries: {
 			total: 0,
 			/** @type {{name:string, listens:number, iso:string}[]} */
@@ -372,9 +379,14 @@ const wrapped = {
 				}
 				// Process
 				data.forEach((track) => {
-					track.artist = fb.TitleFormat(_bt(this.tags.artist))
-						.EvalWithMetadbs(new FbMetadbHandleList(track.handle))
-						.flat(Infinity).join(', ');
+					track.artists = [...new Set(
+						fb.TitleFormat(_bt(this.tags.artist))
+							.EvalWithMetadbs(new FbMetadbHandleList(track.handle))
+							.map((artist) => artist.split(/, ?/))
+							.flat(Infinity)
+					)];
+					track.artist = track.artists.join(', ');
+					track.album = fb.TitleFormat(_bt('ALBUM')).EvalWithMetadb(track.handle[0]);
 					track.title = track.x;
 					track.listens = track.y;
 					delete track.x;
@@ -534,7 +546,7 @@ const wrapped = {
 	 * @param {string} query? - Filter the library
 	 * @param {string} timeKey? - Time units: Days|Weeks
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
-	 * @returns {promise.<{album:string, listens:number}[]>}
+	 * @returns {promise.<{title:string, artist:string, artists:string[], listens:number}[]>}
 	*/
 	getAlbumsData: function (timePeriod, query, timeKey, fromDate) {
 		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
@@ -543,7 +555,7 @@ const wrapped = {
 			x: 'ALBUM',
 			query: this.getDataQuery(queryParam, query),
 			sourceType: 'library',
-			bRemoveDuplicates: true, bIncludeHandles: false,
+			bRemoveDuplicates: true, bIncludeHandles: true,
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
@@ -552,10 +564,17 @@ const wrapped = {
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((album) => album.y !== 0);
 				}
 				// Process
 				data.forEach((album) => {
+					album.artists = [...new Set(
+						fb.TitleFormat(_bt(this.tags.artist))
+							.EvalWithMetadbs(new FbMetadbHandleList(album.handle))
+							.map((artist) => artist.split(/, ?/))
+							.flat(Infinity)
+					)];
+					album.artist = album.artists[0];
 					album.title = album.x;
 					album.listens = album.y;
 					delete album.x;
@@ -1236,6 +1255,14 @@ const wrapped = {
 				}
 			});
 			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.countries.byArtist); }
+		}
+		// Top albums
+		if (wrappedData.artists.length && wrappedData.tracks.length && wrappedData.albums.length) {
+			this.stats.albums.top.album = wrappedData.albums[0].title;
+			this.stats.albums.top.artist = wrappedData.albums[0].artist;
+			const topTrack = wrappedData.tracks.find((track) => track.album === this.stats.albums.top.album && track.artists[0] === this.stats.albums.top.artist);
+			if (topTrack) { this.stats.albums.top.topTrack = topTrack; }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
 		}
 		return this.stats;
 	},
@@ -2099,13 +2126,19 @@ const wrapped = {
 			.then(() => this.getArtistsImgs(wrappedData.tracks))
 			.then(() => this.getArtistsImgs(this.stats.countries.byArtist))
 			.then(() => !!wrappedData.cities[0] && this.getArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
+			.then(() => !!wrappedData.albums[0] && this.getArtistsImgs([wrappedData.albums[0]]))
 			.then(() => this.downloadArtistsImgs(wrappedData.artists))
 			.then(() => this.downloadArtistsImgs(wrappedData.tracks))
 			.then(() => this.downloadArtistsImgs(this.stats.countries.byArtist))
 			.then(() => !!wrappedData.cities[0] && this.downloadArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
-			.then(() => this.saveTracksImgs(wrappedData.tracks))
-			.then(() => this.saveTracksImgs([this.stats.artists.top.topTrack]))
-			.then(() => this.saveTracksImgs([this.stats.time.most.track]))
+			.then(() => !!wrappedData.albums[0] && this.downloadArtistsImgs([wrappedData.albums[0]]))
+			.then(() => this.saveTracksImgs([
+				...wrappedData.tracks,
+				...wrappedData.albums,
+				this.stats.artists.top.topTrack,
+				this.stats.time.most.track,
+				this.stats.albums.top.topTrack
+			]))
 			.then(() => !!wrappedData.cities[0] && this.getCityImg(wrappedData.cities[0]))
 			.then(() => this.downloadCityImgs(wrappedData.cities))
 			.then(() => wrappedData);
@@ -2214,7 +2247,7 @@ const wrapped = {
 		const getMainGenreImg = (path) => this.getMainGenreGroupImg(path).replaceAll('\\', '/');
 		const enumerate = (data, key) => {
 			const subKey = ['artists', 'countries'].includes(key) ? 'artist' : 'title';
-			const imgKey = (key === 'tracks' ? 'album' : subKey) + 'Img';
+			const imgKey = (['tracks', 'albums'].includes(key) ? 'album' : subKey) + 'Img';
 			(key === 'countries' ? data : data[key]).forEach((p, i) => {
 				report += '\\begin{minipage}{0.05\\textwidth}\n';
 				report += '\t{\\Large \\textbf{' + (i + 1) + '}}\n';
@@ -2573,6 +2606,38 @@ const wrapped = {
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
 			report += '{\\Large Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
+				report += '\\\\\n';
+				report += '\\vspace{5mm}\n';
+				report += '\\textbf{\\textit{\\Large It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
+			} else {
+				report += '\n';
+			}
+			report += '\\end{center}\n';
+			report += '\\vfill %\n\n';
+		}
+		// Albums
+		if (this.stats.albums.total > 0) {
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n';
+			report += '\\addcontentsline{toc}{part}{Albums statistics}\n';
+			report += '\\pagebreak\n';
+			report += '\\pagecolor{pink!70}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\section[Your top 5 Albums]{Your top 5 Albums:}\n';
+			enumerate(wrappedData, 'albums');
+			// Top album's track
+			report += '\\pagebreak\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getImage(wrappedData.albums[0].artistImg) + '}};\n';
+			report += '\\begin{figure}[H]\n';
+			report += '\t\\centering\n';
+			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.albums.top.topTrack.albumImg) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(this.stats.albums.top.album, 20)) + '}\n';
+			report += '\\end{figure}\n';
+			report += '\\vspace{10mm}\n';
+			report += '\\begin{center}\n';
+			report += '{\\Large The most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
