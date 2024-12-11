@@ -33,6 +33,7 @@
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 ### Removed
 ### Fixed
+- Images: workaround for some images not being fully processed in some cases by nconvert when creating the pdf (images appeared corrupted).
 - Report: multiple layout fixes and improvements according to latex engine used.
 - UI: '&' being displayed as '_' on tooltips.
 

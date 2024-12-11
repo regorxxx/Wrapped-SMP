@@ -317,7 +317,7 @@ const wrapped = {
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((genre) => genre.y !== 0);
 				}
 				if (this.settings.bFilterGenresGraph) {
 					data = data.filter((g) => !music_graph_descriptors.map_distance_exclusions.has(g.x));
@@ -350,7 +350,7 @@ const wrapped = {
 	 * @param {string} query? - Filter the library
 	 * @param {string} timeKey? - Time units: Days|Weeks
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
-	 * @returns {promise.<{title:string, listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]>}
+	 * @returns {promise.<{title:string, artist:string, artists:string[], listens:number, skipCount:number, handle:FbMetadbHandle[], artist:string}[]>}
 	*/
 	getTracksData: function (timePeriod, query, timeKey, fromDate) {
 		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
@@ -368,7 +368,7 @@ const wrapped = {
 			.then(async (/** @type [{x:string, y:number, skipCount:number, handle:FbMetadbHandle[]}[]] */ data) => {
 				data = data[0];
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((track) => track.y !== 0);
 				}
 				// Process
 				data.forEach((track) => {
@@ -421,7 +421,7 @@ const wrapped = {
 			.then((/** @type [{x: number, y: number}[]] */ data) => {
 				data = data[0].filter((bpm) => bpm.x);
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((bpm) => bpm.y !== 0);
 				}
 				// Process
 				data.forEach((bpm) => {
@@ -464,7 +464,7 @@ const wrapped = {
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0].filter((key) => key.x);
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((key) => key.y !== 0);
 				}
 				// Process
 				data.forEach((key) => {
@@ -491,7 +491,7 @@ const wrapped = {
 	 * @param {string} query? - Filter the library
 	 * @param {string} timeKey? - Time units: Days|Weeks
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
-	 * @returns {promise.<{key:string, listens:number}[]>}
+	 * @returns {promise.<{mood:string, listens:number}[]>}
 	*/
 	getMoodsData: function (timePeriod, query, timeKey, fromDate) {
 		const queryParam = this.getDataQueryParam(timePeriod, timeKey);
@@ -509,7 +509,7 @@ const wrapped = {
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0].filter((key) => key.x);
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((mood) => mood.y !== 0);
 				}
 				// Process
 				data.forEach((mood) => {
@@ -595,7 +595,7 @@ const wrapped = {
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((country) => country.y !== 0);
 				}
 				// Process
 				data.forEach((country) => {
@@ -642,7 +642,7 @@ const wrapped = {
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
 				if (this.isServicesListens()) {
-					data = data.filter((artist) => artist.y !== 0);
+					data = data.filter((city) => city.y !== 0);
 				}
 				// Process
 				data.forEach((city) => {
@@ -1786,20 +1786,22 @@ const wrapped = {
 			(track) => this.getTrackImg(toType(track.handle) === 'FbMetadbHandle' ? track.handle : track.handle[0])
 				.then((artPromise) => {
 					if (artPromise.image) {
-						const imgPath = path + _asciify(sanitize(track.title)).replace(/ /g, '').slice(0, 10) + '.jpg';
+						const imgPath = path + _asciify(sanitize(track.title)).replace(/ /g, '').slice(0, 10).toLowerCase() + '.jpg';
 						artPromise.image.SaveAs(imgPath, 'image/jpeg');
 						track.albumImg = bRelative ? imgPath.replace(root, '') : imgPath;
 					} else { track.albumImg = (bRelative ? '' : root) + 'img\\fallback\\nocover.png'; }
-					return Promise.resolve(track.albumImg);
+					return Promise.wait(500).then(() => track);
 				})
-		).then(() => {
-			if (bFormat) {
-				console.log('Wrapped: processing track images with nconvert.exe');
-				const nconvert = folders.xxx + 'helpers-external\\nconvert\\nconvert' + (soFeat.x64 ? '' : '_32') + '.exe';
-				_runCmd('CMD /C ' + nconvert + ' -out jpeg -dpi 300 -resize 800 800 -overwrite -keepfiledate -ignore_errors "' + path + '*.jpg"', false);
-			}
-			return tracksData;
-		});
+		)
+			.then(() => {
+				if (bFormat) {
+					const nconvert = folders.xxx + 'helpers-external\\nconvert\\nconvert' + (soFeat.x64 ? '' : '_32') + '.exe';
+					const command = ' -out jpeg -dpi 300 -resize 600 600 -overwrite -keepfiledate -ignore_errors "' + path+ '*.jpg"';
+					console.log('Wrapped: processing track images (' + tracksData.length + ') with nconvert\n\tnconvert.exe' + command);
+					_runCmd('CMD /C ' + nconvert + command, false);
+				}
+				return Promise.wait(500).then(() => tracksData); // Give some time to nconvert to end
+			});
 	},
 	/**
 	 * Takes the 'artistsData' or 'tracksData' from {@link wrapped.getArtistsImgs}, downloads the images and and mutates it to change the img path. If there image already exists or there is a match at the image stub folder, that will be used instead.
@@ -2087,11 +2089,12 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; }} wrappedData
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, artist:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; albums: {title:string, artist:string, listens:number, handle:FbMetadbHandle[]}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}}} wrappedData
 	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getDataImages: function (wrappedData) {
 		console.log('Wrapped: retrieving images...');
+		// All arrays have been cut in length at this.getData
 		return this.getArtistsImgs(wrappedData.artists)
 			.then(() => this.getArtistsImgs(wrappedData.tracks))
 			.then(() => this.getArtistsImgs(this.stats.countries.byArtist))
