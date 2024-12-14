@@ -54,7 +54,7 @@ const wrapped = {
 		bOffline: false,
 		bFilterGenresGraph: true,
 		bSuggestions: true,
-		bDebug: true,
+		bDebug: false,
 		bDebugQuery: false,
 		highBpmHalveFactor: 30, // [0, 100]
 		bServicesListens: false,
