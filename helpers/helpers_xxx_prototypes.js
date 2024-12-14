@@ -629,6 +629,10 @@ Array.prototype.joinLast = function joinLast(separator, lastSeparator) { // NOSO
 	return this.join(separator || '').replaceLast(separator, lastSeparator);
 };
 
+Array.prototype.average = function (fn) { // NOSONAR
+	return (fn ? this.map(fn) : this).reduce((prev, curr, i) => prev + (curr - prev) / (i + 1), 0);
+};
+
 function zeroOrVal(e) {
 	return (e === 0 || e);
 }

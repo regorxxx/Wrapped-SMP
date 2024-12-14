@@ -21,6 +21,8 @@
 - Report: added listens per day and minutes per day stats.
 - Report: added album stats; top 5 albums and most listened album info.
 - Report: added album art for the most listened track on the day with most listens.
+- Report: added rating statistics to tracks and albums (average).
+- Report: added loved statistics to tracks and albums (at least 20% loved tracks).
 - Post-Processing: added support for [ghostscript](https://ghostscript.com/) post-processing to optimize the pdf size. Executable (gswin64c.exe or gswin32c.exe) and DLL (gsdll64.dll or gsdll32.dll) must be placed at '.'.\xxx-scripts\helpers-external\ghostscript\'.
 - Post-Processing: added support for configurable CMD commands which are applied to output pdf.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).

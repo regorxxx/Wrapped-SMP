@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/24
+//14/12/24
 
 /* exported wrapped */
 
@@ -54,7 +54,7 @@ const wrapped = {
 		bOffline: false,
 		bFilterGenresGraph: true,
 		bSuggestions: true,
-		bDebug: false,
+		bDebug: true,
 		bDebugQuery: false,
 		highBpmHalveFactor: 30, // [0, 100]
 		bServicesListens: false,
@@ -102,7 +102,7 @@ const wrapped = {
 			top: {
 				artist: '',
 				album: '',
-				topTrack: { title: '', listens: 0, artist: '', album:'', handle: null, albumImg: null }
+				topTrack: { title: '', listens: 0, artist: '', album: '', handle: null, albumImg: null }
 			},
 		},
 		countries: {
@@ -389,6 +389,20 @@ const wrapped = {
 					track.album = fb.TitleFormat(_bt('ALBUM')).EvalWithMetadb(track.handle[0]);
 					track.title = track.x;
 					track.listens = track.y;
+					track.rating = round(
+						Math.max(
+							...fb.TitleFormat(_bt(globTags.rating))
+								.EvalWithMetadbs(new FbMetadbHandleList(track.handle)),
+							0
+						),
+						1
+					);
+					track.loved = fb.TitleFormat(globTags.isLoved)
+						.EvalWithMetadbs(new FbMetadbHandleList(track.handle))
+						.some((val) => val === '1');
+					track.hated = fb.TitleFormat(globTags.isHated)
+						.EvalWithMetadbs(new FbMetadbHandleList(track.handle))
+						.some((val) => val === '1');
 					delete track.x;
 					delete track.y;
 				});
@@ -577,6 +591,20 @@ const wrapped = {
 					album.artist = album.artists[0];
 					album.title = album.x;
 					album.listens = album.y;
+					album.rating = round(
+						fb.TitleFormat(_bt(globTags.rating))
+							.EvalWithMetadbs(new FbMetadbHandleList(album.handle))
+							.average(),
+						1
+					);
+					album.lovedAvg = round(
+						fb.TitleFormat(globTags.isLoved)
+							.EvalWithMetadbs(new FbMetadbHandleList(album.handle))
+							.average(),
+						2
+					);
+					album.lovedAny = album.lovedAvg > 0;
+					album.loved = album.lovedAvg >= 0.2;
 					delete album.x;
 					delete album.y;
 				});
@@ -705,7 +733,7 @@ const wrapped = {
 	*/
 	computeArtistsStats: function (artistsData) {
 		this.stats.artists.total = artistsData.length;
-		if (this.settings.bDebug) { console.log('computeArtistsStats:', this.stats.artists); }
+		if (this.settings.bDebug) { console.log('computeArtistsStats:\n\t', this.stats.artists); }
 		return this.stats;
 	},
 	/**
@@ -748,7 +776,7 @@ const wrapped = {
 			node.score = round(node.score / listensTotal * 100);
 			this.stats.genres.groups.list.push(node);
 		});
-		if (this.settings.bDebug) { console.log('computeGenresStats:', this.stats.genres); }
+		if (this.settings.bDebug) { console.log('computeGenresStats:\n\t', this.stats.genres); }
 		return this.stats;
 	},
 	/**
@@ -765,7 +793,7 @@ const wrapped = {
 	*/
 	computeTracksStats: function (tracksData) {
 		this.stats.tracks.total = tracksData.length;
-		if (this.settings.bDebug) { console.log('computeTracksStats:', this.stats.tracks); }
+		if (this.settings.bDebug) { console.log('computeTracksStats:\n\t', this.stats.tracks); }
 		return this.stats;
 	},
 	/**
@@ -782,7 +810,7 @@ const wrapped = {
 	*/
 	computeAlbumsStats: function (albumsData) {
 		this.stats.albums.total = albumsData.length;
-		if (this.settings.bDebug) { console.log('computeAlbumsStats:', this.stats.albums); }
+		if (this.settings.bDebug) { console.log('computeAlbumsStats:\n\t', this.stats.albums); }
 		return this.stats;
 	},
 	/**
@@ -802,7 +830,7 @@ const wrapped = {
 		countriesData.slice(0, 5).forEach((country) => {
 			this.stats.countries.byISO.push({ ...country, iso: getCountryISO(country.name) });
 		});
-		if (this.settings.bDebug) { console.log('computeCountriesStats:', this.stats.countries); }
+		if (this.settings.bDebug) { console.log('computeCountriesStats:\n\t', this.stats.countries); }
 		return this.stats;
 	},
 	/**
@@ -818,7 +846,7 @@ const wrapped = {
 	*/
 	computeCitiesStats: function (citiesData) {
 		this.stats.cities.total = citiesData.length;
-		if (this.settings.bDebug) { console.log('computeCitiesStats:', this.stats.cities); }
+		if (this.settings.bDebug) { console.log('computeCitiesStats:\n\t', this.stats.cities); }
 		return this.stats;
 	},
 	/**
@@ -913,7 +941,10 @@ const wrapped = {
 		this.stats.time.mean.listensPerDay = this.stats.time.mean.listensPerDay > 1
 			? Math.round(this.stats.time.mean.listensPerDay)
 			: round(this.stats.time.mean.listensPerDay, 1);
-		if (this.settings.bDebug) { console.log('computeListensStats:', this.stats.listens); console.log('computeListensStats:', this.stats.time); }
+		if (this.settings.bDebug) {
+			console.log('computeListensStats:\n\t', this.stats.listens);
+			console.log('computeListensStats:\n\t', this.stats.time);
+		}
 		return this.stats;
 	},
 	/**
@@ -929,7 +960,7 @@ const wrapped = {
 	*/
 	computeSkipsStats: function (tracksData) {
 		this.stats.skips.total = tracksData.reduce((prev, track) => prev + track.skipCount, 0);
-		if (this.settings.bDebug) { console.log('computeSkipsStats:', this.stats.skips); }
+		if (this.settings.bDebug) { console.log('computeSkipsStats:\n\t', this.stats.skips); }
 		return this.stats;
 	},
 	/**
@@ -987,7 +1018,7 @@ const wrapped = {
 		const min = this.stats.bpms.min.val;
 		this.stats.bpms.histogram = calcHistogram(histogram, binSize, max, min)
 			.map((y, i) => { return { x: min + binSize * i, y }; });
-		if (this.settings.bDebug) { console.log('computeBpmStats:', this.stats.bpms); }
+		if (this.settings.bDebug) { console.log('computeBpmStats:\n\t', this.stats.bpms); }
 		return this.stats;
 	},
 	/**
@@ -1039,7 +1070,7 @@ const wrapped = {
 		}
 		this.stats.keys.histogram = calcHistogram(histogram, 1, 12, 1)
 			.map((y, i) => { return { x: 1 + i, y }; });
-		if (this.settings.bDebug) { console.log('computeKeyStats:', this.stats.keys); }
+		if (this.settings.bDebug) { console.log('computeKeyStats:\n\t', this.stats.keys); }
 		return this.stats;
 	},
 	/**
@@ -1066,7 +1097,7 @@ const wrapped = {
 			if (happyMoods.has(p.mood)) { this.stats.moods.happy.listens += p.listens; }
 			if (energeticMoods.has(p.mood)) { this.stats.moods.energetic.listens += p.listens; }
 		});
-		if (this.settings.bDebug) { console.log('computeMoodStats:', this.stats.moods); }
+		if (this.settings.bDebug) { console.log('computeMoodStats:\n\t', this.stats.moods); }
 		return this.stats;
 	},
 	/**
@@ -1187,7 +1218,7 @@ const wrapped = {
 			}
 		}
 		this.stats.character.list.forEach((character) => character.score = round(character.score, 2));
-		if (this.settings.bDebug) { console.log('computeCharacterStats:', this.stats.character.scores); }
+		if (this.settings.bDebug) { console.log('computeCharacterStats:\n\t', this.stats.character.scores); }
 		return this.stats;
 	},
 	/**
@@ -1210,7 +1241,7 @@ const wrapped = {
 			this.stats.artists.top.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === this.stats.artists.top.artist ? 1 : 0), 0);
 			const topTrack = wrappedData.tracks.find((track) => track.artist === this.stats.artists.top.artist);
 			if (topTrack) { this.stats.artists.top.topTrack = topTrack; }
-			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top); }
 			// By month
 			if (timePeriod) {
 				const topArtists = wrappedData.artists.slice(0, 5);
@@ -1241,7 +1272,7 @@ const wrapped = {
 						monthName: monthNames[max[0]]
 					});
 				}
-				if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.byMonth); }
+				if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.byMonth); }
 			}
 		}
 		// Top artist by Country
@@ -1254,7 +1285,7 @@ const wrapped = {
 					this.stats.countries.byArtist.push({ ...country, ...topArtist });
 				}
 			});
-			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.countries.byArtist); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.countries.byArtist); }
 		}
 		// Top albums
 		if (wrappedData.artists.length && wrappedData.tracks.length && wrappedData.albums.length) {
@@ -1262,7 +1293,7 @@ const wrapped = {
 			this.stats.albums.top.artist = wrappedData.albums[0].artist;
 			const topTrack = wrappedData.tracks.find((track) => track.album === this.stats.albums.top.album && track.artists[0] === this.stats.albums.top.artist);
 			if (topTrack) { this.stats.albums.top.topTrack = topTrack; }
-			if (this.settings.bDebug) { console.log('computeGlobalStats:', this.stats.artists.top); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top); }
 		}
 		return this.stats;
 	},
@@ -1303,7 +1334,7 @@ const wrapped = {
 			console.log('Wrapped: creating discovered songs playlist...');
 			let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
 			const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
-			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist: ' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist:\n\t' + query); }
 			handleList = fb.GetQueryItemsCheck(handleList, query);
 			if (handleList) {
 				handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
@@ -1333,7 +1364,7 @@ const wrapped = {
 				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 				queryCombinations(artists, _t(this.tags.artist), 'OR')
 			], 'AND');
-			if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist: ' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist:\n\t' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -1364,7 +1395,7 @@ const wrapped = {
 				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 				queryJoin(queryCombinations(genres, [globTags.genre, globTags.style], 'OR'), 'OR')
 			], 'AND');
-			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist: ' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist:\n\t' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -1399,7 +1430,7 @@ const wrapped = {
 				let handleList = new FbMetadbHandleList();
 				filters.forEach((query) => {
 					let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-					if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist: ' + _p(handleListCountry.Count) + ' <- ' + query); }
+					if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist:\n\t' + _p(handleListCountry.Count) + ' <- ' + query); }
 					if (handleListCountry) {
 						handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
 						handleList.AddRange(handleListCountry);
@@ -1440,7 +1471,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
@@ -1569,7 +1600,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist: ' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
@@ -1823,7 +1854,7 @@ const wrapped = {
 			.then(() => {
 				if (bFormat) {
 					const nconvert = folders.xxx + 'helpers-external\\nconvert\\nconvert' + (soFeat.x64 ? '' : '_32') + '.exe';
-					const command = ' -out jpeg -dpi 300 -resize 600 600 -overwrite -keepfiledate -ignore_errors "' + path+ '*.jpg"';
+					const command = ' -out jpeg -dpi 300 -resize 600 600 -overwrite -keepfiledate -ignore_errors "' + path + '*.jpg"';
 					console.log('Wrapped: processing track images (' + tracksData.length + ') with nconvert\n\tnconvert.exe' + command);
 					_runCmd('CMD /C ' + nconvert + command, false);
 				}
@@ -2103,7 +2134,13 @@ const wrapped = {
 				await this.computeGlobalStats(data, timePeriod, timeKey, fromDate);
 				Object.keys(data).forEach((key) => {
 					if (this.stats[key].total > 5) { data[key].length = 5; }
-					if (this.settings.bDebug) { console.log('getData[' + key + ']:', data[key]); }
+					if (this.settings.bDebug) {
+						if (['tracks', 'albums'].includes(key)) {
+							console.log('getData[' + key + ']:\n\t', data[key].map((d) => { return { ...d, handle: null }; }));
+						} else {
+							console.log('getData[' + key + ']:\n\t', data[key]);
+						}
+					}
 				});
 				return data;
 			});
@@ -2260,11 +2297,28 @@ const wrapped = {
 				report += '\t\\end{figure}\n';
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
-				report += subKey === 'title'
-					? '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n'
-					: key === 'countries'
-						? '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\\textit{' + cut(p[subKey], 40) + '}}\\\\With \\textit{' + p.listens + ' listens}.\n'
-						: '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
+				if (subKey === 'title') {
+					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
+						'By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\' +
+						'With \\textbf{\\textit{' + p.listens + ' listens}}';
+					if (['tracks', 'albums'].includes(key) && p.rating) {
+						report += '\\\\ \\Stars{' + p.rating + '}';
+					}
+					if (['tracks', 'albums'].includes(key) && p.loved) {
+						report += ' - \\Heart';
+					}
+					report += '}\n';
+				} else {
+					if (key === 'countries') {
+						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\\' +
+							'textit{' + cut(p[subKey], 40) + '}}\\\\' +
+							'With \\textit{' + p.listens + ' listens}.\n';
+					} else {
+						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
+							'With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
+					}
+
+				}
 				report += '\\end{minipage}\n';
 			});
 		};
@@ -2292,6 +2346,21 @@ const wrapped = {
 			'\\usepackage[dvipsnames]{xcolor} % Page color\n' +
 			'\\usepackage{tikz} % Background Image\n' +
 			'\\usetikzlibrary{shadows} % Shadows for nodes\n' +
+			'\\usetikzlibrary{shapes.geometric} % Stars\n' +
+			'\\newcommand{\\Stars}[2][fill=Goldenrod,draw=Gray]{\\begin{tikzpicture}[baseline=-0.35em,#1]\n' +
+			'\t\\foreach \\X in {1,...,5}\n' +
+			'\t{\\pgfmathsetmacro{\\xfill}{min(1,max(1+#2-\\X,0))}\n' +
+			'\t\t\\path (\\X*1.1em,0)\n' +
+			'\tnode[star,draw,star point height=0.25em,minimum size=1em,inner sep=0pt,\n' +
+			'\tpath picture={\\fill (path picture bounding box.south west)\n' +
+			'\t\t\trectangle  ([xshift=\\xfill*1em]path picture bounding box.north west);}]{};\n' +
+			'\t}\n' +
+			'\\end{tikzpicture}}\n' +
+			'\\newcommand{\\Heart}{\\begin{tikzpicture}[scale=0.35]\n' +
+			'\t\\fill [red, thick, domain=-200:200, samples=50]\n' +
+			'\tplot ({ .67*sin(\\x) * sin(\\x) * sin(\\x) + .5 },\n' +
+			'\t{ .65 * cos(\\x) - .2 * cos(2*\\x) - .1 * cos(3*\\x) - .05 * cos(4*\\x) - .4 } );\n' +
+			'\\end{tikzpicture}}\n' +
 			'\\usepackage{multicol} % Columns\n' +
 			'\\usepackage[colorlinks=true,linkcolor=blue,urlcolor=black,bookmarksopen=true]{hyperref}% TOC\n' +
 			'\\usepackage[open]{bookmark} % TOC\n' +
@@ -2622,7 +2691,7 @@ const wrapped = {
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Albums statistics}\n';
 			report += '\\pagebreak\n';
-			report += '\\pagecolor{pink!70}\n';
+			report += '\\pagecolor{NavyBlue!70}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\section[Your top 5 Albums]{Your top 5 Albums:}\n';
 			enumerate(wrappedData, 'albums');
@@ -2630,6 +2699,9 @@ const wrapped = {
 			report += '\\pagebreak\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getImage(wrappedData.albums[0].artistImg) + '}};\n';
+			report += '\\begin{center}\n';
+			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.albums.total + '}} different albums.}\n';
+			report += '\\end{center}\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.albums.top.topTrack.albumImg) + '}\n';
@@ -2637,7 +2709,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large The most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\Large And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
