@@ -6,7 +6,7 @@
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globQuery:readable, globTags:readable, soFeat:readable, isSkipCount:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, toType:readable */
+/* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, toType:readable, range:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable, _deleteFile:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -64,6 +64,7 @@ const wrapped = {
 	},
 	isWorking: [],
 	backgroundImgs: [],
+	monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 	stats: {
 		genres: {
 			total: 0,
@@ -157,7 +158,9 @@ const wrapped = {
 				date: new Date(),
 				minutes: 0,
 				track: { title: '', artist: '', handle: null, albumImg: null }
-			}
+			},
+			/** @type {{month:number, monthName:string, listens:number, time:number, minutes:number }[]} */
+			byMonth: []
 		},
 		character: {
 			list: [
@@ -885,24 +888,35 @@ const wrapped = {
 				}
 			)).map((track) => track.listens);
 			const days = new Map();
+			const months = new Map(
+				range(0, 11, 1).map((m) => [m, { month: m + 1, monthName: this.monthNames[m], listens: 0, time: 0, minutes: 0 }])
+			);
 			listens.forEach((listenArr, i) => {
 				const listenCount = listenArr.length;
 				this.stats.listens.total += listenCount;
 				listenArr.forEach((listen) => {
-					const dateStr = listen.toDateString();
-					const old = days.get(dateStr) || {
-						date: listen,
-						time: 0,
-						track: { listens: 0, handle: null, title: '', artist: '' }
-					};
-					old.time += tracks[i].handle.Length;
-					if (listenCount > old.track.listens) {
-						old.track.listens = listenCount;
-						old.track.handle = tracks[i].handle;
-						old.track.title = tracks[i].title;
-						old.track.artist = tracks[i].artist;
+					{ // Days
+						const dateStr = listen.toDateString();
+						const old = days.get(dateStr) || {
+							date: listen,
+							time: 0,
+							track: { listens: 0, handle: null, title: '', artist: '' }
+						};
+						old.time += tracks[i].handle.Length;
+						if (listenCount > old.track.listens) {
+							old.track.listens = listenCount;
+							old.track.handle = tracks[i].handle;
+							old.track.title = tracks[i].title;
+							old.track.artist = tracks[i].artist;
+						}
+						days.set(dateStr, old);
 					}
-					days.set(dateStr, old);
+					{ // Months
+						const dateStr = listen.getMonth();
+						const old = months.get(dateStr);
+						old.time += tracks[i].handle.Length;
+						old.listens++;
+					}
 				});
 			});
 			/** @type {{date:Date, time:number, track:{handle:FbMetadbHandle, title:string, artist:string}}} */
@@ -910,6 +924,8 @@ const wrapped = {
 			this.stats.time.most.date = max.date;
 			this.stats.time.most.minutes = round(max.time / 60, 0);
 			this.stats.time.most.track = max.track;
+			this.stats.time.byMonth = [...months.values()];
+			this.stats.time.byMonth.forEach((m) => m.minutes = round(m.time / 60, 0));
 		} else {
 			const tracks = tracksData.map((track) => {
 				this.stats.listens.total += track.listens;
@@ -1264,12 +1280,11 @@ const wrapped = {
 						});
 					});
 					const max = [...months.entries()].sort((a, b) => b[1] - a[1])[0];
-					const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 					this.stats.artists.byMonth.push({
 						artist: artist.artist,
 						month: max[0],
 						listens: max[1],
-						monthName: monthNames[max[0]]
+						monthName: this.monthNames[max[0]]
 					});
 				}
 				if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.byMonth); }
@@ -2572,9 +2587,36 @@ const wrapped = {
 		report += '{\\Huge Aproximately \\textbf{\\textit{' + this.stats.time.mean.minutesPerDay + '}} minutes per day.}\\\\\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
+		if (this.stats.time.byMonth.length) {
+			const topMonth = [...this.stats.time.byMonth].sort((a, b) => b.listens - a.listens)[0];
+			report += '\\pagebreak\n';
+			report += '\\phantomsection\n\\addcontentsline{toc}{section}{Listens by month}\n';
+			report += '\\pagecolor{red}\n';
+			report += '\\clearpage \\vspace*{\\fill}\n';
+			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
+			report += '\\begin{center}\n';
+			report += '{\\Huge In \\textbf{\\textit{' + topMonth.monthName + '}} you spent \\textbf{\\textit{' + topMonth.minutes + '}} minutes listening to your favourite music.}\\\\\n';
+			report += '\\vspace{40mm}\n';
+			report += '\t\\begin{tikzpicture}\n';
+			report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
+			report += '\t\t\\begin{axis} [ybar,bar width=1,width=\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,ylabel={Minutes},xlabel={Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,bar shift=0pt,enlarge x limits={abs=0.525}]\n';
+			report += '\t\t\t\\addplot[fill opacity=0.8,BurntOrange!40!black,fill=Goldenrod!70] coordinates {\n';
+			this.stats.time.byMonth.forEach((point) => {
+				report += '\t\t\t\t(' + point.month + ',' + point.minutes + ')\n';
+			});
+			report += '\t\t\t};\n';
+			report += '\t\t\t\\addplot[fill opacity=0.2,BurntOrange!40!black,fill=red] coordinates {\n';
+			report += '\t\t\t(' + topMonth.month + ',' + topMonth.minutes + ')\n';
+			report += '\t\t\t};\n';
+			report += '\t\t\\end{axis}\n';
+			report += '\t\\end{tikzpicture}\n';
+			report += '\t\\vspace{50mm}\n';
+			report += '\\end{center}\n\n';
+		}
 		// Day with more listening time
 		if (this.stats.time.most.minutes) {
 			report += '\\pagebreak\n';
+			report += '\\phantomsection\n\\addcontentsline{toc}{section}{Top Day}\n';
 			report += '\\pagecolor{red}\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
@@ -2709,7 +2751,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\Large And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
