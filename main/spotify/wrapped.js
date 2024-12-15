@@ -1258,7 +1258,7 @@ const wrapped = {
 			const topTrack = wrappedData.tracks.find((track) => track.artist === this.stats.artists.top.artist);
 			if (topTrack) { this.stats.artists.top.topTrack = topTrack; }
 			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top); }
-			// By month
+			// By Month
 			if (timePeriod) {
 				const topArtists = wrappedData.artists.slice(0, 5);
 				for (const artist of topArtists) {
@@ -2315,7 +2315,7 @@ const wrapped = {
 				if (subKey === 'title') {
 					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 						'By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\' +
-						'With \\textbf{\\textit{' + p.listens + ' listens}}';
+						'With \\textbf{\\textit{' + p.listens + ' listens}.}';
 					if (['tracks', 'albums'].includes(key) && p.rating) {
 						report += '\\\\ \\Stars{' + p.rating + '}';
 					}
@@ -2326,11 +2326,11 @@ const wrapped = {
 				} else {
 					if (key === 'countries') {
 						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\\' +
-							'textit{' + cut(p[subKey], 40) + '}}\\\\' +
-							'With \\textit{' + p.listens + ' listens}.\n';
+							'\\textbf{textit{' + cut(p[subKey], 40) + '}}\\\\' +
+							'With \\textit{' + p.listens + ' listens}.}\n';
 					} else {
 						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
-							'With \\textbf{\\textit{' + p.listens + ' listens}}}.\n';
+							'With \\textbf{\\textit{' + p.listens + ' listens}}.}\n';
 					}
 
 				}
@@ -2434,7 +2434,7 @@ const wrapped = {
 		report += '\\tikz[remember picture,overlay] \\node[opacity=1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\textwidth,height=24.4cm]{' + getCharImg(root) + '}};\n';
 		report += '\\begin{center}\n';
 		report += '\\tikz[baseline=0.6ex,overlay] \\fill [opacity=0.4,white] (-4,-1.6) rectangle (\\paperwidth,6ex);\n';
-		report += '\\textbf{\\textit{\\Large ' + this.stats.character.main.description.replace(latex, '\\$&') + '}}\n';
+		report += '\\textbf{\\textit{\\LARGE ' + this.stats.character.main.description.replace(latex, '\\$&') + '}}\n';
 		report += '\\end{center}\n\n';
 		report += '\n';
 		// Burger genres
@@ -2449,7 +2449,7 @@ const wrapped = {
 			report += '\t\\centering\n';
 			report += '\\begin{center}';
 			report += '\t{\\Huge Your most listened genres}\\\\\n';
-			report += '\t{\\large \u00D1am.}\n';
+			report += '\t{\\Large \u00D1am.}\n';
 			report += '\\end{center}';
 			report += '\\vspace{30mm}';
 			{
@@ -2475,7 +2475,7 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '{\\Huge ' + (year || period) + ' has been great...}\\\\\n';
 			report += '\\vspace{15mm}\n';
-			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.genres.total + '}} genres.}\n';
+			report += '{\\LARGE You have listened to \\textbf{\\textit{' + this.stats.genres.total + '}} genres.}\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Genre groups
@@ -2508,7 +2508,7 @@ const wrapped = {
 			report += '\\section[Your top 5 Genres]{Your top 5 Genres:}\n';
 			report += '\\begin{enumerate}\n';
 			wrappedData.genres.forEach((genre) => {
-				report += '\t\\item \\textbf{\\textit{' + genre.genre + '}} with \\textit{' + genre.listens + ' listens}.\n';
+				report += '\t\\item {\\Large\\textbf{\\textit{' + genre.genre + '}} with \\textit{' + genre.listens + ' listens}.}\n';
 			});
 			report += '\\end{enumerate}\n';
 		}
@@ -2524,7 +2524,7 @@ const wrapped = {
 			report += '\\begin{multicols}{2}\n';
 			report += '\t\\begin{itemize}\n';
 			this.stats.genres.similar.slice(0, 16).forEach((genre) => {
-				report += '\t\\item \\textbf{\\textit{' + genre.replace(latex, '\\$&') + '}}.\n';
+				report += '\t\\item {\\Large\\textbf{\\textit{' + genre.replace(latex, '\\$&') + '}}.}\n';
 			});
 			report += '\t\\end{itemize}\n';
 			report += '\\end{multicols}\n';
@@ -2542,10 +2542,11 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
 			report += '\\vspace{15mm}\n';
-			report += '{\\huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
+			report += '{\\Huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens\\\\\\vspace{5mm}and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
 			report += '\\vspace{15mm}\n';
-			report += '{\\Large But there is one special track for you...}\n';
+			report += '{\\LARGE But there is one special track for you...}\\\\\n';
 			report += '\\end{center}\n';
+			report += '\\vspace{30mm}\n';
 			report += '\\vfill %\n\n';
 			// Top track
 			report += '\\pagebreak\n';
@@ -2561,7 +2562,7 @@ const wrapped = {
 			report += '\t\\includegraphics[width=400px]{' + getImage(wrappedData.tracks[0].albumImg) + '}\n';
 			report += '\t\\label{fig:' + getUniqueLabel(wrappedData.tracks[0].title) + '}\n';
 			report += '\\end{figure}\n';
-			report += '{\\Large You have played it \\textbf{\\textit{' + wrappedData.tracks[0].listens + '}} times ' + (year ? 'this year' : 'since ' + firstYear) + '.}\n\n';
+			report += '{\\LARGE You have played it \\textbf{\\textit{' + wrappedData.tracks[0].listens + '}} times ' + (year ? 'this year' : 'since ' + firstYear) + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top 5 Tracks
@@ -2582,7 +2583,7 @@ const wrapped = {
 		report += '\\begin{center}\n';
 		report += '{\\Huge In total, you have listened to \\textbf{\\textit{' + this.stats.time.minutes + '}} minutes of music.}\\\\\n';
 		report += '\\vspace{15mm}\n';
-		report += '{\\Large That\'s \\textbf{\\textit{' + this.stats.time.days + '}} days non-stop.}\\\\\n';
+		report += '{\\LARGE That\'s \\textbf{\\textit{' + this.stats.time.days + '}} days non-stop.}\\\\\n';
 		report += '\\vspace{20mm}\n';
 		report += '{\\Huge Aproximately \\textbf{\\textit{' + this.stats.time.mean.minutesPerDay + '}} minutes per day.}\\\\\n';
 		report += '\\end{center}\n';
@@ -2590,16 +2591,17 @@ const wrapped = {
 		if (this.stats.time.byMonth.length) {
 			const topMonth = [...this.stats.time.byMonth].sort((a, b) => b.listens - a.listens)[0];
 			report += '\\pagebreak\n';
-			report += '\\phantomsection\n\\addcontentsline{toc}{section}{Listens by month}\n';
+			report += '\\phantomsection\n\\addcontentsline{toc}{section}{Listens by Month}\n';
 			report += '\\pagecolor{red}\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\begin{center}\n';
 			report += '{\\Huge In \\textbf{\\textit{' + topMonth.monthName + '}} you spent \\textbf{\\textit{' + topMonth.minutes + '}} minutes listening to your favourite music.}\\\\\n';
 			report += '\\vspace{40mm}\n';
+			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
-			report += '\t\t\\tikzstyle{every node}=[font=\\Large]\n';
-			report += '\t\t\\begin{axis} [ybar,bar width=1,width=\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,ylabel={Minutes},xlabel={Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,bar shift=0pt,enlarge x limits={abs=0.525}]\n';
+			report += '\t\t\\tikzstyle{every node}=[font=\\LARGE]\n';
+			report += '\t\t\\begin{axis} [ybar,bar width=1,width=1.06\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,title={Listens by Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},bar shift=0pt,enlarge x limits={abs=0.522}]\n';
 			report += '\t\t\t\\addplot[fill opacity=0.8,BurntOrange!40!black,fill=Goldenrod!70] coordinates {\n';
 			this.stats.time.byMonth.forEach((point) => {
 				report += '\t\t\t\t(' + point.month + ',' + point.minutes + ')\n';
@@ -2631,7 +2633,7 @@ const wrapped = {
 			report += '\t\\includegraphics[width=400px]{' + getImage(this.stats.time.most.track.albumImg) + '}\n';
 			report += '\t\\label{fig:' + getUniqueLabel(this.stats.time.most.track.title) + '}\n';
 			report += '\\end{figure}\n';
-			report += '{\\Large Your most listened track was \\textbf{\\textit{' +
+			report += '{\\LARGE Your most listened track was \\textbf{\\textit{' +
 				this.stats.time.most.track.title.replace(latex, '\\$&') +
 				'}} by \\textbf{\\textit{' +
 				this.stats.time.most.track.artist.replace(latex, '\\$&') + '}}.}\\\\\n';
@@ -2643,13 +2645,13 @@ const wrapped = {
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n';
 			report += '\\addcontentsline{toc}{part}{Artists statistics}\n';
-			// Artist by month
+			// Artist by Month
 			if (this.stats.artists.byMonth.length) {
 				wrappedData.artists.forEach((artist, i) => {
 					const month = this.stats.artists.byMonth[i].month;
 					const monthName = this.stats.artists.byMonth[i].monthName;
 					if (i !== 0) { report += '\\pagebreak\n'; }
-					else { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by month}\n'; }
+					else { report += '\\phantomsection\n\\addcontentsline{toc}{section}{Artists by Month}\n'; }
 					report += '\\pagecolor{teal}\n';
 					report += '\\clearpage \\vspace*{\\fill}\n';
 					report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
@@ -2668,7 +2670,7 @@ const wrapped = {
 						'}}}}\n';
 					report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
 					report += '\\end{figure}\n';
-					report += '{\\Large Month with more listens:\\\\\n';
+					report += '{\\LARGE Month with more listens:\\\\\n';
 					report += '\\textbf{' + monthName + '}}\n';
 					report += '\\end{center}\n';
 					report += '\\vfill %\n\n';
@@ -2686,7 +2688,7 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '{\\Huge You didn\'t waste your time in ' + (year || period) + '...}\\\\\n';
 			report += '\\vspace{15mm}\n';
-			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.artists.total + '}} artists.}\n';
+			report += '{\\LARGE You have listened to \\textbf{\\textit{' + this.stats.artists.total + '}} artists.}\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top artist
@@ -2716,11 +2718,11 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\LARGE Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
-				report += '\\textbf{\\textit{\\Large It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
+				report += '\\textbf{\\textit{\\LARGE It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
 			} else {
 				report += '\n';
 			}
@@ -2742,7 +2744,7 @@ const wrapped = {
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getImage(wrappedData.albums[0].artistImg) + '}};\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large You have listened to \\textbf{\\textit{' + this.stats.albums.total + '}} different albums.}\n';
+			report += '{\\LARGE You have listened to \\textbf{\\textit{' + this.stats.albums.total + '}} different albums.}\n';
 			report += '\\end{center}\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
@@ -2751,11 +2753,11 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Large And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\LARGE And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
-				report += '\\textbf{\\textit{\\Large It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
+				report += '\\textbf{\\textit{\\LARGE It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
 			} else {
 				report += '\n';
 			}
@@ -2772,7 +2774,7 @@ const wrapped = {
 			report += '\\section[Your listens around the world]{Your listens around the world:}\n';
 			report += '\\begin{enumerate}\n';
 			wrappedData.countries.forEach((country) => {
-				report += '\t\\item \\textbf{\\textit{' + cut(country.name, 20) + '}} with \\textit{' + country.listens + ' listens}.\n';
+				report += '\t\\item {\\Large\\textbf{\\textit{' + cut(country.name, 20) + '}} with \\textit{' + country.listens + ' listens}.}\n';
 			});
 			report += '\\end{enumerate}\n';
 			report += '\\vspace{15mm}\n';
@@ -2833,7 +2835,7 @@ const wrapped = {
 				const topArtistCity = wrappedData.cities[0].artists.slice(0, 3)
 					.map((data) => '\\textbf{\\textit{' + data.artist.replace(latex, '\\$&') + '}}')
 					.joinLast(', ', ' or ');
-				report += '{\\Large Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
+				report += '{\\LARGE Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
 			}
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
