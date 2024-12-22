@@ -17,6 +17,7 @@
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
 - UI: toolbar tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: tooltip now shows the most relevant settings.
+- Suggestions: suggested similar genres are now filtered to minimize showing genres already known (by listening period), but all alternative terms are still internally used to find more matches (i.e. trap, latin trap, ...). Algorithm has also been finetuned to provide more relevant results.
 - Report: general layout improvements.
 - Report: added listens per day and minutes per day stats.
 - Report: added album stats; top 5 albums and most listened album info.
@@ -31,6 +32,7 @@
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Images: it uses now Biography images found at '.foobarProfilePath\yttm\art_img\$lower($cut(artist),1))\artist\' before trying to download them from Spotify. TF is configurable.
 - Report: differentiates now between [different] tracks and listens.
+- Report: suggested similar genres are now filtered to minimize showing genres already known (by listening period) and also deduplicated (i.e. no alternative terms shown). Algorithm has also been finetuned to provide more relevant results. The list is also shuffled so in case there are more than 16 suggestions, random ones are picked instead of only those from first genres (this only applies to the report and not the playlist generation).
 - UI: modified layout of all menu entries, now split to make usage easier. Added configuration submenu and readme entries.
 - Readme: revised the entire readme with more detailed instructions, requisites, features and tips.
 - Helpers: updated helpers.

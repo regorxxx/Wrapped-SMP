@@ -1,4 +1,5 @@
-﻿'use strict';
+﻿
+'use strict';
 //22/12/24
 
 /* exported wrapped */
@@ -74,6 +75,8 @@ const wrapped = {
 			byScore: [],
 			/** @type {{name:string}[]} */
 			similar: [],
+			/** @type {{name:string}[]} */
+			similarV2: [],
 			groups: {
 				/** @type {{name:string, score: number}[]} */
 				list: [],
@@ -90,21 +93,15 @@ const wrapped = {
 		tracks: { total: 0 },
 		artists: {
 			total: 0,
-			top: {
-				artist: '',
-				tracks: 0,
-				topTrack: { title: '', listens: 0, artist: '', handle: null, albumImg: null }
-			},
+			/** @type {{artist:string, tracks:number, topTrack: { title:string, listens:number, artist:string, handle:FbMetadbHandle?, albumImg:string? }}[]} */
+			top: [],
 			/** @type {{artist:string, month:number, listens:number, monthName:string}[]} */
 			byMonth: []
 		},
 		albums: {
 			total: 0,
-			top: {
-				artist: '',
-				album: '',
-				topTrack: { title: '', listens: 0, artist: '', album: '', handle: null, albumImg: null }
-			},
+			/** @type {{artist:string, album:string, topTrack: { title:string, listens:number, artist:string,album:string, handle:FbMetadbHandle?, albumImg:string? }}[]} */
+			top: []
 		},
 		countries: {
 			total: 0,
@@ -209,7 +206,7 @@ const wrapped = {
 			} else if (!Object.getOwnPropertyDescriptor(obj, key)['get']) {
 				if (key === 'date') {
 					obj[key] = new Date();
-				} else if (['byMonth', 'similar', 'byScore', 'byISO', 'byArtist', 'histogram'].includes(key)) {
+				} else if (['byMonth', 'similar', 'byScore', 'byISO', 'byArtist', 'histogram', 'top'].includes(key)) {
 					obj[key].length = 0;
 				} else if (['artist', 'title'].includes(key)) {
 					obj[key] = '';
@@ -754,10 +751,22 @@ const wrapped = {
 		this.stats.genres.total = genresData.length;
 		const top = genresData.slice(0, 5);
 		const topGenres = top.map((genre) => genre.genre);
-		this.stats.genres.similar = [
-			...new Set(getNearestGenreStyles(topGenres, 50)).difference(new Set(topGenres))
-		];
 		const totalListensTop = top.reduce((acc, genre) => acc + genre.listens, 0);
+		this.stats.genres.similar = new Set(
+			getNearestGenreStyles(topGenres, music_graph_descriptors.cluster * 2)
+		).difference(
+			new Set(music_graph_descriptors.replaceWithAlternativeTerms(topGenres, true, true))
+		);
+		// Filter similar genres with things already present on library
+		genresData.filter((genre) =>
+			(genre.listens / totalListensTop) > 0.05 || (genre.listens / top[0].listens) > 0.1
+		).forEach((genre) => {
+			music_graph_descriptors.replaceWithAlternativeTerms([genre.genre], true, true)
+				.forEach((sub) => this.stats.genres.similar.delete(sub));
+		});
+		this.stats.genres.similar = [...this.stats.genres.similar];
+		this.stats.genres.similarV2 = music_graph_descriptors.filterDuplicatedSubstitutions(this.stats.genres.similar)
+			.shuffle();
 		top.forEach((genre) => {
 			this.stats.genres.byScore.push({
 				...genre,
@@ -1103,8 +1112,8 @@ const wrapped = {
 	computeMoodsStats: function (moodData) {
 		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow', 'Cold', 'Healing', 'Laidback', 'Meditation', 'Peaceful', 'Relaxed', 'Reflective', 'Slow', 'Smooth', 'Soft']);
 		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark', 'Drepressive', 'Emotional', 'Lonely', 'Nostalgic', 'Morose', 'Suicidal', 'Yearning']);
-		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun', 'Feel Good', 'Hot', 'Humorous', 'Positive', 'Sweet', 'Trippy']);
-		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting', 'Angry', 'Crazy', 'Energetic', 'Fast', 'Heavy', 'High', 'Upbeat', 'Wild']);
+		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun', 'Feel Good', 'Hot', 'Humorous', 'Positive', 'Sweet', 'Trippy', 'Flirty', 'Playful']);
+		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting', 'Angry', 'Crazy', 'Energetic', 'Fast', 'Heavy', 'High', 'Upbeat', 'Wild', 'Bouncy', 'Upbeat']);
 		// Every track may have multiple moods of same type, so total is not = total listens
 		moodData.forEach((p) => {
 			this.stats.moods.total += p.listens;
@@ -1252,19 +1261,27 @@ const wrapped = {
 	computeGlobalStats: async function (wrappedData, timePeriod, timeKey, fromDate) {
 		// Top artists
 		if (wrappedData.artists.length && wrappedData.tracks.length) {
-			// Top artist
-			this.stats.artists.top.artist = wrappedData.artists[0].artist;
-			this.stats.artists.top.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === this.stats.artists.top.artist ? 1 : 0), 0);
-			const topTrack = wrappedData.tracks.find((track) => track.artist === this.stats.artists.top.artist);
-			if (topTrack) { this.stats.artists.top.topTrack = topTrack; }
-			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top); }
+			// Top 5 artists
+			wrappedData.artists.slice(0, 5).forEach((data) => {
+				const topArtist = {
+					artist: '',
+					tracks: 0,
+					topTrack: { title: '', listens: 0, artist:'', handle: null, albumImg: null }
+				};
+				topArtist.artist = data.artist;
+				topArtist.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === topArtist.artist ? 1 : 0), 0);
+				const topTrack = wrappedData.tracks.find((track) => track.artist === topArtist.artist);
+				if (topTrack) { data.topTrack = topArtist.topTrack = topTrack; }
+				this.stats.artists.top.push(topArtist);
+			});
+			// Top artists
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top[0]); }
 			// By Month
 			if (timePeriod) {
-				const topArtists = wrappedData.artists.slice(0, 5);
-				for (const artist of topArtists) {
+				for (const data of this.stats.artists.top) {
 					const listens = (await getPlayCountV2(
 						new FbMetadbHandleList(
-							wrappedData.tracks.filter((track) => track.artist === artist.artist)
+							wrappedData.tracks.filter((track) => track.artist === data.artist)
 								.map((track) => track.handle[0])
 						), timePeriod, timeKey, fromDate, void (0),
 						{
@@ -1281,7 +1298,7 @@ const wrapped = {
 					});
 					const max = [...months.entries()].sort((a, b) => b[1] - a[1])[0];
 					this.stats.artists.byMonth.push({
-						artist: artist.artist,
+						artist: data.artist,
 						month: max[0],
 						listens: max[1],
 						monthName: this.monthNames[max[0]]
@@ -1296,6 +1313,9 @@ const wrapped = {
 				const filter = getZoneArtistFilter(country.iso, 'country');
 				const topArtist = wrappedData.artists.find((artist) => filter.artists.includes(artist.artist));
 				if (topArtist) {
+					topArtist.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === topArtist.artist ? 1 : 0), 0);
+					const topTrack = wrappedData.tracks.find((track) => track.artist === topArtist.artist);
+					if (topTrack) { topArtist.topTrack = topTrack; }
 					// Overwrites country's listens with artist's listens
 					this.stats.countries.byArtist.push({ ...country, ...topArtist });
 				}
@@ -1304,11 +1324,21 @@ const wrapped = {
 		}
 		// Top albums
 		if (wrappedData.artists.length && wrappedData.tracks.length && wrappedData.albums.length) {
-			this.stats.albums.top.album = wrappedData.albums[0].title;
-			this.stats.albums.top.artist = wrappedData.albums[0].artist;
-			const topTrack = wrappedData.tracks.find((track) => track.album === this.stats.albums.top.album && track.artists[0] === this.stats.albums.top.artist);
-			if (topTrack) { this.stats.albums.top.topTrack = topTrack; }
-			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top); }
+			// Top 5 artists
+			wrappedData.albums.slice(0, 5).forEach((data) => {
+				const topAlbum = {
+					artist: '',
+					album: '',
+					topTrack: { title: '', listens: 0, artist:'', album: '', handle: null, albumImg: null }
+				};
+				topAlbum.artist = data.artist;
+				topAlbum.album = data.title;
+				const topTrack = wrappedData.tracks.find((track) => track.album === topAlbum.album && track.artists[0] === topAlbum.artist);
+				if (topTrack) { data.topTrack = topAlbum.topTrack = topTrack; }
+				this.stats.albums.top.push(topAlbum);
+
+			});
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top[0]); }
 		}
 		return this.stats;
 	},
@@ -2187,10 +2217,10 @@ const wrapped = {
 			.then(() => this.saveTracksImgs([
 				...wrappedData.tracks,
 				...wrappedData.albums,
-				this.stats.artists.top.topTrack,
+				!!this.stats.artists.top[0] && this.stats.artists.top[0].topTrack,
 				this.stats.time.most.track,
-				this.stats.albums.top.topTrack
-			]))
+				!!this.stats.albums.top[0] && this.stats.albums.top[0].topTrack
+			].filter(Boolean)))
 			.then(() => !!wrappedData.cities[0] && this.getCityImg(wrappedData.cities[0]))
 			.then(() => this.downloadCityImgs(wrappedData.cities))
 			.then(() => wrappedData);
@@ -2313,8 +2343,8 @@ const wrapped = {
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
 				if (subKey === 'title') {
-					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
-						'By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\' +
+					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
+						'By \\textbf{\\textit{' + cut(p.artist, 40).replace(latex, '\\$&') + '}}\\\\' +
 						'With \\textbf{\\textit{' + p.listens + ' listens}.}';
 					if (['tracks', 'albums'].includes(key) && p.rating) {
 						report += '\\\\ \\Stars{' + p.rating + '}';
@@ -2325,12 +2355,20 @@ const wrapped = {
 					report += '}\n';
 				} else {
 					if (key === 'countries') {
-						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\' +
-							'\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
-							'With \\textit{' + p.listens + ' listens}.}\n';
+						report += '\t{\\Large\\textbf{' + cut(p.name, 40).replace(latex, '\\$&') + '}:\\\\' +
+							'\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
+							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
+							(Object.hasOwn(p, 'topTrack')
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40).replace(latex, '\\$&') + '}}\\\\'
+								: ''
+							) + '}\n';
 					} else {
-						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
-							'With \\textbf{\\textit{' + p.listens + ' listens}}.}\n';
+						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
+							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
+							(Object.hasOwn(p, 'topTrack')
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40).replace(latex, '\\$&') + '}}\\\\'
+								: ''
+							) + '}\n';
 					}
 
 				}
@@ -2519,11 +2557,11 @@ const wrapped = {
 			report += '\t\\label{fig:screenshot001}\n';
 			report += '\\end{figure}\n';
 		}
-		if (this.stats.genres.similar.length) {
+		if (this.stats.genres.similarV2.length) {
 			report += '\\subsection[Similar genres]{Other genres similar to your favourites you may like:}\n';
 			report += '\\begin{multicols}{2}\n';
 			report += '\t\\begin{itemize}\n';
-			this.stats.genres.similar.slice(0, 16).forEach((genre) => {
+			this.stats.genres.similarV2.slice(0, 16).forEach((genre) => {
 				report += '\t\\item {\\Large\\textbf{\\textit{' + genre.replace(latex, '\\$&') + '}}.}\n';
 			});
 			report += '\t\\end{itemize}\n';
@@ -2601,7 +2639,7 @@ const wrapped = {
 			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
 			report += '\t\t\\tikzstyle{every node}=[font=\\LARGE]\n';
-			report += '\t\t\\begin{axis} [ybar,bar width=1,width=1.06\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,title={Listens by Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},bar shift=0pt,enlarge x limits={abs=0.522}]\n';
+			report += '\t\t\\begin{axis} [ybar,bar width=1,width=1.06\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,title={Minutes by Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},bar shift=0pt,enlarge x limits={abs=0.522}]\n';
 			report += '\t\t\t\\addplot[fill opacity=0.8,BurntOrange!40!black,fill=Goldenrod!70] coordinates {\n';
 			this.stats.time.byMonth.forEach((point) => {
 				report += '\t\t\t\t(' + point.month + ',' + point.minutes + ')\n';
@@ -2704,7 +2742,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{5mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top.tracks + '}} different tracks played ' + (year ? 'this year' : 'these years') + '.}\n\n';
+			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top[0].tracks + '}} different tracks played ' + (year ? 'this year' : 'these years') + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top artist's track
@@ -2713,13 +2751,13 @@ const wrapped = {
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.4,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getImage(wrappedData.artists[0].artistImg) + '}};\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
-			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.artists.top.topTrack.albumImg) + '}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(this.stats.artists.top.topTrack.title, 20)) + '}\n';
+			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.artists.top[0].topTrack.albumImg) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(this.stats.artists.top[0].topTrack.title, 20)) + '}\n';
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\LARGE Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top.topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
-			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
+			report += '{\\LARGE Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			if (this.stats.artists.top[0].topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
 				report += '\\textbf{\\textit{\\LARGE It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
@@ -2748,13 +2786,13 @@ const wrapped = {
 			report += '\\end{center}\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
-			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.albums.top.topTrack.albumImg) + '}\n';
-			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(this.stats.albums.top.album, 20)) + '}\n';
+			report += '\t\\includegraphics[width=320px,height=320px]{' + getImage(this.stats.albums.top[0].topTrack.albumImg) + '}\n';
+			report += '\t\\label{fig:' + getUniqueLabel(cutReplace(this.stats.albums.top[0].album, 20)) + '}\n';
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\LARGE And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top.topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top.topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
-			if (this.stats.artists.top.topTrack === wrappedData.tracks[0]) {
+			report += '{\\LARGE And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			if (this.stats.artists.top[0].topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
 				report += '\\textbf{\\textit{\\LARGE It\'s also your overall most listened track ' + (year ? 'this year' : 'these years') + '!}}\n';
