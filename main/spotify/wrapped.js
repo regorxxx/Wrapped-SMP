@@ -2325,8 +2325,8 @@ const wrapped = {
 					report += '}\n';
 				} else {
 					if (key === 'countries') {
-						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\\' +
-							'\\textbf{textit{' + cut(p[subKey], 40) + '}}\\\\' +
+						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\\' +
+							'\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 							'With \\textit{' + p.listens + ' listens}.}\n';
 					} else {
 						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
