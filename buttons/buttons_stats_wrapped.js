@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/24
+//25/12/24
 
 /*
 	Wrapped
@@ -39,7 +39,7 @@ prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
 var newButtonsProperties = { // NOSONAR[global]
 	queryFilter: ['Library query filter', globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', { func: isStringWeak }, globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2'],
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
-	bFilterGenresGraph: ['Filter genres with Graph exclusions', true, { func: isBoolean }, true],
+	bFilterGenresGraph: ['Filter genres with Graph descriptors', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],
 	bServicesListens: ['Use external listens', false, { func: isBoolean }, false],
 	highBpmHalveFactor: ['% of high BPM tracks to halve', 30, { func: isInt, range: [[0, 100]] }, 30],

@@ -29,6 +29,7 @@
 - Post-Processing: added support for configurable CMD commands which are applied to output pdf.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).
 ### Changed
+- Configuration: 'Filter genres with Graph exclusions' has been changed to 'Filter genres with Graph descriptors' and now will remove any genre/style not found at the Graph (not only the exclusions).
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Images: it uses now Biography images found at '.foobarProfilePath\yttm\art_img\$lower($cut(artist),1))\artist\' before trying to download them from Spotify. TF is configurable.
 - Report: differentiates now between [different] tracks and listens.

@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//22/12/24
+//25/12/24
 
 /* exported wrapped */
 
@@ -327,7 +327,8 @@ const wrapped = {
 					data = data.filter((genre) => genre.y !== 0);
 				}
 				if (this.settings.bFilterGenresGraph) {
-					data = data.filter((g) => !music_graph_descriptors.map_distance_exclusions.has(g.x));
+					const descr = music_graph_descriptors;
+					data = data.filter((g) => !descr.map_distance_exclusions.has(g.x) && descr.isOnGraph([g.x]));
 				}
 				// Process
 				data.forEach((genre) => {
@@ -2627,26 +2628,27 @@ const wrapped = {
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		if (this.stats.time.byMonth.length) {
-			const topMonth = [...this.stats.time.byMonth].sort((a, b) => b.listens - a.listens)[0];
+			const topMonth = this.stats.time.byMonth
+				.reduce((top, curr) => top.minutes > curr.minutes ? top : curr, this.stats.time.byMonth[0]);
 			report += '\\pagebreak\n';
 			report += '\\phantomsection\n\\addcontentsline{toc}{section}{Listens by Month}\n';
 			report += '\\pagecolor{red}\n';
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge In \\textbf{\\textit{' + topMonth.monthName + '}} you spent \\textbf{\\textit{' + topMonth.minutes + '}} minutes listening to your favourite music.}\\\\\n';
+			report += '{\\Huge You listened \\textbf{\\textit{' + topMonth.minutes + '}} minutes of your favourite music in \\textbf{\\textit{' + topMonth.monthName + '}}, across \\textbf{\\textit{' + topMonth.listens + '}} listens.}\\\\\n';
 			report += '\\vspace{40mm}\n';
 			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
 			report += '\t\t\\tikzstyle{every node}=[font=\\LARGE]\n';
-			report += '\t\t\\begin{axis} [ybar,bar width=1,width=1.06\\textwidth,enlarge y limits=upper,xmin=1,ymin=0,title={Minutes by Month},xticklabels={,,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},bar shift=0pt,enlarge x limits={abs=0.522}]\n';
-			report += '\t\t\t\\addplot[fill opacity=0.8,BurntOrange!40!black,fill=Goldenrod!70] coordinates {\n';
+			report += '\t\t\\begin{axis} [smooth,width=1.06\\textwidth,enlarge y limits=upper,ymin=0,xlabel={Minutes by Month},xticklabels={,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},enlarge x limits={abs=0.025}]\n';
+			report += '\t\t\t\\addplot[fill opacity=0.9,BurntOrange,fill=BurntOrange!40!Yellow]\n\t\t\tcoordinates {\n';
 			this.stats.time.byMonth.forEach((point) => {
-				report += '\t\t\t\t(' + point.month + ',' + point.minutes + ')\n';
+				report += '\t\t\t\t(' + (point.month - 1) + ',' + point.minutes + ')\n';
 			});
-			report += '\t\t\t};\n';
-			report += '\t\t\t\\addplot[fill opacity=0.2,BurntOrange!40!black,fill=red] coordinates {\n';
-			report += '\t\t\t(' + topMonth.month + ',' + topMonth.minutes + ')\n';
+			report += '\t\t\t}\\closedcycle;\n';
+			report += '\t\t\t\\addplot[scatter,mark options={scale=2.5}]\n\t\t\tcoordinates {\n';
+			report += '\t\t\t(' + (topMonth.month - 1 + 0.2) + ',' + (topMonth.minutes + 10) + ')\n';
 			report += '\t\t\t};\n';
 			report += '\t\t\\end{axis}\n';
 			report += '\t\\end{tikzpicture}\n';
