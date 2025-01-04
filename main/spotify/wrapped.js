@@ -2652,7 +2652,7 @@ const wrapped = {
 			});
 			report += '\t\t\t}\\closedcycle;\n';
 			report += '\t\t\t\\addplot[scatter,mark options={scale=2.5}]\n\t\t\tcoordinates {\n';
-			report += '\t\t\t(' + (topMonth.month - 1 + (topMonth.month < 12 || this.stats.time.byMonth[topMonth.month].minutes !== 0 ?  0.2 : 0)) + ',' + (Math.round(topMonth.minutes * 1.002)) + ')\n';
+			report += '\t\t\t(' + (topMonth.month - 1 + (topMonth.month < 12 && this.stats.time.byMonth[topMonth.month].minutes !== 0 ?  0.2 : 0)) + ',' + (Math.round(topMonth.minutes * 1.002)) + ')\n';
 			report += '\t\t\t};\n';
 			report += '\t\t\\end{axis}\n';
 			report += '\t\\end{tikzpicture}\n';
