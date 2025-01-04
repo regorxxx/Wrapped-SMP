@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/24
+//26/12/24
 
 /*
 	Wrapped
@@ -39,7 +39,7 @@ prefix = getUniquePrefix(prefix, ''); // Puts new ID before '_'
 var newButtonsProperties = { // NOSONAR[global]
 	queryFilter: ['Library query filter', globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', { func: isStringWeak }, globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2'],
 	tags: ['Tags', JSON.stringify(wrapped.tags), { func: isJSON }, JSON.stringify(wrapped.tags)],
-	bFilterGenresGraph: ['Filter genres with Graph descriptors', true, { func: isBoolean }, true],
+	bFilterGenres: ['Filter non-recognized genre/styles', true, { func: isBoolean }, true],
 	bOffline: ['Offline mode', false, { func: isBoolean }, false],
 	bServicesListens: ['Use external listens', false, { func: isBoolean }, false],
 	highBpmHalveFactor: ['% of high BPM tracks to halve', 30, { func: isInt, range: [[0, 100]] }, 30],
@@ -98,7 +98,7 @@ addButton({
 								} else { deleteMainMenuDynamic('Wrapped'); }
 							},
 						'*': (value, key) => {
-							const settingsKeys = ['bFilterGenresGraph', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath'];
+							const settingsKeys = ['bFilterGenres', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath'];
 							if (settingsKeys.includes(key)) {
 								wrapped.settings[key] = value;
 							} else if (['tags'].includes(key)) {
@@ -231,7 +231,7 @@ addButton({
 				overwriteProperties(parent.buttonsProperties);
 			}
 			// Init wrapped settings
-			['bFilterGenresGraph', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
+			['bFilterGenres', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
 				.forEach((key) => wrapped.settings[key] = parent.buttonsProperties[key][1]);
 			Object.entries(JSON.parse(parent.buttonsProperties.tags[1])).forEach((pair) => {
 				if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }

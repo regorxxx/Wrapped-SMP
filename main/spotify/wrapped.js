@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//25/12/24
+//05/01/24
 
 /* exported wrapped */
 
@@ -52,8 +52,12 @@ const wrapped = {
 		mood: globTags.mood
 	},
 	settings: {
+		topSlice: 5, // Top X artists/albums/genres/countries
+		genreGroupSlice: 4, // Top X genre groups
+		genreSuggestSlice: 16, // Genre recommendations
+		cityArtistSlice: 3, // Top X artists from city (isplay of artist imgs hardcoded to max 3  on current latext report)
 		bOffline: false,
-		bFilterGenresGraph: true,
+		bFilterGenres: true,
 		bSuggestions: true,
 		bDebug: false,
 		bDebugQuery: false,
@@ -93,14 +97,14 @@ const wrapped = {
 		tracks: { total: 0 },
 		artists: {
 			total: 0,
-			/** @type {{artist:string, tracks:number, topTrack: { title:string, listens:number, artist:string, handle:FbMetadbHandle?, albumImg:string? }}[]} */
+			/** @type {{artist:string, tracks:number, topTrack: { title:string, listens:number, artist:string, handle:FbMetadbHandle[]?, albumImg:string? }}[]} */
 			top: [],
 			/** @type {{artist:string, month:number, listens:number, monthName:string}[]} */
 			byMonth: []
 		},
 		albums: {
 			total: 0,
-			/** @type {{artist:string, album:string, topTrack: { title:string, listens:number, artist:string,album:string, handle:FbMetadbHandle?, albumImg:string? }}[]} */
+			/** @type {{artist:string, album:string, topTrack: { title:string, listens:number, artist:string,album:string, handle:FbMetadbHandle[]?, albumImg:string? }}[]} */
 			top: []
 		},
 		countries: {
@@ -326,7 +330,7 @@ const wrapped = {
 				if (this.isServicesListens()) {
 					data = data.filter((genre) => genre.y !== 0);
 				}
-				if (this.settings.bFilterGenresGraph) {
+				if (this.settings.bFilterGenres) {
 					const descr = music_graph_descriptors;
 					data = data.filter((g) => !descr.map_distance_exclusions.has(g.x) && descr.isOnGraph([g.x]));
 				}
@@ -750,7 +754,7 @@ const wrapped = {
 	*/
 	computeGenresStats: function (genresData) {
 		this.stats.genres.total = genresData.length;
-		const top = genresData.slice(0, 5);
+		const top = genresData.slice(0, this.settings.topSlice);
 		const topGenres = top.map((genre) => genre.genre);
 		const totalListensTop = top.reduce((acc, genre) => acc + genre.listens, 0);
 		this.stats.genres.similar = new Set(
@@ -840,7 +844,7 @@ const wrapped = {
 	*/
 	computeCountriesStats: function (countriesData) {
 		this.stats.countries.total = countriesData.length;
-		countriesData.slice(0, 5).forEach((country) => {
+		countriesData.slice(0, this.settings.topSlice).forEach((country) => {
 			this.stats.countries.byISO.push({ ...country, iso: getCountryISO(country.name) });
 		});
 		if (this.settings.bDebug) { console.log('computeCountriesStats:\n\t', this.stats.countries); }
@@ -1142,7 +1146,7 @@ const wrapped = {
 		if (this.stats.artists.total > 0) {
 			// Fanatic: top artist listens > total listens / 3
 			if (this.stats.listens.total > 0) {
-				const topArtistWeight = wrappedData.artists[0].listens / wrappedData.artists.slice(0, 5).reduce((acc, artist) => acc + artist.listens, 0);
+				const topArtistWeight = wrappedData.artists[0].listens / wrappedData.artists.slice(0, this.settings.topSlice).reduce((acc, artist) => acc + artist.listens, 0);
 				const topArtistListenWeight = wrappedData.artists[0].listens / this.stats.listens.total;
 				if (topArtistListenWeight > 1 / 5 || topArtistWeight > 1 / 5) {
 					findChar('fanatic').score = (Math.min(topArtistListenWeight / (2 / 3) * 100, 100) + Math.min(topArtistWeight / (2 / 3), 100)) / 2;
@@ -1216,8 +1220,8 @@ const wrapped = {
 				char.score += Math.min(emotWeight / 1.5 * 100, 30);
 			}
 			// Time traveler: listen to favourite tracks many times
-			const top5Listens = wrappedData.tracks.slice(0, 5).reduce((prev, track) => prev + track.listens, 0);
-			const top20Listens = top5Listens + wrappedData.tracks.slice(5, 20).reduce((prev, track) => prev + track.listens, 0);
+			const top5Listens = wrappedData.tracks.slice(0, this.settings.topSlice).reduce((prev, track) => prev + track.listens, 0);
+			const top20Listens = top5Listens + wrappedData.tracks.slice(this.settings.topSlice, this.settings.topSlice * 4).reduce((prev, track) => prev + track.listens, 0);
 			const favWeight = (top5Listens / this.stats.listens.total + top5Listens / top20Listens) / 2;
 			if (favWeight > 1 / 10) {
 				findChar('time traveler').score = Math.min(favWeight * 100, 100);
@@ -1263,7 +1267,7 @@ const wrapped = {
 		// Top artists
 		if (wrappedData.artists.length && wrappedData.tracks.length) {
 			// Top 5 artists
-			wrappedData.artists.slice(0, 5).forEach((data) => {
+			wrappedData.artists.slice(0, this.settings.topSlice).forEach((data) => {
 				const topArtist = {
 					artist: '',
 					tracks: 0,
@@ -1326,7 +1330,7 @@ const wrapped = {
 		// Top albums
 		if (wrappedData.artists.length && wrappedData.tracks.length && wrappedData.albums.length) {
 			// Top 5 artists
-			wrappedData.albums.slice(0, 5).forEach((data) => {
+			wrappedData.albums.slice(0, this.settings.topSlice).forEach((data) => {
 				const topAlbum = {
 					artist: '',
 					album: '',
@@ -1434,7 +1438,7 @@ const wrapped = {
 	 * @returns {FbMetadbHandleList}
 	*/
 	computeTopGenresPlaylist: function (genresData, size = 100) {
-		const genres = genresData.slice(0, 5).map((genre) => genre.genre).filter(Boolean);
+		const genres = genresData.slice(0, this.settings.topSlice).map((genre) => genre.genre).filter(Boolean);
 		if (genres.length) {
 			console.log('Wrapped: creating top genres playlist...');
 			const query = queryJoin([
@@ -1636,7 +1640,7 @@ const wrapped = {
 		*/
 	computeSuggestedArtistsPlaylist: function (artistsData, queryParam, size = 100) {
 		console.log('Wrapped: creating similar artists playlist...');
-		const artists = artistsData.slice(0, 5).map((artist) => artist.artist);
+		const artists = artistsData.slice(0, this.settings.topSlice).map((artist) => artist.artist);
 		const lb = ListenBrainz;
 		if (this.settings.bOffline) {
 			this.playlists.suggestions.artists = Promise.resolve((() => {
@@ -2208,12 +2212,12 @@ const wrapped = {
 		return this.getArtistsImgs(wrappedData.artists)
 			.then(() => this.getArtistsImgs(wrappedData.tracks))
 			.then(() => this.getArtistsImgs(this.stats.countries.byArtist))
-			.then(() => !!wrappedData.cities[0] && this.getArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
+			.then(() => !!wrappedData.cities[0] && this.getArtistsImgs(wrappedData.cities[0].artists.slice(0, this.settings.cityArtistSlice)))
 			.then(() => !!wrappedData.albums[0] && this.getArtistsImgs([wrappedData.albums[0]]))
 			.then(() => this.downloadArtistsImgs(wrappedData.artists))
 			.then(() => this.downloadArtistsImgs(wrappedData.tracks))
 			.then(() => this.downloadArtistsImgs(this.stats.countries.byArtist))
-			.then(() => !!wrappedData.cities[0] && this.downloadArtistsImgs(wrappedData.cities[0].artists.slice(0, 3)))
+			.then(() => !!wrappedData.cities[0] && this.downloadArtistsImgs(wrappedData.cities[0].artists.slice(0, this.settings.cityArtistSlice)))
 			.then(() => !!wrappedData.albums[0] && this.downloadArtistsImgs([wrappedData.albums[0]]))
 			.then(() => this.saveTracksImgs([
 				...wrappedData.tracks,
@@ -2285,7 +2289,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @type {function}
-	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData - Data from {@link wrapped.getData}
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, artist:string, handle:FbMetadbHandle[]?, albumImg:string?}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData - Data from {@link wrapped.getData}
 	 * @param {number} year - Used for formatting purposes
 	 * @param {?string} root - Optional parameter that specifies the root directory for the report
 	 * @returns {string}
@@ -2530,10 +2534,10 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '\\begin{tikzpicture}[node distance={22mm},minimum size=2cm,main/.style = {draw,circle,fill opacity=0.75,general shadow={fill=blue!60,shadow xshift=3pt,shadow yshift=-3pt,fill opacity=0.4}}]\n';
 			const colors = ['Aquamarine!85', 'Aquamarine!70', 'BlueGreen!60', 'BlueGreen!50'];
-			this.stats.genres.groups.scores.slice(0, 4).forEach((group, i) => {
+			this.stats.genres.groups.scores.slice(0, this.settings.genreGroupSlice).forEach((group, i) => {
 				const name = group.name.replace(/dance_cluster|music_cluster|cluster/gi, '')
 					.replace(/[ _]/gi, ' ').replace(latex, '\\$&');
-				report += '\t\\node[main,scale=' + Math.max((4 - i), 1) + ',align=center,fill=' + colors[i] + '] (' + (i + 1) + ') ' +
+				report += '\t\\node[main,scale=' + Math.max((this.settings.genreGroupSlice - i), 1) + ',align=center,fill=' + colors[i] + '] (' + (i + 1) + ') ' +
 					(i > 0 ? '[below right of=' + i + ']' : '') +
 					'{' + name + '\\\\{\\scriptsize' + _p(group.score + '\\%') + '}};\n';
 			});
@@ -2562,7 +2566,7 @@ const wrapped = {
 			report += '\\subsection[Similar genres]{Other genres similar to your favourites you may like:}\n';
 			report += '\\begin{multicols}{2}\n';
 			report += '\t\\begin{itemize}\n';
-			this.stats.genres.similarV2.slice(0, 16).forEach((genre) => {
+			this.stats.genres.similarV2.slice(0, this.settings.genreSuggestSlice).forEach((genre) => {
 				report += '\t\\item {\\Large\\textbf{\\textit{' + genre.replace(latex, '\\$&') + '}}.}\n';
 			});
 			report += '\t\\end{itemize}\n';
@@ -2648,7 +2652,7 @@ const wrapped = {
 			});
 			report += '\t\t\t}\\closedcycle;\n';
 			report += '\t\t\t\\addplot[scatter,mark options={scale=2.5}]\n\t\t\tcoordinates {\n';
-			report += '\t\t\t(' + (topMonth.month - 1 + 0.2) + ',' + (topMonth.minutes + 10) + ')\n';
+			report += '\t\t\t(' + (topMonth.month - 1 + (topMonth.month < 12 || this.stats.time.byMonth[topMonth.month].minutes !== 0 ?  0.2 : 0)) + ',' + (Math.round(topMonth.minutes * 1.002)) + ')\n';
 			report += '\t\t\t};\n';
 			report += '\t\t\\end{axis}\n';
 			report += '\t\\end{tikzpicture}\n';
@@ -2872,7 +2876,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{7mm}\n';
 			if (artistsCity > 0) {
-				const topArtistCity = wrappedData.cities[0].artists.slice(0, 3)
+				const topArtistCity = wrappedData.cities[0].artists.slice(0, this.settings.cityArtistSlice)
 					.map((data) => '\\textbf{\\textit{' + data.artist.replace(latex, '\\$&') + '}}')
 					.joinLast(', ', ' or ');
 				report += '{\\LARGE Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
