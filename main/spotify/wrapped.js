@@ -2348,8 +2348,8 @@ const wrapped = {
 				report += '\\end{minipage}  \\hfill\n';
 				report += '\\begin{minipage}{0.70\\textwidth}\n';
 				if (subKey === 'title') {
-					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
-						'By \\textbf{\\textit{' + cut(p.artist, 40).replace(latex, '\\$&') + '}}\\\\' +
+					report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
+						'By \\textbf{\\textit{' + cut(p.artist, 40) + '}}\\\\' +
 						'With \\textbf{\\textit{' + p.listens + ' listens}.}';
 					if (['tracks', 'albums'].includes(key) && p.rating) {
 						report += '\\\\ \\Stars{' + p.rating + '}';
@@ -2360,18 +2360,18 @@ const wrapped = {
 					report += '}\n';
 				} else {
 					if (key === 'countries') {
-						report += '\t{\\Large\\textbf{' + cut(p.name, 40).replace(latex, '\\$&') + '}:\\\\' +
-							'\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
+						report += '\t{\\Large\\textbf{' + cut(p.name, 40) + '}:\\\\' +
+							'\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
 							(Object.hasOwn(p, 'topTrack')
-								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40).replace(latex, '\\$&') + '}}\\\\'
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}\\\\'
 								: ''
 							) + '}\n';
 					} else {
-						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40).replace(latex, '\\$&') + '}}\\\\' +
+						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
 							(Object.hasOwn(p, 'topTrack')
-								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40).replace(latex, '\\$&') + '}}\\\\'
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}\\\\'
 								: ''
 							) + '}\n';
 					}
@@ -2762,7 +2762,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\LARGE Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.title.replace(latex, '\\$&') + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\LARGE Their most loved track for you has been \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.title + '}} and you have played it \\textbf{\\textit{' + this.stats.artists.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top[0].topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
@@ -2797,7 +2797,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{10mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\LARGE And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.title.replace(latex, '\\$&') + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
+			report += '{\\LARGE And the most loved track from your top album has been \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.title + '}}. You have played it \\textbf{\\textit{' + this.stats.albums.top[0].topTrack.listens + '}} times ' + (year ? 'this year' : 'these years') + '}';
 			if (this.stats.artists.top[0].topTrack === wrappedData.tracks[0]) {
 				report += '\\\\\n';
 				report += '\\vspace{5mm}\n';
