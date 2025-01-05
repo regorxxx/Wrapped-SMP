@@ -2429,10 +2429,10 @@ const wrapped = {
 			'\\usepackage{anyfontsize} % Font size fixes\n' +
 			'\\renewcommand{\\familydefault}{\\sfdefault}\n\n' +
 			'\\newsavebox{\\picbox}\n' +
-			'\\newcommand{\\cutpic}[3]{\n' +
-			'\t\\savebox{\\picbox}{\\includegraphics[width=#2,height=#2]{#3}}\n' +
-			'\t\\tikz\\node [draw, rounded corners=#1, line width=4pt,\n' +
-			'\tcolor=orange, minimum width=\\wd\\picbox,\n' +
+			'\\newcommand{\\cutpic}[5]{\n' +
+			'\t\\savebox{\\picbox}{\\includegraphics[width=#3,height=#3]{#4}}\n' +
+			'\t\\tikz\\node [draw, rounded corners=#1, line width=#2,\n' +
+			'\tcolor=#5, minimum width=\\wd\\picbox,\n' +
 			'\tminimum height=\\ht\\picbox, path picture={\n' +
 			'\t\t\\node at (path picture bounding box.center) {\n' +
 			'\t\t\t\\usebox{\\picbox}};\n' +
@@ -2645,7 +2645,7 @@ const wrapped = {
 			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
 			report += '\t\t\\tikzstyle{every node}=[font=\\LARGE]\n';
-			report += '\t\t\\begin{axis} [smooth,width=1.06\\textwidth,enlarge y limits=upper,ymin=0,xlabel={Minutes by Month},xticklabels={,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},enlarge x limits={abs=0.025}]\n';
+			report += '\t\t\\begin{axis} [smooth,width=1.06\\textwidth,enlarge y limits=upper,ymin=0,xlabel={Minutes by Month},xticklabels={,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},enlarge x limits={abs=0.01}]\n';
 			report += '\t\t\t\\addplot[fill opacity=0.9,BurntOrange,fill=BurntOrange!40!Yellow]\n\t\t\tcoordinates {\n';
 			this.stats.time.byMonth.forEach((point) => {
 				report += '\t\t\t\t(' + (point.month - 1) + ',' + point.minutes + ')\n';
@@ -2709,9 +2709,9 @@ const wrapped = {
 						getImage('img\\month\\' + month + '.png') + '}}\n	';
 					report += '\t\\includegraphics[width=400px]{' +
 						getImage('img\\month\\' + month + '.png') +
-						'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{10px}{100px}{' +
+						'}\\llap{\\makebox[\\wd1][c]{\\raisebox{150px}{\\cutpic{50px}{2pt}{100px}{' +
 						getImage(wrappedData.artists[i].artistImg) +
-						'}}}}\n';
+						'}{Purple!90}}}}\n';
 					report += '\t\\label{fig:' + getUniqueLabel(cut(wrappedData.artists[0].artist, 20)) + '}\n';
 					report += '\\end{figure}\n';
 					report += '{\\LARGE Month with more listens:\\\\\n';
@@ -2865,12 +2865,12 @@ const wrapped = {
 			report += '\\vspace{7mm}\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
-			report += '\t\\cutpic{10px}{400px}{' + getImage(wrappedData.cities[0].img) + '}\n';
+			report += '\t\\cutpic{10px}{4pt}{400px}{' + getImage(wrappedData.cities[0].img) + '}{RawSienna!95}\n';
 			const artistsCity = wrappedData.cities[0].artists.length;
 			if (artistsCity > 0) {
 				const layout = artistsCity >= 3 ? ['l', 'c', 'r'] : artistsCity === 2 ? ['l', 'r'] : ['c'];
 				layout.forEach((align, i) => {
-					report += '\t\\llap{\\makebox[425px][' + align + ']{\\raisebox{-50px}{\\cutpic{10px}{100px}{' + getImage(wrappedData.cities[0].artists[i].artistImg) + '}}}}\n';
+					report += '\t\\llap{\\makebox[425px][' + align + ']{\\raisebox{-50px}{\\cutpic{10px}{3pt}{100px}{' + getImage(wrappedData.cities[0].artists[i].artistImg) + '}{RawSienna!85}}}}\n';
 				});
 			}
 			report += '\\end{figure}\n';
