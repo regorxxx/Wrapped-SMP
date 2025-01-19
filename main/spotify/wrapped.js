@@ -2364,14 +2364,14 @@ const wrapped = {
 							'\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
 							(Object.hasOwn(p, 'topTrack')
-								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}\\\\'
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}'
 								: ''
 							) + '}\n';
 					} else {
 						report += '\t{\\Large\\textbf{\\textit{' + cut(p[subKey], 40) + '}}\\\\' +
 							'With \\textbf{\\textit{' + p.listens + ' listens}}.' +
 							(Object.hasOwn(p, 'topTrack')
-								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}\\\\'
+								? '\\\\Top track: \\textbf{\\textit{' + cut(p.topTrack.title, 40) + '}}'
 								: ''
 							) + '}\n';
 					}
