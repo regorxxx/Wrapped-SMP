@@ -3,7 +3,7 @@
 [![CodeFactor][codefactor_badge]](https://www.codefactor.io/repository/github/regorxxx/wrapped-smp/overview/main)
 [![Codacy Badge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Wrapped-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Wrapped-SMP&amp;utm_campaign=Badge_Grade)
 ![GitHub](https://img.shields.io/github/license/regorxxx/Wrapped-SMP)  
-User listening statistics for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel). Analyzes user listening habits and outputs a report similar to Spotify's wrapped and personalized playlists. **To get statistics for previous years, Enhanced Playback Statistics and Playback Statistics must have been installed on that period.**
+User listening statistics for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel)/[JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378). Analyzes user listening habits and outputs a report similar to Spotify's wrapped and personalized playlists. **To get statistics for previous years, Enhanced Playback Statistics and Playback Statistics must have been installed on that period.**
 
     ![wp_1](https://github.com/user-attachments/assets/79a5b152-3259-4778-b76a-091ba7885a0c)
 
@@ -74,10 +74,12 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 ![Auto-device2](https://user-images.githubusercontent.com/83307074/125861102-9253716b-ded6-41d5-83b5-84664edeb17f.gif)
 
 ## Requirements[^details]
-1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
-2. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
-3. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
-4. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7 (64 bit) use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7). [For Win 7 / Wine (32 bit), use 21.6 version](https://www.npackd.org/p/org.miktex.MiKTeX/21.6).
+1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon. Only x32.
+2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
+4. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See installation notes.
+5. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
+6. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
+7. [LaTeX](https://miktex.org): Recommended LuaLaTeX via MiKTeX. Any version works. [For Win 7 (64 bit) use 22.7 version (or lower)](https://www.npackd.org/p/org.miktex.MiKTeX64/22.7). [For Win 7 / Wine (32 bit), use 21.6 version](https://www.npackd.org/p/org.miktex.MiKTeX/21.6).
 
 ## Optional[^details]
 1. [Skip Count](https://github.com/Fjara-h/foo_skipcount): To get some extra track stats.
@@ -87,8 +89,17 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 5. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
 
 ##  Installation
-See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
+See [_INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
+
+## Support
+ 1. [Issues tracker](https://github.com/regorxxx/Wrapped-SMP/issues).
+ 2. [Hydrogenaudio forum](https://hydrogenaud.io/index.php/topic,125565.0.html).
+ 3. [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki).
+
+## Nightly releases
+Zip file [from GitHub](https://github.com/regorxxx/Wrapped-SMP/archive/refs/heads/main.zip) (using the latest commit).
+
 
 [^details]: There are further details about versions and  required (or optional) software on the readme which can be opened at the button (at the settings menu). Not following those instructions carefully will probably break some things.
 
