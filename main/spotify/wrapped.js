@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//05/01/24
+//10/02/25
 
 /* exported wrapped */
 
@@ -1362,7 +1362,7 @@ const wrapped = {
 	computeTopTracksPlaylist: function (tracksData, size = 100) {
 		console.log('Wrapped: creating top songs playlist...');
 		let handleList = new FbMetadbHandleList(tracksData.slice(0, size).map((track) => track.handle[0]));
-		({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+		({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 		this.playlists.top = handleList;
 		return this.playlists.top;
 	},
@@ -1388,7 +1388,7 @@ const wrapped = {
 			handleList = fb.GetQueryItemsCheck(handleList, query);
 			if (handleList) {
 				handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
-				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 				this.playlists.discover = handleList;
 			}
 		}
@@ -1419,7 +1419,7 @@ const wrapped = {
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
 				handleList = new FbMetadbHandleList(handleList.Convert().shuffle().slice(0, size));
-				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 				this.playlists.topArtists = handleList;
 			}
 		}
@@ -1450,7 +1450,7 @@ const wrapped = {
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
 				handleList = new FbMetadbHandleList(handleList.Convert().shuffle().slice(0, size));
-				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+				({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 				this.playlists.topGenres = handleList;
 			}
 		}
@@ -1487,7 +1487,7 @@ const wrapped = {
 					}
 				});
 				if (handleList.Count) {
-					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 					this.playlists.topCountries = handleList;
 				}
 			}
@@ -1524,7 +1524,7 @@ const wrapped = {
 				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
-					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 					return handleList.Convert().slice(0, size);
 				}
 				return [];
@@ -1653,7 +1653,7 @@ const wrapped = {
 				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
-					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating' }) || { handleList: new FbMetadbHandleList() });
+					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
 					return handleList.Convert().slice(0, size);
 				}
 				return [];
