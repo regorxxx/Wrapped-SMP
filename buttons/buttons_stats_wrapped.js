@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/12/24
+//13/02/25
 
 /*
 	Wrapped
@@ -55,21 +55,12 @@ var newButtonsProperties = { // NOSONAR[global]
 setProperties(newButtonsProperties, prefix, 0); //This sets all the panel properties at once
 newButtonsProperties = getPropertiesPairs(newButtonsProperties, prefix, 0);
 buttonsBar.list.push(newButtonsProperties);
-// Create dynamic menus
-if (newButtonsProperties.bDynamicMenus[1]) {
-	bindDynamicMenus({
-		menu: wrappedMenu.bind({ buttonsProperties: newButtonsProperties, prefix: '' }),
-		parentName: 'Wrapped',
-		entryCallback: (entry) => {
-			const prefix = 'Wrapped';
-			return prefix + entry.entryText.replace(/\t.*/, '').replace(/&&/g, '&');
-		}
-	});
-}
 
 addButton({
-	'Wrapped': new ThemedButton({ x: 0, y: 0, w: _gr.CalcTextWidth('Wrapped', _gdiFont(globFonts.button.name, globFonts.button.size * buttonsBar.config.scale)) + 25 * _scale(1, false) / _scale(buttonsBar.config.scale), h: 22 }, 'Wrapped',
-		function (mask) {
+	'Wrapped': new ThemedButton({
+		coordinates: { x: 0, y: 0, w: _gr.CalcTextWidth('Wrapped', _gdiFont(globFonts.button.name, globFonts.button.size * buttonsBar.config.scale)) + 25 * _scale(1, false) / _scale(buttonsBar.config.scale), h: 22 },
+		text: 'Wrapped',
+		func: function (mask) {
 			if (mask === MK_SHIFT) {
 				const menu = settingsMenu(
 					this, true, ['buttons_stats_wrapped.js'],
@@ -175,7 +166,8 @@ addButton({
 			} else {
 				wrappedMenu.bind(this)().btn_up(this.currX, this.currY + this.currH);
 			}
-		}, null, void (0), () => {
+		},
+		description: () => {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
 			const bInfo = typeof menu_panelProperties === 'undefined' || menu_panelProperties.bTooltipInfo[1];
 			let info = '';
@@ -196,11 +188,12 @@ addButton({
 			}
 			return info;
 		},
-		'', newButtonsProperties, chars.spotify, void (0),
-		{
+		prefix, buttonsProperties: newButtonsProperties,
+		icon: chars.spotify,
+		variables: {
 			lBrainzTokenListener: false
 		},
-		{
+		listener: {
 			on_notify_data: (parent, name, info) => {
 				if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply' || name === 'precacheLibraryPaths') { return; }
 				switch (name) {
@@ -222,27 +215,39 @@ addButton({
 				}
 			},
 		},
-		(parent) => {
+		onInit: function () {
+			// Create dynamic menus
+			if (this.buttonsProperties.bDynamicMenus[1]) {
+				bindDynamicMenus({
+					menu: wrappedMenu.bind({ buttonsProperties: this.buttonsProperties, prefix: '' }),
+					parentName: 'Wrapped',
+					entryCallback: (entry) => {
+						const prefix = 'Wrapped';
+						return prefix + entry.entryText.replace(/\t.*/, '').replace(/&&/g, '&');
+					}
+				});
+			}
 			// Retrieve token from other panels
-			if (!parent.buttonsProperties.lBrainzToken[1].length) {
-				parent.lBrainzTokenListener = true;
+			if (!this.buttonsProperties.lBrainzToken[1].length) {
+				this.lBrainzTokenListener = true;
 				setTimeout(() => window.NotifyOthers('xxx-scripts: lb token', null), 3000);
-				setTimeout(() => { parent.lBrainzTokenListener = false; }, 6000);
-				overwriteProperties(parent.buttonsProperties);
+				setTimeout(() => { this.lBrainzTokenListener = false; }, 6000);
+				overwriteProperties(this.buttonsProperties);
 			}
 			// Init wrapped settings
 			['bFilterGenres', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
-				.forEach((key) => wrapped.settings[key] = parent.buttonsProperties[key][1]);
-			Object.entries(JSON.parse(parent.buttonsProperties.tags[1])).forEach((pair) => {
+				.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
+			Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
 				if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
 			});
 			// ListenBrainz token
-			if (parent.buttonsProperties.lBrainzToken[1] && !parent.buttonsProperties.lBrainzEncrypt[1]) {
-				wrapped.settings.tokens.listenBrainz = parent.buttonsProperties.lBrainzToken[1];
+			if (this.buttonsProperties.lBrainzToken[1] && !this.buttonsProperties.lBrainzEncrypt[1]) {
+				wrapped.settings.tokens.listenBrainz = this.buttonsProperties.lBrainzToken[1];
 			}
-			if (parent.buttonsProperties.lBrainzUser[1]) {
-				wrapped.settings.tokens.listenBrainzUser = parent.buttonsProperties.lBrainzUser[1];
+			if (this.buttonsProperties.lBrainzUser[1]) {
+				wrapped.settings.tokens.listenBrainzUser = this.buttonsProperties.lBrainzUser[1];
 			}
 		},
-		{ scriptName: 'Wrapped-SMP', version }),
+		update: { scriptName: 'Wrapped-SMP', version }
+	}),
 });
