@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//10/02/25
+//11/03/25
 
 /* exported wrapped */
 
@@ -1558,7 +1558,7 @@ const wrapped = {
 					let libItems;
 					if (globQuery.filter.length) {
 						try { libItems = fb.GetQueryItems(fb.GetLibraryItems(), globQuery.filter); } // Sanity check
-						catch (e) { libItems = fb.GetLibraryItems(); }
+						catch (e) { libItems = fb.GetLibraryItems(); } // eslint-disable-line no-unused-vars
 					} else { libItems = fb.GetLibraryItems(); }
 					const notFound = [];
 					let items = [];
@@ -1577,7 +1577,7 @@ const wrapped = {
 					items = queryArr.map((query, i) => {
 						let itemHandleList;
 						try { itemHandleList = fb.GetQueryItems(libItems, query); } // Sanity check
-						catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; }
+						catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; } // eslint-disable-line no-unused-vars
 						// Filter
 						if (itemHandleList.Count) {
 							itemHandleList = removeDuplicates({ handleList: itemHandleList, checkKeys: ['MUSICBRAINZ_TRACKID'], sortBias: globQuery.remDuplBias, bPreserveSort: false });
@@ -1719,7 +1719,7 @@ const wrapped = {
 					let libItems;
 					if (globQuery.filter.length) {
 						try { libItems = fb.GetQueryItems(fb.GetLibraryItems(), globQuery.filter); } // Sanity check
-						catch (e) { libItems = fb.GetLibraryItems(); }
+						catch (e) { libItems = fb.GetLibraryItems(); } // eslint-disable-line no-unused-vars
 					} else { libItems = fb.GetLibraryItems(); }
 					const notFound = [];
 					let items = [];
@@ -1762,7 +1762,7 @@ const wrapped = {
 						return queries.map((query, j) => {
 							let itemHandleList;
 							try { itemHandleList = fb.GetQueryItems(libItems, query); } // Sanity check
-							catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; }
+							catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query, 'ListenBrainz'); return; } // eslint-disable-line no-unused-vars
 							const title = tags[i].TITLE[j];
 							// Filter
 							if (itemHandleList.Count) {
@@ -1840,7 +1840,7 @@ const wrapped = {
 			: spotify.searchArtistInfo(artist)
 				.then((sData) => {
 					let img = null;
-					try { img = sData.best_match.items[0].images[0].url; } catch (e) { /* empty */ }
+					try { img = sData.best_match.items[0].images[0].url; } catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 					return img;
 				});
 	},
