@@ -36,6 +36,7 @@
 - Images: it uses now Biography images found at '.foobarProfilePath\yttm\art_img\$lower($cut(artist),1))\artist\' before trying to download them from Spotify. TF is configurable.
 - Report: differentiates now between [different] tracks and listens.
 - Report: suggested similar genres are now filtered to minimize showing genres already known (by listening period) and also deduplicated (i.e. no alternative terms shown). Algorithm has also been finetuned to provide more relevant results. The list is also shuffled so in case there are more than 16 suggestions, random ones are picked instead of only those from first genres (this only applies to the report and not the playlist generation).
+- UI: unified script updates settings across all my scripts, look for 'Updates' submenu.
 - UI: modified layout of all menu entries, now split to make usage easier. Added configuration submenu and readme entries.
 - Readme: revised the entire readme with more detailed instructions, requisites, features and tips.
 - Helpers: updated helpers.
