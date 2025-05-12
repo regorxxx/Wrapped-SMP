@@ -12,7 +12,6 @@
 
 ## [Unreleased][]
 ### Added
-
 - Data: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags to check if a source needs to be auto-updated. i.e. '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%','%2003_LAST_PLAYED_AGO%' and '%2003_LAST_PLAYED_AGO2%'.
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
 - UI: toolbar tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
@@ -29,6 +28,7 @@
 - Post-Processing: added support for configurable CMD commands which are applied to output pdf.
 - Readmes: Ctrl + L. Click on any entry within 'Add button' submenu on toolbar now opens directly their associated readme (without actually adding the button).
 ### Changed
+- Installation: added popup warnings when scripts are installed outside foobar2000 profile folder. These checks can be tweaked at globSettings.json.
 - Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
 - Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
 - Configuration: 'Filter genres with Graph exclusions' has been changed to 'Filter genres with Graph descriptors' and now will remove any genre/style not found at the Graph (not only the exclusions).
