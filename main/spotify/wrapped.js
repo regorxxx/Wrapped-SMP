@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//11/03/25
+//11/06/25
 
 /* exported wrapped */
 
@@ -195,7 +195,7 @@ const wrapped = {
 		topGenres: new FbMetadbHandleList(),
 		topCountries: new FbMetadbHandleList(),
 		suggestions: {
-			/** @type {Promise<(FbMetadbHandle|string)[]>} */
+			/** @type {Promise.<(FbMetadbHandle|string)[]>} */
 			genres: Promise.resolve([]),
 			/** @type {Promise.<(FbMetadbHandle|string)[]>} */
 			artists: Promise.resolve([]),
@@ -2070,7 +2070,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{name:string, listens:number}} cityData
-	 * @returns {Promise<string>}
+	 * @returns {Promise.<string>}
 	*/
 	getCityImg: function (cityData) {
 		cityData.img = null;
@@ -2117,7 +2117,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{name:string, listens:number, img:string}} cityData
-	 * @returns {Promise<string>}
+	 * @returns {Promise.<string>}
 	*/
 	downloadCityImgs: function (citiesData, root = this.basePath, bRelative = true) {
 		const path = root + 'img\\cities\\';
@@ -2148,7 +2148,7 @@ const wrapped = {
 	 * @param {string} query? - Recommended to use '%RATING% MISSING OR %RATING% GREATER 2'
 	 * @param {string} timeKey? - Time units: Days|Weeks
 	 * @param {Date} fromDate? - Reference date for usage with time periods based on time units
-	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
+	 * @returns {Promise.<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getData: async function (timePeriod, query, timeKey = null, fromDate = null) {
 		console.log('Wrapped: retrieving listening stats...');
@@ -2204,7 +2204,7 @@ const wrapped = {
 	 * @memberof wrapped
 	 * @type {function}
 	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, artist:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; albums: {title:string, artist:string, listens:number, handle:FbMetadbHandle[]}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}}} wrappedData
-	 * @returns {Promise<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
+	 * @returns {Promise.<{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, handle:FbMetadbHandle[]}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }>}
 	*/
 	getDataImages: function (wrappedData) {
 		console.log('Wrapped: retrieving images...');
