@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//11/06/25
+//20/06/25
 
 /* exported wrapped */
 
@@ -9,7 +9,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global forEachNested:readable, _bt:readable, _q:readable, round:readable, _asciify:readable, _p:readable, _t:readable, toType:readable, range:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable, _deleteFile:readable */
+/* global sanitize:readable, _isFolder:readable,, _isFile:readable, _createFolder:readable, getFiles:readable, _runCmd:readable, _copyFile:readable, _save:readable, _run:readable, _recycleFile:readable, _deleteFolder:readable, _deleteFile:readable, _jsonParseFileCheck:readable, utf8:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global sendToPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_statistics.js');
@@ -65,7 +65,9 @@ const wrapped = {
 		bServicesListens: false,
 		tokens: { listenBrainz: '', listenBrainzUser: '' },
 		imageStubPath: '.\\yttm\\art_img\\$lower($cut(%1,1))\\%1\\',
-
+		filePaths: {
+			worldMapArtists: '.\\profile\\' + folders.dataName + 'worldMap.json'
+		}
 	},
 	isWorking: [],
 	backgroundImgs: [],
@@ -246,7 +248,7 @@ const wrapped = {
 	getDataQuery: function (queryParam, extraQuery = '') {
 		return queryJoin([
 			queryParam && !this.isServicesListens()
-				? '%LAST_PLAYED_ENHANCED% ' + queryParam + ' OR %LAST_PLAYED% ' + queryParam + ' OR %2003_LAST_PLAYED% ' + queryParam
+				? '(%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% ' + queryParam + ') OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% ' + queryParam + ') OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% ' + queryParam + ')'
 				: '',
 			extraQuery || ''
 		].filter(Boolean), 'AND');
@@ -274,7 +276,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x: string, y: number}[]]*/ data) => {
 				data = data[0];
@@ -323,7 +326,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0]; // There is only a single serie
@@ -375,7 +379,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then(async (/** @type [{x:string, y:number, skipCount:number, handle:FbMetadbHandle[]}[]] */ data) => {
 				data = data[0];
@@ -447,7 +452,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x: number, y: number}[]] */ data) => {
 				data = data[0].filter((bpm) => bpm.x);
@@ -490,7 +496,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
 				data = data[0].filter((key) => key.x);
@@ -535,7 +542,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0].filter((key) => key.x);
@@ -578,7 +586,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
@@ -642,7 +651,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
@@ -689,7 +699,8 @@ const wrapped = {
 			listenBrainz: {
 				user: this.isServicesListens() ? this.settings.tokens.listenBrainzUser : '',
 				bOffline: true
-			}
+			},
+			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x:string, y:number}[]] */ data) => {
 				data = data[0];
@@ -949,10 +960,10 @@ const wrapped = {
 			}).flat(Infinity);
 			const handleList = new FbMetadbHandleList(tracks.map((track) => track.handle));
 			// Tracks never played break the sorting with N/A
-			const tfFirst = fb.TitleFormat('$if3(%2003_FIRST_PLAYED%,%FIRST_PLAYED_ENHANCED%,%FIRST_PLAYED%,99999)');
+			const tfFirst = fb.TitleFormat(globTags.sortFirstPlayed);
 			handleList.OrderByFormat(tfFirst, 1);
 			const first = handleList[0];
-			const tfLast = fb.TitleFormat('$if3(%2003_LAST_PLAYED%,%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,0)');
+			const tfLast = fb.TitleFormat(globTags.sortLastPlayed);
 			handleList.OrderByFormat(tfLast, -1);
 			const last = handleList[0];
 			this.stats.time.first.date = new Date(tfFirst.EvalWithMetadb(first));
@@ -1179,7 +1190,7 @@ const wrapped = {
 				);
 			}
 		}
-		/*  TODO add statistics
+		/*  IDEA: add statistics
 			Alchemist: create many playlists
 			Collector: listen to own playlists
 			Joker: vampire and luminary stats similar, similar proportions of all moods
@@ -1271,7 +1282,7 @@ const wrapped = {
 				const topArtist = {
 					artist: '',
 					tracks: 0,
-					topTrack: { title: '', listens: 0, artist:'', handle: null, albumImg: null }
+					topTrack: { title: '', listens: 0, artist: '', handle: null, albumImg: null }
 				};
 				topArtist.artist = data.artist;
 				topArtist.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === topArtist.artist ? 1 : 0), 0);
@@ -1314,17 +1325,20 @@ const wrapped = {
 		}
 		// Top artist by Country
 		if (wrappedData.countries.length && wrappedData.artists.length) {
-			this.stats.countries.byISO.forEach((country) => {
-				const filter = getZoneArtistFilter(country.iso, 'country');
-				const topArtist = wrappedData.artists.find((artist) => filter.artists.includes(artist.artist));
-				if (topArtist) {
-					topArtist.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === topArtist.artist ? 1 : 0), 0);
-					const topTrack = wrappedData.tracks.find((track) => track.artist === topArtist.artist);
-					if (topTrack) { topArtist.topTrack = topTrack; }
-					// Overwrites country's listens with artist's listens
-					this.stats.countries.byArtist.push({ ...country, ...topArtist });
-				}
-			});
+			const worldMapData = _jsonParseFileCheck(this.settings.filePaths.worldMapArtists, 'Tags json', window.Name, utf8);
+			if (worldMapData) {
+				this.stats.countries.byISO.forEach((country) => {
+					const filter = getZoneArtistFilter(country.iso, 'country', worldMapData);
+					const topArtist = wrappedData.artists.find((artist) => filter.artists.includes(artist.artist));
+					if (topArtist) {
+						topArtist.tracks = wrappedData.tracks.reduce((acc, track) => acc + (track.artist === topArtist.artist ? 1 : 0), 0);
+						const topTrack = wrappedData.tracks.find((track) => track.artist === topArtist.artist);
+						if (topTrack) { topArtist.topTrack = topTrack; }
+						// Overwrites country's listens with artist's listens
+						this.stats.countries.byArtist.push({ ...country, ...topArtist });
+					}
+				});
+			}
 			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.countries.byArtist); }
 		}
 		// Top albums
@@ -1334,7 +1348,7 @@ const wrapped = {
 				const topAlbum = {
 					artist: '',
 					album: '',
-					topTrack: { title: '', listens: 0, artist:'', album: '', handle: null, albumImg: null }
+					topTrack: { title: '', listens: 0, artist: '', album: '', handle: null, albumImg: null }
 				};
 				topAlbum.artist = data.artist;
 				topAlbum.album = data.title;
@@ -1472,23 +1486,26 @@ const wrapped = {
 		const ISO = this.stats.countries.byISO.map((country) => country.iso).filter(Boolean);
 		if (ISO.length) {
 			console.log('Wrapped: creating top countries playlist...');
-			const filters = ISO.map((iso) => getZoneArtistFilter(iso, 'country')).filter(Boolean)
-				.map((filter) => queryJoin([globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', filter.query], 'AND'));
-			const count = filters.length;
-			if (count) {
-				/** @type {FbMetadbHandleList} */
-				let handleList = new FbMetadbHandleList();
-				filters.forEach((query) => {
-					let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-					if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist:\n\t' + _p(handleListCountry.Count) + ' <- ' + query); }
-					if (handleListCountry) {
-						handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
-						handleList.AddRange(handleListCountry);
+			const worldMapData = _jsonParseFileCheck(this.settings.filePaths.worldMapArtists, 'Tags json', window.Name, utf8);
+			if (worldMapData) {
+				const filters = ISO.map((iso) => getZoneArtistFilter(iso, 'country', worldMapData)).filter(Boolean)
+					.map((filter) => queryJoin([globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2', filter.query], 'AND'));
+				const count = filters.length;
+				if (count) {
+					/** @type {FbMetadbHandleList} */
+					let handleList = new FbMetadbHandleList();
+					filters.forEach((query) => {
+						let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
+						if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist:\n\t' + _p(handleListCountry.Count) + ' <- ' + query); }
+						if (handleListCountry) {
+							handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
+							handleList.AddRange(handleListCountry);
+						}
+					});
+					if (handleList.Count) {
+						({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
+						this.playlists.topCountries = handleList;
 					}
-				});
-				if (handleList.Count) {
-					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
-					this.playlists.topCountries = handleList;
 				}
 			}
 		}
@@ -2645,14 +2662,14 @@ const wrapped = {
 			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
 			report += '\t\t\\tikzstyle{every node}=[font=\\LARGE]\n';
-			report += '\t\t\\begin{axis} [smooth,width=1.06\\textwidth,enlarge y limits=upper,ymin=0,xlabel={Minutes by Month},xticklabels={,' + this.monthNames.map((m) => m.slice(0,3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},enlarge x limits={abs=0.01}]\n';
+			report += '\t\t\\begin{axis} [smooth,width=1.06\\textwidth,enlarge y limits=upper,ymin=0,xlabel={Minutes by Month},xticklabels={,' + this.monthNames.map((m) => m.slice(0, 3)).join(',') + '},ytick pos=left,xtick pos=bottom,axis x line*=bottom,axis y line*=left,scaled y ticks=base 10:-3,ytick scale label code/.code={},yticklabel={\\pgfmathprintnumber{\\tick} k},enlarge x limits={abs=0.01}]\n';
 			report += '\t\t\t\\addplot[fill opacity=0.9,BurntOrange,fill=BurntOrange!40!Yellow]\n\t\t\tcoordinates {\n';
 			this.stats.time.byMonth.forEach((point) => {
 				report += '\t\t\t\t(' + (point.month - 1) + ',' + point.minutes + ')\n';
 			});
 			report += '\t\t\t}\\closedcycle;\n';
 			report += '\t\t\t\\addplot[scatter,mark options={scale=2.5}]\n\t\t\tcoordinates {\n';
-			report += '\t\t\t(' + (topMonth.month - 1 + (topMonth.month < 12 && this.stats.time.byMonth[topMonth.month].minutes !== 0 ?  0.2 : 0)) + ',' + (Math.round(topMonth.minutes * 1.002)) + ')\n';
+			report += '\t\t\t(' + (topMonth.month - 1 + (topMonth.month < 12 && this.stats.time.byMonth[topMonth.month].minutes !== 0 ? 0.2 : 0)) + ',' + (Math.round(topMonth.minutes * 1.002)) + ')\n';
 			report += '\t\t\t};\n';
 			report += '\t\t\\end{axis}\n';
 			report += '\t\\end{tikzpicture}\n';

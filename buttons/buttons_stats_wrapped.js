@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/25
+//20/06/25
 
 /*
 	Wrapped
@@ -8,7 +8,7 @@
 
 /* global menu_panelProperties:readable */
 include('..\\helpers\\helpers_xxx.js');
-/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable, isPlayCount:readable, isEnhPlayCount:readable, isPlayCount2003:readable */
+/* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable, isPlayCount:readable, isEnhPlayCount:readable, isPlayCount2003:readable, folders:readable */
 include('..\\helpers\\buttons_xxx.js');
 /* global getUniquePrefix:readable, buttonsBar:readable, addButton:readable, ThemedButton:readable */
 include('..\\helpers\\helpers_xxx_input.js');
@@ -51,7 +51,13 @@ var newButtonsProperties = { // NOSONAR[global]
 	extraCmd: ['Extra cmd applied to output', JSON.stringify([]), { func: isJSON }, JSON.stringify([])],
 	bDynamicMenus: ['Menus at  \'File\\Spider Monkey Panel\\...\'', false, { func: isBoolean }, false],
 	bIconMode: ['Icon-only mode', false, { func: isBoolean }, false],
+	filePaths: ['External database paths', JSON.stringify({
+		listenBrainzArtists: '.\\profile\\' + folders.dataName + 'listenbrainz_artists.json',
+		searchByDistanceArtists: '.\\profile\\' + folders.dataName + 'searchByDistance_artists.json',
+		worldMapArtists: '.\\profile\\' + folders.dataName + 'worldMap.json'
+	})]
 };
+newButtonsProperties.filePaths.push({ func: isJSON }, newButtonsProperties.filePaths[1]);
 setProperties(newButtonsProperties, prefix, 0); //This sets all the panel properties at once
 newButtonsProperties = getPropertiesPairs(newButtonsProperties, prefix, 0);
 buttonsBar.list.push(newButtonsProperties);
@@ -113,6 +119,13 @@ addButton({
 								}
 							} else if ('lBrainzUser' === key) {
 								wrapped.settings.tokens.listenBrainzUser = value;
+							} else if ('filePaths' === key) {
+								const filePaths = JSON.parse(this.buttonsProperties.filePaths[1]);
+								for (let key in filePaths) {
+									if (Object.hasOwn(wrapped.settings.filePaths, key)) {
+										wrapped.settings.filePaths[key] = filePaths[key];
+									}
+								}
 							}
 						}
 					},
@@ -239,6 +252,12 @@ addButton({
 			// Init wrapped settings
 			['bFilterGenres', 'bOffline', 'bServicesListens', 'highBpmHalveFactor', 'imageStubPath']
 				.forEach((key) => wrapped.settings[key] = this.buttonsProperties[key][1]);
+			const filePaths = JSON.parse(this.buttonsProperties.filePaths[1]);
+			for (let key in filePaths) {
+				if (Object.hasOwn(wrapped.settings.filePaths, key)) {
+					wrapped.settings.filePaths[key] = filePaths[key];
+				}
+			}
 			Object.entries(JSON.parse(this.buttonsProperties.tags[1])).forEach((pair) => {
 				if (pair[1]) { wrapped.tags[pair[0]] = pair[1]; }
 			});
