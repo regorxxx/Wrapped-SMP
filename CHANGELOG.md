@@ -15,6 +15,7 @@
 - Data: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags to check if a source needs to be auto-updated. i.e. '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%','%2003_LAST_PLAYED_AGO%' and '%2003_LAST_PLAYED_AGO2%'.
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
 - UI: toolbar tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
+- UI: toolbar tooltip now shows 'Ctrl + Win + R. Click' shortcut to script panel menu (see above at 'installation').
 - UI: tooltip now shows the most relevant settings.
 - Suggestions: suggested similar genres are now filtered to minimize showing genres already known (by listening period), but all alternative terms are still internally used to find more matches (i.e. trap, latin trap, ...). Algorithm has also been finetuned to provide more relevant results.
 - Report: general layout improvements.
