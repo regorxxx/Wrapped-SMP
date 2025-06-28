@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/06/25
+//27/06/25
 
 /* exported getData, getDataAsync */
 
@@ -588,8 +588,8 @@ const getDataHelpers = {
 					if (id) {
 						if (!idMap.has(id)) { idMap.set(id, this.idChars.shuffle().join('')); }
 						id = idMap.get(id);
-					} else { id = ''; }
-					tag += id;
+						tag += id;
+					}
 				}
 				const entry = tagCount.get(tag);
 				if (!entry) {
@@ -830,6 +830,7 @@ function timeRange(tag, fromDate, toDate) {
 		case '#MONTH#':
 			return ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 		case '#YEAR#':
-			return range(toDate.getUTCFullYear(), fromDate.getUTCFullYear());
+			return range((toDate || new Date()).getUTCFullYear(), fromDate ? fromDate.getUTCFullYear() : 0);
+		default:
 	}
 }
