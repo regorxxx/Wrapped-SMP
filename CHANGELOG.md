@@ -18,6 +18,7 @@
 - UI: toolbar tooltip now shows 'Ctrl + Win + R. Click' shortcut to script panel menu (see below at 'installation').
 - UI: tooltip now shows the most relevant settings.
 - Suggestions: suggested similar genres are now filtered to minimize showing genres already known (by listening period), but all alternative terms are still internally used to find more matches (i.e. trap, latin trap, ...). Algorithm has also been finetuned to provide more relevant results.
+- Report: added new options to output report as JSON or HTML (IE) files. HTML (IE) option is Internet Explorer 8 compatible, meant to be opened within foobar2000 using SMP html popups.
 - Report: general layout improvements.
 - Report: added listens per day and minutes per day stats.
 - Report: added album stats; top 5 albums and most listened album info.

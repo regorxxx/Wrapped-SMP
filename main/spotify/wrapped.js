@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//20/06/25
+//03/07/25
 
 /* exported wrapped */
 
@@ -3100,6 +3100,163 @@ const wrapped = {
 			_recycleFile(root + fileName + '.aux', true);
 			_recycleFile(root + fileName + '.log', true);
 			console.log('Wrapped: opening .pdf file at\n\t' + output);
+			_run(output);
+			return true;
+		}
+		return false;
+	},
+	/**
+	 * Used to generate a HTML IE-compatible report for a specific year.
+	 *
+	 * @property
+	 * @name createHtmlIeReport
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{ timePeriod?: number; timeKey?: string; fromDate?: Date; query?: string; latexCmd?: string; extraCmd:string[]; root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, extraCmd, root }
+	 * @returns {any}
+	*/
+	createHtmlIeReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', extraCmd = [], root = this.basePath }) {
+		if (this.settings.bOffline) { console.log('Wrapped: offline mode'); }
+		this.cleanRoot(root);
+		this.copyDependencies(root);
+		return this.getData(timePeriod, query, timeKey, fromDate)
+			.then((wrappedData) => this.getDataImages(wrappedData))
+			.then((wrappedData) => {
+				this.cleanExif();
+				this.compressImgs();
+				return this.formatHtmlIeReport(wrappedData, timePeriod, root);
+			})
+			.then((report) => this.compileHtmlIeReport(report, timePeriod, extraCmd, root));
+	},
+	/**
+	 * Gives format in HTML IE-compatible to data retrieved {@link wrapped.getData} for a given year
+	 *
+	 * @property
+	 * @name formatHtmlIeReport
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, artist:string, handle:FbMetadbHandle[]?, albumImg:string?}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData - Data from {@link wrapped.getData}
+	 * @param {number} year - Used for formatting purposes
+	 * @param {?string} root - Optional parameter that specifies the root directory for the report
+	 * @returns {string}
+	*/
+	formatHtmlIeReport: function (wrappedData, year, root = this.basePath) {
+		console.log('Wrapped: creating HTML IE-compatible report...');
+		// Report
+		console.log(this.stats);
+		console.log(wrappedData);
+		console.log(wrappedData);
+		return {data: wrappedData, stats: this.stats};
+	},
+	/**
+		 * Compiles a report from {@link wrapped.formatHtmlIeReport} into HTML IE-compatible.
+		 *
+		 * @property
+		 * @name compileHtmlIeReport
+		 * @kind method
+		 * @memberof wrapped
+		 * @type {function}
+		 * @param {string} report - LaTeX formatted text from {@link wrapped.formatLatexReport}
+		 * @param {number|string} timePeriod - Used for formatting purposes
+		 * @param {string[]?} extraCmd - Commands applied to output pdf
+		 * @param {string?} root - Optional parameter that specifies the root directory for the report
+		 * @returns {boolean}
+		 */
+	compileHtmlIeReport: function compileLatexReport(report, timePeriod, extraCmd, root = this.basePath) {
+		console.log('Wrapped: compiling HTML IE-compatible report...');
+		const period = !timePeriod
+			? this.stats.time.first.date.getFullYear().toString() + '_' + this.stats.time.last.date.getFullYear().toString()
+			: null;
+		// Save report
+		const fileName = 'Wrapped_' + (timePeriod || period);
+		const data = root + fileName + '.js';
+		const output = root + fileName + '.html';
+		const parseCmd = (cmd) => cmd.replace(/%1/gi, _q(output))
+			.replace(/%2/gi, _q(output))
+			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
+			.replace(/%4/gi, (timePeriod || period));
+		_save(data, JSON.stringify(report, null, '\t').replace(/\n/g, '\r\n'), false);
+		// Parse cmd
+		if (_isFile(output)) {
+			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
+			console.log('Wrapped: opening .html file at\n\t' + output);
+			utils.ShowHtmlDialog(0, 'file://' + output);
+			return true;
+		}
+		return false;
+	},
+	/**
+	 * Used to generate a JSON report for a specific year.
+	 *
+	 * @property
+	 * @name createJsonReport
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{ timePeriod?: number; timeKey?: string; fromDate?: Date; query?: string; latexCmd?: string; extraCmd:string[]; root?: string }} { timePeriod, timeKey, fromDate, query, latexCmd, extraCmd, root }
+	 * @returns {any}
+	*/
+	createJsonReport: function ({ timePeriod, timeKey = null, fromDate = null, query = '', extraCmd = [], root = this.basePath }) {
+		if (this.settings.bOffline) { console.log('Wrapped: offline mode'); }
+		this.cleanRoot(root);
+		this.copyDependencies(root);
+		return this.getData(timePeriod, query, timeKey, fromDate)
+			.then((wrappedData) => this.getDataImages(wrappedData))
+			.then((wrappedData) => {
+				this.cleanExif();
+				this.compressImgs();
+				return this.formatJsonReport(wrappedData, timePeriod, root);
+			})
+			.then((report) => this.compileJsonReport(report, timePeriod, extraCmd, root));
+	},
+	/**
+	 * Gives format in JSON to data retrieved {@link wrapped.getData} for a given year
+	 *
+	 * @property
+	 * @name formatJsonReport
+	 * @kind method
+	 * @memberof wrapped
+	 * @type {function}
+	 * @param {{ genres: {genre:string, listens:number}[]; tracks: {title:string, listens:number, artist:string, handle:FbMetadbHandle[]?, albumImg:string?}[]; artists: {artist:string, listens:number}[]; bpms: {bpm:number, listens:number}[]; keys: {key:{hour:number, letter:string}, openKey:string, stdKey: string, listens:number}[]; moods: {mood:string, listens:number}[]; cities: {city:string, listens:number, artists:{artist:string, listens:number}[]}[]; countries: {name:string, listens:number}[]; albums: {album:string, listens:number}[] }} wrappedData - Data from {@link wrapped.getData}
+	 * @returns {object}
+	*/
+	formatJsonReport: function (wrappedData) {
+		console.log('Wrapped: creating HTML IE-compatible report...');
+		return {data: wrappedData, stats: this.stats};
+	},
+	/**
+		 * Compiles a report from {@link wrapped.formatHtmlIeReport} into JSON.
+		 *
+		 * @property
+		 * @name compileJsonReport
+		 * @kind method
+		 * @memberof wrapped
+		 * @type {function}
+		 * @param {string} report - LaTeX formatted text from {@link wrapped.formatLatexReport}
+		 * @param {number|string} timePeriod - Used for formatting purposes
+		 * @param {string[]?} extraCmd - Commands applied to output pdf
+		 * @param {string?} root - Optional parameter that specifies the root directory for the report
+		 * @returns {boolean}
+		 */
+	compileJsonReport: function compileLatexReport(report, timePeriod, extraCmd, root = this.basePath) {
+		console.log('Wrapped: compiling JSON report...');
+		const period = !timePeriod
+			? this.stats.time.first.date.getFullYear().toString() + '_' + this.stats.time.last.date.getFullYear().toString()
+			: null;
+		// Save report
+		const fileName = 'Wrapped_' + (timePeriod || period);
+		const output = root + fileName + '.json';
+		const parseCmd = (cmd) => cmd.replace(/%1/gi, _q(output))
+			.replace(/%2/gi, _q(output))
+			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
+			.replace(/%4/gi, (timePeriod || period));
+		_save(output, JSON.stringify(report, null, '\t').replace(/\n/g, '\r\n'), false);
+		// Parse cmd
+		if (_isFile(output)) {
+			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
+			console.log('Wrapped: opening .json file at\n\t' + output);
 			_run(output);
 			return true;
 		}

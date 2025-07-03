@@ -1,5 +1,5 @@
 'use strict';
-//11/12/24
+//03/07/25
 
 /* exported wrappedMenu */
 
@@ -49,12 +49,12 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	}
 	// Globals
 	const hasListens = isPlayCount && (isEnhPlayCount || isPlayCount2003);
-	const runWrapped = (timePeriod, query = '', latexCmd = null, extraCmd = [], mode = 'all') => {
+	const runWrapped = (timePeriod, query = '', latexCmd = null, extraCmd = [], mode = 'all', method = 'createPdfReport') => {
 		this.switchAnimation('Wrapped stats retrieval', true);
 		if (mode === 'report') { wrapped.settings.bSuggestions = false; }
 		(
 			mode === 'all' || mode === 'report'
-				? wrapped.createPdfReport({ timePeriod, query, latexCmd, extraCmd })
+				? wrapped[method]({ timePeriod, query, latexCmd, extraCmd })
 				: wrapped.getData(timePeriod, query)
 		)
 			.then((bDone) => {
@@ -89,55 +89,76 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	{	// Report
 		const currentYear = new Date().getFullYear();
 		const years = range(currentYear - 4, currentYear, 1).reverse();
+		const reportTypes = [
+			{ menu: 'PDF (LaTeX)', method: 'createPdfReport' },
+			{ menu: 'HTML (IE)', method: 'createHtmlIeReport' },
+			{ menu: 'JSON', method: 'createJsonReport' }
+		];
 		[
-			{ menu: 'Wrapped & Recommendations', mode: 'all', descr: 'Outputs the report & playlists:' },
-			{ menu: 'Wrapped (only)', mode: 'report', descr: 'Outputs only the report:' },
-			{ menu: 'Recommendations (only)', mode: 'recommendations', descr: 'Outputs only the playlists:' },
+			{ menu: 'Report and recommendations', mode: 'all', descr: 'Outputs report and playlists:' },
+			{ menu: 'Report', mode: 'report', descr: 'Outputs report:' },
+			{ menu: 'Recommendations', mode: 'recommendations', descr: 'Outputs only playlists:' },
 		].forEach((opt) => {
-			const menuName = menu.findOrNewMenu(opt.menu);
-			menu.newEntry({ menuName, entryText: opt.descr, flags: MF_GRAYED });
-			menu.newSeparator(menuName);
-			years.forEach((year) => {
+			reportTypes.forEach((reportType, i) => {
+				const menuName = menu.findOrNewMenu(opt.menu);
+				if (i === 0) {
+					menu.newEntry({ menuName, entryText: opt.descr, flags: MF_GRAYED });
+					menu.newSeparator(menuName);
+				}
+				const subMenuName = opt.mode !== 'recommendations'
+					? menu.findOrNewMenu(reportType.menu, menuName)
+					: menuName;
+				if (opt.mode === 'recommendations') {
+					if (i !== 0) { return; }
+				} else {
+					menu.newEntry({ menuName: subMenuName, entryText: 'Choose a period:', flags: MF_GRAYED });
+					menu.newSeparator(subMenuName);
+				}
+				years.forEach((year) => {
+					menu.newEntry({
+						menuName: subMenuName,
+						entryText: 'From ' + year + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+							runWrapped(
+								year,
+								this.buttonsProperties.queryFilter[1] || '',
+								this.buttonsProperties.latexCmd[1] || null,
+								this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
+								opt.mode,
+								reportType.method
+							);
+						}
+					});
+				});
+				menu.newSeparator(subMenuName);
 				menu.newEntry({
-					menuName,
-					entryText: 'From ' + year + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+					menuName: subMenuName,
+					entryText: 'From year...' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+						const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
+						if (input === null) { return; }
 						runWrapped(
-							year,
+							input,
 							this.buttonsProperties.queryFilter[1] || '',
 							this.buttonsProperties.latexCmd[1] || null,
 							this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
-							opt.mode
+							opt.mode,
+							reportType.method
 						);
-					}
+					}, flags: hasListens ? MF_STRING : MF_GRAYED
 				});
-			});
-			menu.newSeparator(menuName);
-			menu.newEntry({
-				menuName,
-				entryText: 'From year...' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
-					const input = Input.number('int', new Date().getFullYear(), 'Enter year:\n(requires listening story)', 'Wrapped', 2020, [(n) => n > 0]);
-					if (input === null) { return; }
-					runWrapped(
-						input,
-						this.buttonsProperties.queryFilter[1] || '',
-						this.buttonsProperties.latexCmd[1] || null,
-						this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
-						opt.mode
-					);
-				}, flags: hasListens ? MF_STRING : MF_GRAYED
-			});
-			menu.newSeparator(menuName);
-			menu.newEntry({
-				menuName,
-				entryText: 'Entire listening history' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
-					runWrapped(
-						null,
-						this.buttonsProperties.queryFilter[1] || '',
-						this.buttonsProperties.latexCmd[1] || null,
-						this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
-						opt.mode
-					);
-				}, flags: hasListens ? MF_STRING : MF_GRAYED
+				menu.newSeparator(subMenuName);
+				menu.newEntry({
+					menuName: subMenuName,
+					entryText: 'Entire listening history' + (hasListens ? '' : '\t[missing plugin]'), func: () => {
+						runWrapped(
+							null,
+							this.buttonsProperties.queryFilter[1] || '',
+							this.buttonsProperties.latexCmd[1] || null,
+							this.buttonsProperties.extraCmd[1] ? JSON.parse(this.buttonsProperties.extraCmd[1]) : [],
+							opt.mode,
+							reportType.method
+						);
+					}, flags: hasListens ? MF_STRING : MF_GRAYED
+				});
 			});
 		});
 	}
