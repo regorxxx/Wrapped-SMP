@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//03/07/25
+//05/07/25
 
 /* exported wrapped */
 
@@ -176,6 +176,7 @@ const wrapped = {
 				{ name: 'Vampire', score: 0, description: 'When it comes to your listening, you like to embrace a little... darkness. You listen to emotional, atmospheric music more than most.' },
 				{ name: 'Hunter', score: 0, description: 'You\'re always searching for new favorites. You skip tracks more than other listeners. Maybe it\'s the thrill of the chase?' },
 				{ name: 'Luminary', score: 0, description: 'There\'s a spark in you, and your listening shows it. You play light, upbeat music more than others. Bet you\'re fun at parties.' },
+				{ name: 'Joker', score: 0, description: 'One day you play light and upbeat music, the next you like to embrace the darkness. Your taste suits any ocassion.' },
 				{ name: 'Alchemist', score: 0, description: 'Listening is your laboratory. You create your own playlists more than other listeners do. Nice work, doc.' },
 				{ name: 'Mastermind', score: 0, description: 'Knowledge is power, listener. Which makes you powerful indeed, as you like to study a wide range of different genres. Clever you.' },
 				{ name: 'Fanatic', score: 0, description: 'Once you pick a favorite, you never let go. Your top artist makes up more than a third of your listening. Impressive.' }
@@ -1190,11 +1191,6 @@ const wrapped = {
 				);
 			}
 		}
-		/*  IDEA: add statistics
-			Alchemist: create many playlists
-			Collector: listen to own playlists
-			Joker: vampire and luminary stats similar, similar proportions of all moods
-		*/
 		if (this.stats.listens.total > 0) {
 			// Luminary: many listens for light/upbeat tracks -> major key (30%) + mood (30%) + high BPM (40%)
 			let char = findChar('luminary');
@@ -1216,7 +1212,7 @@ const wrapped = {
 			if (upbeatWeight > 0.10) {
 				char.score += Math.min(upbeatWeight / 1.5 * 100, 30);
 			}
-			// Vampire: many listens for atmospheric/emotional tracks -> key (30%) + mood (30%) + low bpm (40%)
+			// Vampire: many listens for atmospheric/emotional tracks -> minor key (30%) + mood (30%) + low bpm (40%)
 			char = findChar('vampire');
 			const lBpmWeight = this.stats.bpms.low.listens / this.stats.listens.total;
 			if (this.stats.bpms.low.listens > this.stats.bpms.high.listens && this.stats.bpms.mean.val < 110 && lBpmWeight > 0.10) {
@@ -1229,6 +1225,22 @@ const wrapped = {
 			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.moods.total;
 			if (emotWeight > 0.10) {
 				char.score += Math.min(emotWeight / 1.5 * 100, 30);
+			}
+			// Joker: similar listens for light/upbeat and atmospheric/emotional tracks -> equal key (30%) + mood (30%) + bpm (40%)
+			if (findChar('vampire').score >= 25 && findChar('luminary') >= 25) {
+				char = findChar('joker');
+				const eBpmWeight = (1 - Math.abs(lBpmWeight - hBpmWeight)) * Math.min(lBpmWeight / 0.35, 1) * Math.min(hBpmWeight / 0.35, 1);
+				if (lBpmWeight >= 0.05 && hBpmWeight >= 0.05 && eBpmWeight > 0.3) {
+					char.score += Math.min(eBpmWeight / 1.5 * 100, 40);
+				}
+				const eKeyWeight = (1 - Math.abs(majKeyWeight - minKeyWeight)) * Math.min(majKeyWeight / 0.35, 1) * Math.min(minKeyWeight / 0.35, 1);
+				if (majKeyWeight >= 0.05 && minKeyWeight >= 0.05 && eKeyWeight > 0.3) {
+					char.score += Math.min(eKeyWeight / 1.5 * 100, 30);
+				}
+				const moodWeight = (1 - Math.abs(emotWeight - upbeatWeight) * Math.min(emotWeight / 0.35, 1)) * Math.min(upbeatWeight / 0.35, 1);;
+				if (emotWeight >= 0.05 && upbeatWeight >= 0.05 && moodWeight > 0.3) {
+					char.score += Math.min(moodWeight / 1.5 * 100, 30);
+				}
 			}
 			// Time traveler: listen to favourite tracks many times
 			const top5Listens = wrappedData.tracks.slice(0, this.settings.topSlice).reduce((prev, track) => prev + track.listens, 0);
@@ -1243,8 +1255,8 @@ const wrapped = {
 				findChar('hunter').score = Math.min(skipWeight / (1 / 2) * 100, 100);
 			}
 		}
-		// Hypnotist: listen to entire albums without skip (low proportion of albums per track)
 		if (this.stats.tracks.total) {
+			// Hypnotist: listen to entire albums without skip (low proportion of albums per track)
 			const albumWeight = this.stats.albums.total / this.stats.tracks.total;
 			if (albumWeight < 1 / 5) {
 				findChar('hypnotist').score = Math.min((1 / 5 - albumWeight) / (1 / 5) * 100, 100);
@@ -1256,6 +1268,33 @@ const wrapped = {
 				findChar('roboticist').score = wrappedData.artists
 					.reduce((acc, artist) => acc + (artist.listens > meanListens ? 1 : 0), 0) / this.stats.artists.total * 50 +
 					Math.min(diffArtistsWeight / (1 / 5) * 25, 50);
+			}
+		}
+		if (plman.PlaylistCount > 10) {
+			// Alchemist: have many playlists
+			const plsWeight = plman.PlaylistCount / 100;
+			if (plsWeight >= 0.25) {
+				findChar('Alchemist').score = Math.min(plsWeight * 100, 100);
+			}
+			// Collector: listen to own playlists, checking for the top tracks listened present on them
+			if (plsWeight >= 0.10) {
+				const plsItems = range(0, plman.PlaylistCount - 1).map((i) => {
+					const handleList = plman.GetPlaylistItems(i);
+					handleList.Sort();
+					return handleList;
+				});
+				let plsListenWeight = 0;
+				let totalListens = 0;
+				wrappedData.tracks.slice(this.settings.topSlice, 100)
+					.forEach(({ listens, handle }) => {
+						for (let i = 0; i < plman.PlaylistCount; i++) {
+							const score = listens / plsItems[i].Count;
+							if (handle.some((h) => plsItems[i].BSearch(h))) { plsListenWeight += score; };
+							totalListens += score / plman.PlaylistCount;
+						}
+					});
+				plsListenWeight = plsListenWeight / totalListens;
+				findChar('Alchemist').score = Math.min(plsListenWeight * 100, 100);
 			}
 		}
 		this.stats.character.list.forEach((character) => character.score = round(character.score, 2));
@@ -3148,7 +3187,7 @@ const wrapped = {
 		console.log(this.stats);
 		console.log(wrappedData);
 		console.log(wrappedData);
-		return {data: wrappedData, stats: this.stats};
+		return { data: wrappedData, stats: this.stats };
 	},
 	/**
 		 * Compiles a report from {@link wrapped.formatHtmlIeReport} into HTML IE-compatible.
@@ -3224,7 +3263,7 @@ const wrapped = {
 	*/
 	formatJsonReport: function (wrappedData) {
 		console.log('Wrapped: creating HTML IE-compatible report...');
-		return {data: wrappedData, stats: this.stats};
+		return { data: wrappedData, stats: this.stats };
 	},
 	/**
 		 * Compiles a report from {@link wrapped.formatHtmlIeReport} into JSON.
