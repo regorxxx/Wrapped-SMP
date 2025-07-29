@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//05/07/25
+//28/07/25
 
 /* exported wrapped */
 
@@ -27,7 +27,7 @@ include('..\\search\\top_tracks_from_date.js');
 include('spotify.js');
 /* global spotify:readable */
 include('..\\search_by_distance\\search_by_distance_genres.js');
-/* global getNearestGenreStyles:readable, music_graph_descriptors:readable */
+/* global getNearestGenreStyles:readable, music_graph_descriptors:readable, musicGraph:readable */
 include('..\\search_by_distance\\search_by_distance_culture.js');
 /* global getCountryISO:readable, getZoneArtistFilter:readable */
 include('..\\music_graph\\music_graph_descriptors_xxx_node.js');
@@ -769,8 +769,9 @@ const wrapped = {
 		const top = genresData.slice(0, this.settings.topSlice);
 		const topGenres = top.map((genre) => genre.genre);
 		const totalListensTop = top.reduce((acc, genre) => acc + genre.listens, 0);
+		const graph = musicGraph();
 		this.stats.genres.similar = new Set(
-			getNearestGenreStyles(topGenres, music_graph_descriptors.cluster * 2)
+			getNearestGenreStyles(topGenres, music_graph_descriptors.cluster * 2, graph)
 		).difference(
 			new Set(music_graph_descriptors.replaceWithAlternativeTerms(topGenres, true, true))
 		);
