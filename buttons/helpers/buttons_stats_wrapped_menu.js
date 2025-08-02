@@ -1,14 +1,14 @@
 'use strict';
-//03/07/25
+//01/08/25
 
 /* exported wrappedMenu */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_GRAYED:readable, isEnhPlayCount:readable, isPlayCount:readable, isPlayCount2003:readable, MF_STRING:readable, folders:readable, MK_SHIFT:readable */
+/* global MF_GRAYED:readable, isEnhPlayCount:readable, isPlayCount:readable, isPlayCount2003:readable, MF_STRING:readable, MK_SHIFT:readable */
+include('..\\..\\helpers\\buttons_xxx.js');
+/* global showButtonReadme:readable  */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable  */
-include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global range:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -163,13 +163,8 @@ function wrappedMenu({ bSimulate = false } = {}) {
 		});
 	}
 	menu.newSeparator();
-	menu.newEntry({ entryText: 'Configuration...', func: () => this.onClick(MK_SHIFT) });
-	menu.newEntry({
-		entryText: 'Readme...', func: () => {
-			const readme = _open(folders.xxx + 'helpers\\readme\\wrapped.txt', utf8);
-			if (readme.length) { fb.ShowPopupMessage(readme, 'Wrapped'); }
-			else { console.log(folders.xxx + 'helpers\\readme\\wrapped.txt not found.'); }
-		}
-	});
+	menu.newEntry({ entryText: 'Settings...', func: () => this.onClick(MK_SHIFT) });
+	menu.newSeparator();
+	menu.newEntry({ entryText: 'Readme...', func: () => showButtonReadme('buttons_stats_wrapped.js') });
 	return menu;
 }
