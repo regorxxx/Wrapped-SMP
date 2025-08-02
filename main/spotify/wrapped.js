@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//28/07/25
+//31/07/25
 
 /* exported wrapped */
 
@@ -750,7 +750,7 @@ const wrapped = {
 	*/
 	computeArtistsStats: function (artistsData) {
 		this.stats.artists.total = artistsData.length;
-		if (this.settings.bDebug) { console.log('computeArtistsStats:\n\t', this.stats.artists); }
+		if (this.settings.bDebug) { console.log('computeArtistsStats:\n\t ', this.stats.artists); }
 		return this.stats;
 	},
 	/**
@@ -806,7 +806,7 @@ const wrapped = {
 			node.score = round(node.score / listensTotal * 100);
 			this.stats.genres.groups.list.push(node);
 		});
-		if (this.settings.bDebug) { console.log('computeGenresStats:\n\t', this.stats.genres); }
+		if (this.settings.bDebug) { console.log('computeGenresStats:\n\t ', this.stats.genres); }
 		return this.stats;
 	},
 	/**
@@ -823,7 +823,7 @@ const wrapped = {
 	*/
 	computeTracksStats: function (tracksData) {
 		this.stats.tracks.total = tracksData.length;
-		if (this.settings.bDebug) { console.log('computeTracksStats:\n\t', this.stats.tracks); }
+		if (this.settings.bDebug) { console.log('computeTracksStats:\n\t ', this.stats.tracks); }
 		return this.stats;
 	},
 	/**
@@ -840,7 +840,7 @@ const wrapped = {
 	*/
 	computeAlbumsStats: function (albumsData) {
 		this.stats.albums.total = albumsData.length;
-		if (this.settings.bDebug) { console.log('computeAlbumsStats:\n\t', this.stats.albums); }
+		if (this.settings.bDebug) { console.log('computeAlbumsStats:\n\t ', this.stats.albums); }
 		return this.stats;
 	},
 	/**
@@ -860,7 +860,7 @@ const wrapped = {
 		countriesData.slice(0, this.settings.topSlice).forEach((country) => {
 			this.stats.countries.byISO.push({ ...country, iso: getCountryISO(country.name) });
 		});
-		if (this.settings.bDebug) { console.log('computeCountriesStats:\n\t', this.stats.countries); }
+		if (this.settings.bDebug) { console.log('computeCountriesStats:\n\t ', this.stats.countries); }
 		return this.stats;
 	},
 	/**
@@ -876,7 +876,7 @@ const wrapped = {
 	*/
 	computeCitiesStats: function (citiesData) {
 		this.stats.cities.total = citiesData.length;
-		if (this.settings.bDebug) { console.log('computeCitiesStats:\n\t', this.stats.cities); }
+		if (this.settings.bDebug) { console.log('computeCitiesStats:\n\t ', this.stats.cities); }
 		return this.stats;
 	},
 	/**
@@ -985,8 +985,8 @@ const wrapped = {
 			? Math.round(this.stats.time.mean.listensPerDay)
 			: round(this.stats.time.mean.listensPerDay, 1);
 		if (this.settings.bDebug) {
-			console.log('computeListensStats:\n\t', this.stats.listens);
-			console.log('computeListensStats:\n\t', this.stats.time);
+			console.log('computeListensStats:\n\t ', this.stats.listens);
+			console.log('computeListensStats:\n\t ', this.stats.time);
 		}
 		return this.stats;
 	},
@@ -1003,7 +1003,7 @@ const wrapped = {
 	*/
 	computeSkipsStats: function (tracksData) {
 		this.stats.skips.total = tracksData.reduce((prev, track) => prev + track.skipCount, 0);
-		if (this.settings.bDebug) { console.log('computeSkipsStats:\n\t', this.stats.skips); }
+		if (this.settings.bDebug) { console.log('computeSkipsStats:\n\t ', this.stats.skips); }
 		return this.stats;
 	},
 	/**
@@ -1061,7 +1061,7 @@ const wrapped = {
 		const min = this.stats.bpms.min.val;
 		this.stats.bpms.histogram = calcHistogram(histogram, binSize, max, min)
 			.map((y, i) => { return { x: min + binSize * i, y }; });
-		if (this.settings.bDebug) { console.log('computeBpmStats:\n\t', this.stats.bpms); }
+		if (this.settings.bDebug) { console.log('computeBpmStats:\n\t ', this.stats.bpms); }
 		return this.stats;
 	},
 	/**
@@ -1113,7 +1113,7 @@ const wrapped = {
 		}
 		this.stats.keys.histogram = calcHistogram(histogram, 1, 12, 1)
 			.map((y, i) => { return { x: 1 + i, y }; });
-		if (this.settings.bDebug) { console.log('computeKeyStats:\n\t', this.stats.keys); }
+		if (this.settings.bDebug) { console.log('computeKeyStats:\n\t ', this.stats.keys); }
 		return this.stats;
 	},
 	/**
@@ -1140,7 +1140,7 @@ const wrapped = {
 			if (happyMoods.has(p.mood)) { this.stats.moods.happy.listens += p.listens; }
 			if (energeticMoods.has(p.mood)) { this.stats.moods.energetic.listens += p.listens; }
 		});
-		if (this.settings.bDebug) { console.log('computeMoodStats:\n\t', this.stats.moods); }
+		if (this.settings.bDebug) { console.log('computeMoodStats:\n\t ', this.stats.moods); }
 		return this.stats;
 	},
 	/**
@@ -1299,7 +1299,7 @@ const wrapped = {
 			}
 		}
 		this.stats.character.list.forEach((character) => character.score = round(character.score, 2));
-		if (this.settings.bDebug) { console.log('computeCharacterStats:\n\t', this.stats.character.scores); }
+		if (this.settings.bDebug) { console.log('computeCharacterStats:\n\t ', this.stats.character.scores); }
 		return this.stats;
 	},
 	/**
@@ -1331,7 +1331,7 @@ const wrapped = {
 				this.stats.artists.top.push(topArtist);
 			});
 			// Top artists
-			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top[0]); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t ', this.stats.artists.top[0]); }
 			// By Month
 			if (timePeriod) {
 				for (const data of this.stats.artists.top) {
@@ -1360,7 +1360,7 @@ const wrapped = {
 						monthName: this.monthNames[max[0]]
 					});
 				}
-				if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.byMonth); }
+				if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t ', this.stats.artists.byMonth); }
 			}
 		}
 		// Top artist by Country
@@ -1379,7 +1379,7 @@ const wrapped = {
 					}
 				});
 			}
-			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.countries.byArtist); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t ', this.stats.countries.byArtist); }
 		}
 		// Top albums
 		if (wrappedData.artists.length && wrappedData.tracks.length && wrappedData.albums.length) {
@@ -1397,7 +1397,7 @@ const wrapped = {
 				this.stats.albums.top.push(topAlbum);
 
 			});
-			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t', this.stats.artists.top[0]); }
+			if (this.settings.bDebug) { console.log('computeGlobalStats:\n\t ', this.stats.artists.top[0]); }
 		}
 		return this.stats;
 	},
@@ -1438,7 +1438,7 @@ const wrapped = {
 			console.log('Wrapped: creating discovered songs playlist...');
 			let handleList = new FbMetadbHandleList(tracksData.map((track) => track.handle[0]));
 			const query = '%ADDED% ' + timePeriod.replace('SINCE', 'DURING');
-			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist:\n\t' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeDiscoverPlaylist:\n\t ' + query); }
 			handleList = fb.GetQueryItemsCheck(handleList, query);
 			if (handleList) {
 				handleList = new FbMetadbHandleList(handleList.Convert().slice(0, size).shuffle());
@@ -1468,7 +1468,7 @@ const wrapped = {
 				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 				queryCombinations(artists, _t(this.tags.artist), 'OR')
 			], 'AND');
-			if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist:\n\t' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeTopArtistsPlaylist:\n\t ' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -1499,7 +1499,7 @@ const wrapped = {
 				globTags.rating + ' MISSING OR ' + globTags.rating + ' GREATER 2',
 				queryJoin(queryCombinations(genres, [globTags.genre, globTags.style], 'OR'), 'OR')
 			], 'AND');
-			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist:\n\t' + query); }
+			if (this.settings.bDebugQuery) { console.log('computeTopGenresPlaylist:\n\t ' + query); }
 			/** @type {FbMetadbHandleList} */
 			let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
 			if (handleList) {
@@ -1536,7 +1536,7 @@ const wrapped = {
 					let handleList = new FbMetadbHandleList();
 					filters.forEach((query) => {
 						let handleListCountry = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-						if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist:\n\t' + _p(handleListCountry.Count) + ' <- ' + query); }
+						if (this.settings.bDebugQuery) { console.log('computeTopCountriesPlaylist:\n\t ' + _p(handleListCountry.Count) + ' <- ' + query); }
 						if (handleListCountry) {
 							handleListCountry = new FbMetadbHandleList(handleListCountry.Convert().shuffle().slice(0, size / count));
 							handleList.AddRange(handleListCountry);
@@ -1578,7 +1578,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedGenresPlaylist:\n\t ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
@@ -1707,7 +1707,7 @@ const wrapped = {
 				], 'AND NOT');
 				/** @type FbMetadbHandleList */
 				let handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query);
-				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist:\n\t' + _p(handleList.Count) + ' <- ' + query); }
+				if (this.settings.bDebugQuery) { console.log('computeSuggestedArtistsPlaylist:\n\t ' + _p(handleList.Count) + ' <- ' + query); }
 				if (handleList && handleList.Count) {
 					handleList = removeDuplicates({ handleList, checkKeys: globTags.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: false });
 					({ handleList } = shuffleByTags({ selItems: handleList, bSendToActivePls: false, bAdvancedShuffle: true, sortBias: 'rating', bMultiple: true }) || { handleList: new FbMetadbHandleList() });
@@ -2243,9 +2243,9 @@ const wrapped = {
 					if (this.stats[key].total > 5) { data[key].length = 5; }
 					if (this.settings.bDebug) {
 						if (['tracks', 'albums'].includes(key)) {
-							console.log('getData[' + key + ']:\n\t', data[key].map((d) => { return { ...d, handle: null }; }));
+							console.log('getData[' + key + ']:\n\t ', data[key].map((d) => { return { ...d, handle: null }; }));
 						} else {
-							console.log('getData[' + key + ']:\n\t', data[key]);
+							console.log('getData[' + key + ']:\n\t ', data[key]);
 						}
 					}
 				});
@@ -3120,7 +3120,7 @@ const wrapped = {
 			.replace(/%2/gi, _q(output))
 			.replace(/%3/gi, _q(root.replace(/\\$/, '')))
 			.replace(/%4/gi, (timePeriod || period));
-		console.log('Wrapped: saving .tex file to\n\t' + input);
+		console.log('Wrapped: saving .tex file to\n\t ' + input);
 		_recycleFile(input, true);
 		_save(input, report, false);
 		// Parse cmd
@@ -3128,7 +3128,7 @@ const wrapped = {
 			latexCmd = 'lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1';
 		}
 		latexCmd = parseCmd(latexCmd);
-		console.log('Wrapped: processing latex\n\t' + latexCmd);
+		console.log('Wrapped: processing latex\n\t ' + latexCmd);
 		if (latexCmd.includes('lualatex')) {
 			console.log('Wrapped: double compilation required');
 			_runCmd(latexCmd, true);
@@ -3139,7 +3139,7 @@ const wrapped = {
 			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
 			_recycleFile(root + fileName + '.aux', true);
 			_recycleFile(root + fileName + '.log', true);
-			console.log('Wrapped: opening .pdf file at\n\t' + output);
+			console.log('Wrapped: opening .pdf file at\n\t ' + output);
 			_run(output);
 			return true;
 		}
@@ -3221,7 +3221,7 @@ const wrapped = {
 		// Parse cmd
 		if (_isFile(output)) {
 			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
-			console.log('Wrapped: opening .html file at\n\t' + output);
+			console.log('Wrapped: opening .html file at\n\t ' + output);
 			utils.ShowHtmlDialog(0, 'file://' + output);
 			return true;
 		}
@@ -3296,7 +3296,7 @@ const wrapped = {
 		// Parse cmd
 		if (_isFile(output)) {
 			if (extraCmd && extraCmd.length) { extraCmd.filter(Boolean).forEach((cmd) => _runCmd(parseCmd(cmd), true)); }
-			console.log('Wrapped: opening .json file at\n\t' + output);
+			console.log('Wrapped: opening .json file at\n\t ' + output);
 			_run(output);
 			return true;
 		}
@@ -3407,7 +3407,7 @@ const wrapped = {
 		ghostscript.some((gs) => {
 			if (_isFile(gs)) {
 				const command = ' -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dQUIET -sDEVICE=pdfwrite -o ' + _q(input + '_') + ' ' + _q(input);
-				console.log('Wrapped: processing pdf with ghostscript\n\t' + gs.split('\\').pop() + command);
+				console.log('Wrapped: processing pdf with ghostscript\n\t ' + gs.split('\\').pop() + command);
 				_runCmd('CMD /C ' + _q(gs) + command, true);
 				if (_isFile(input + '_')) {
 					_copyFile(input + '_', input);

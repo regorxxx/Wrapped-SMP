@@ -1,5 +1,5 @@
 'use strict';
-//10/12/24
+//31/07/25
 
 /* exported spotify */
 
@@ -51,7 +51,7 @@ const spotify = {
 				URL
 			}).then(
 				(resolve) => resolve,
-				(reject) => { console.log('spotify.get: ' + reject.status + ' ' + reject.responseText + '\n\t' + URL); return null; }
+				(reject) => { console.log('spotify.get: ' + reject.status + ' ' + reject.responseText + '\n\t ' + URL); return null; }
 			).catch((error) => { fb.ShowPopupMessage(JSON.stringify(error)); return null; });
 	},
 	/**
