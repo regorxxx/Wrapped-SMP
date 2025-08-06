@@ -1,6 +1,6 @@
 ﻿
 'use strict';
-//31/07/25
+//06/08/25
 
 /* exported wrapped */
 
@@ -55,7 +55,7 @@ const wrapped = {
 		topSlice: 5, // Top X artists/albums/genres/countries
 		genreGroupSlice: 4, // Top X genre groups
 		genreSuggestSlice: 16, // Genre recommendations
-		cityArtistSlice: 3, // Top X artists from city (isplay of artist imgs hardcoded to max 3  on current latext report)
+		cityArtistSlice: 3, // Top X artists from city (display of artist imgs hardcoded to max 3  on current latex report)
 		bOffline: false,
 		bFilterGenres: true,
 		bSuggestions: true,
@@ -176,7 +176,7 @@ const wrapped = {
 				{ name: 'Vampire', score: 0, description: 'When it comes to your listening, you like to embrace a little... darkness. You listen to emotional, atmospheric music more than most.' },
 				{ name: 'Hunter', score: 0, description: 'You\'re always searching for new favorites. You skip tracks more than other listeners. Maybe it\'s the thrill of the chase?' },
 				{ name: 'Luminary', score: 0, description: 'There\'s a spark in you, and your listening shows it. You play light, upbeat music more than others. Bet you\'re fun at parties.' },
-				{ name: 'Joker', score: 0, description: 'One day you play light and upbeat music, the next you like to embrace the darkness. Your taste suits any ocassion.' },
+				{ name: 'Joker', score: 0, description: 'One day you play light and upbeat music, the next you like to embrace the darkness. Your taste suits any occasion.' },
 				{ name: 'Alchemist', score: 0, description: 'Listening is your laboratory. You create your own playlists more than other listeners do. Nice work, doc.' },
 				{ name: 'Mastermind', score: 0, description: 'Knowledge is power, listener. Which makes you powerful indeed, as you like to study a wide range of different genres. Clever you.' },
 				{ name: 'Fanatic', score: 0, description: 'Once you pick a favorite, you never let go. Your top artist makes up more than a third of your listening. Impressive.' }
@@ -331,7 +331,7 @@ const wrapped = {
 			filePaths: this.settings.filePaths
 		})
 			.then((/** @type [{x: string, y: number}[]] */ data) => {
-				data = data[0]; // There is only a single serie
+				data = data[0]; // There is only a single series
 				if (this.isServicesListens()) {
 					data = data.filter((genre) => genre.y !== 0);
 				}
@@ -1129,7 +1129,7 @@ const wrapped = {
 	*/
 	computeMoodsStats: function (moodData) {
 		const calmMoods = new Set(['Acoustic', 'Relaxed', 'Chill', 'Smooth', 'Calm', 'Sweet', 'Slow', 'Cold', 'Healing', 'Laidback', 'Meditation', 'Peaceful', 'Relaxed', 'Reflective', 'Slow', 'Smooth', 'Soft']);
-		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark', 'Drepressive', 'Emotional', 'Lonely', 'Nostalgic', 'Morose', 'Suicidal', 'Yearning']);
+		const sadMoods = new Set(['Sad', 'Mellow', 'Melancholy', 'Soulful', 'Spiritual', 'Dark', 'Depressive', 'Emotional', 'Lonely', 'Nostalgic', 'Morose', 'Suicidal', 'Yearning']);
 		const happyMoods = new Set(['Happy', 'Cool', 'Funky', 'Groovy', 'Fun', 'Feel Good', 'Hot', 'Humorous', 'Positive', 'Sweet', 'Trippy', 'Flirty', 'Playful']);
 		const energeticMoods = new Set(['Aggressive', 'Party', 'Uplifting', 'Angry', 'Crazy', 'Energetic', 'Fast', 'Heavy', 'High', 'Upbeat', 'Wild', 'Bouncy', 'Upbeat']);
 		// Every track may have multiple moods of same type, so total is not = total listens
@@ -1183,11 +1183,11 @@ const wrapped = {
 			// Mastermind: listen too many different genres
 			const graphNodes = 848; // Hardcoded value from music_graph #nodes
 			if (this.stats.genres.total > graphNodes / 10) {
-				const coef = this.stats.genres.total * (1 + Math.log(graphNodes / this.stats.genres.total));
+				const coeff = this.stats.genres.total * (1 + Math.log(graphNodes / this.stats.genres.total));
 				const meanListens = wrappedData.genres.reduce((acc, genre) => acc + genre.listens, 0) / this.stats.genres.total;
 				findChar('mastermind').score = Math.max(
 					wrappedData.genres
-						.reduce((acc, genre) => acc + genre.listens / meanListens - 0.35, 0) / coef * 100,
+						.reduce((acc, genre) => acc + genre.listens / meanListens - 0.35, 0) / coeff * 100,
 					0
 				);
 			}
@@ -1223,9 +1223,9 @@ const wrapped = {
 			if (minKeyWeight > 0.10) {
 				char.score += Math.min(minKeyWeight / 1.5 * 100, 30);
 			}
-			const emotWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.moods.total;
-			if (emotWeight > 0.10) {
-				char.score += Math.min(emotWeight / 1.5 * 100, 30);
+			const emotionWeight = (this.stats.moods.calm.listens + this.stats.moods.sad.listens) / 2 / this.stats.moods.total;
+			if (emotionWeight > 0.10) {
+				char.score += Math.min(emotionWeight / 1.5 * 100, 30);
 			}
 			// Joker: similar listens for light/upbeat and atmospheric/emotional tracks -> equal key (30%) + mood (30%) + bpm (40%)
 			if (findChar('vampire').score >= 25 && findChar('luminary') >= 25) {
@@ -1238,12 +1238,12 @@ const wrapped = {
 				if (majKeyWeight >= 0.05 && minKeyWeight >= 0.05 && eKeyWeight > 0.3) {
 					char.score += Math.min(eKeyWeight / 1.5 * 100, 30);
 				}
-				const moodWeight = (1 - Math.abs(emotWeight - upbeatWeight) * Math.min(emotWeight / 0.35, 1)) * Math.min(upbeatWeight / 0.35, 1);;
-				if (emotWeight >= 0.05 && upbeatWeight >= 0.05 && moodWeight > 0.3) {
+				const moodWeight = (1 - Math.abs(emotionWeight - upbeatWeight) * Math.min(emotionWeight / 0.35, 1)) * Math.min(upbeatWeight / 0.35, 1);;
+				if (emotionWeight >= 0.05 && upbeatWeight >= 0.05 && moodWeight > 0.3) {
 					char.score += Math.min(moodWeight / 1.5 * 100, 30);
 				}
 			}
-			// Time traveler: listen to favourite tracks many times
+			// Time traveler: listen to favorite tracks many times
 			const top5Listens = wrappedData.tracks.slice(0, this.settings.topSlice).reduce((prev, track) => prev + track.listens, 0);
 			const top20Listens = top5Listens + wrappedData.tracks.slice(this.settings.topSlice, this.settings.topSlice * 4).reduce((prev, track) => prev + track.listens, 0);
 			const favWeight = (top5Listens / this.stats.listens.total + top5Listens / top20Listens) / 2;
@@ -1402,7 +1402,7 @@ const wrapped = {
 		return this.stats;
 	},
 	/**
-	 * Playlist of favourite tracks, using data from {@link wrapped.getTracksData}.
+	 * Playlist of favorite tracks, using data from {@link wrapped.getTracksData}.
 	 *
 	 * @property
 	 * @name computeTopTracksPlaylist
@@ -2027,7 +2027,7 @@ const wrapped = {
 	 * @kind method
 	 * @memberof wrapped
 	 * @param {string} root - Path to load the images at '.\\char\\'
-	 * @param {boolean} bRelative - Wethere to use relative or absolute paths
+	 * @param {boolean} bRelative - Flag to use relative or absolute paths
 	 * @returns {string}
 	 */
 	getCharacterImg: function (root = this.basePath, bRelative = true) {
@@ -2553,18 +2553,18 @@ const wrapped = {
 			report += '\\end{center}';
 			report += '\\vspace{30mm}';
 			{
-				report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
+				report += '\t\\setbox1=\\hbox{\\includegraphics[width=\\textwidth]{img/burger/burger}}\n';
 				report += '\t\\begin{tikzpicture}\n';
 				report += '\t\t\\filldraw [draw=lime!70, ultra thick,draw opacity=0,fill opacity=0] (0,0) rectangle ++(14cm,0);\n';
 				let y = 9.5;
-				const burguerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
+				const burgerColors = ['yellow!60', 'red!70', 'teal', 'orange!60', 'blue!60', 'purple!60'];
 				this.stats.genres.byScore.forEach((genre, i) => {
 					const iH = i === 0 ? 2.5 : round(6 * (genre.score + this.stats.genres.byScore[0].score / 4) / 100, 2);
 					y -= iH;
-					report += '\t\t\\filldraw [fill=' + burguerColors[i] + ', draw=' + burguerColors[i] + '] (-1,' + y + ') rectangle ++(14cm,' + iH + ');\n';
+					report += '\t\t\\filldraw [fill=' + burgerColors[i] + ', draw=' + burgerColors[i] + '] (-1,' + y + ') rectangle ++(14cm,' + iH + ');\n';
 					report += '\t\t\\node[rectangle] (a) at (6,' + round(y + iH / 2, 1) + ') {\\Large \\textbf{' + genre.genre.replace(latex, '\\$&') + '}};\n';
 				});
-				report += '\t\\end{tikzpicture}\\llap{\\includegraphics[width=\\textwidth]{img/burguer/burguer}}\n';
+				report += '\t\\end{tikzpicture}\\llap{\\includegraphics[width=\\textwidth]{img/burger/burger}}\n';
 				report += '\\end{figure}\n';
 			}
 			report += '\\vfill %\n\n';
@@ -2620,7 +2620,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 		}
 		if (this.stats.genres.similarV2.length) {
-			report += '\\subsection[Similar genres]{Other genres similar to your favourites you may like:}\n';
+			report += '\\subsection[Similar genres]{Other genres similar to your favorites you may like:}\n';
 			report += '\\begin{multicols}{2}\n';
 			report += '\t\\begin{itemize}\n';
 			this.stats.genres.similarV2.slice(0, this.settings.genreSuggestSlice).forEach((genre) => {
@@ -2642,7 +2642,7 @@ const wrapped = {
 			report += '\\begin{center}\n';
 			report += '{\\Huge You have listened to \\textbf{\\textit{' + this.stats.tracks.total + '}} tracks in ' + (year || period) + '.}\\\\\n';
 			report += '\\vspace{15mm}\n';
-			report += '{\\Huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens\\\\\\vspace{5mm}and aproximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
+			report += '{\\Huge With a total of \\textbf{\\textit{' + this.stats.listens.total + '}} listens\\\\\\vspace{5mm}and approximately \\textbf{\\textit{' + this.stats.time.mean.listensPerDay + '}} listens per day.}\\\\\n';
 			report += '\\vspace{15mm}\n';
 			report += '{\\LARGE But there is one special track for you...}\\\\\n';
 			report += '\\end{center}\n';
@@ -2685,7 +2685,7 @@ const wrapped = {
 		report += '\\vspace{15mm}\n';
 		report += '{\\LARGE That\'s \\textbf{\\textit{' + this.stats.time.days + '}} days non-stop.}\\\\\n';
 		report += '\\vspace{20mm}\n';
-		report += '{\\Huge Aproximately \\textbf{\\textit{' + this.stats.time.mean.minutesPerDay + '}} minutes per day.}\\\\\n';
+		report += '{\\Huge Approximately \\textbf{\\textit{' + this.stats.time.mean.minutesPerDay + '}} minutes per day.}\\\\\n';
 		report += '\\end{center}\n';
 		report += '\\vfill %\n\n';
 		if (this.stats.time.byMonth.length) {
@@ -2697,7 +2697,7 @@ const wrapped = {
 			report += '\\clearpage \\vspace*{\\fill}\n';
 			report += '\\tikz[remember picture,overlay] \\node[opacity=0.1,inner sep=0pt] at (current page.center){\\includegraphics[width=\\paperwidth,height=\\paperheight]{' + getBgImg(root) + '}};\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge You listened \\textbf{\\textit{' + topMonth.minutes + '}} minutes of your favourite music in \\textbf{\\textit{' + topMonth.monthName + '}}, across \\textbf{\\textit{' + topMonth.listens + '}} listens.}\\\\\n';
+			report += '{\\Huge You listened \\textbf{\\textit{' + topMonth.minutes + '}} minutes of your favorite music in \\textbf{\\textit{' + topMonth.monthName + '}}, across \\textbf{\\textit{' + topMonth.listens + '}} listens.}\\\\\n';
 			report += '\\vspace{40mm}\n';
 			report += '\\hspace*{-1cm}\n';
 			report += '\t\\begin{tikzpicture}\n';
@@ -2728,7 +2728,7 @@ const wrapped = {
 				topDay +
 				'}} was a special day for you, listening during \\textbf{\\textit{' +
 				this.stats.time.most.minutes +
-				'}} minutes to your favourite music.}\\\\\n';
+				'}} minutes to your favorite music.}\\\\\n';
 			report += '\\begin{figure}[H]\n';
 			report += '\t\\centering\n';
 			report += '\t\\includegraphics[width=400px]{' + getImage(this.stats.time.most.track.albumImg) + '}\n';
@@ -2805,7 +2805,7 @@ const wrapped = {
 			report += '\\end{figure}\n';
 			report += '\\vspace{5mm}\n';
 			report += '\\begin{center}\n';
-			report += '{\\Huge Your favourite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top[0].tracks + '}} different tracks played ' + (year ? 'this year' : 'these years') + '.}\n\n';
+			report += '{\\Huge Your favorite artist has been \\textbf{\\textit{' + cut(wrappedData.artists[0].artist, 20) + '}} with \\textbf{\\textit{' + wrappedData.artists[0].listens + '}} listens and \\textbf{\\textit{' + this.stats.artists.top[0].tracks + '}} different tracks played ' + (year ? 'this year' : 'these years') + '.}\n\n';
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
 			// Top artist's track
@@ -2936,7 +2936,7 @@ const wrapped = {
 				const topArtistCity = wrappedData.cities[0].artists.slice(0, this.settings.cityArtistSlice)
 					.map((data) => '\\textbf{\\textit{' + data.artist.replace(latex, '\\$&') + '}}')
 					.joinLast(', ', ' or ');
-				report += '{\\LARGE Some of your favourite artists, like ' + topArtistCity + ', were born here.}\n';
+				report += '{\\LARGE Some of your favorite artists, like ' + topArtistCity + ', were born here.}\n';
 			}
 			report += '\\end{center}\n';
 			report += '\\vfill %\n\n';
@@ -3042,24 +3042,24 @@ const wrapped = {
 					const colors = ['Rhodamine', 'Purple', 'Violet', 'RoyalBlue', 'SkyBlue', 'SeaGreen', 'Green!75', 'GreenYellow', 'Yellow', 'Orange', 'Red', 'RedViolet!75'];
 					const noKeyListens = Math.round((this.stats.listens.total - wrappedData.keys.reduce((prev, curr) => prev + curr.listens, 0)) / this.stats.listens.total * 100);
 					const labels = this.stats.keys.histogram.length;
-					const percs = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
+					const percentages = this.stats.keys.histogram.map((point) => Math.round(point.y / this.stats.listens.total * 100));
 					let rest = 0;
-					percs.forEach((perc) => { if (perc < 8) { rest += perc; } });
+					percentages.forEach((perc) => { if (perc < 8) { rest += perc; } });
 					// Add rounding errors
-					const offset = 100 - percs.reduce((prev, curr) => prev + curr, 0) - noKeyListens;
+					const offset = 100 - percentages.reduce((prev, curr) => prev + curr, 0) - noKeyListens;
 					if (offset !== 0) {
 						if (rest) { rest += offset; }
 						else {
-							percs.some((perc, i) => {
+							percentages.some((perc, i) => {
 								if (perc > 10) {
-									percs[i] += offset;
+									percentages[i] += offset;
 									return true;
 								}
 							});
 						}
 					}
 					this.stats.keys.histogram.forEach((point, j) => {
-						const perc = percs[j];
+						const perc = percentages[j];
 						if (perc >= 8) {
 							toAddReport += '\t\t\t' + perc + '/' + point.x + 'd|m' + (noKeyListens || rest > 0 || (labels - 1 !== j) ? ',' : '') + '\n';
 							toAddColors.push(colors[j]);
@@ -3315,7 +3315,7 @@ const wrapped = {
 	copyDependencies: function (root = this.basePath) {
 		// Copy dependencies
 		if (!_isFolder(root)) { _createFolder(root); }
-		['bg', 'char', 'genres', 'month', 'burguer', 'soundcity', 'map', 'fallback'].forEach((folder) => {
+		['bg', 'char', 'genres', 'month', 'burger', 'soundcity', 'map', 'fallback'].forEach((folder) => {
 			const path = root + 'img\\' + folder + '\\';
 			if (!_isFolder(path)) {
 				_createFolder(path);
