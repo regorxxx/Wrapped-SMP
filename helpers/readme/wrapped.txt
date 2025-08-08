@@ -50,15 +50,15 @@ recommendations using these stats.
 	- Outputs a report in Latex format. Compilation in PDF.
 
 	- Playlists recommendations:
-		* Top Favourite Songs
+		* Top Favorite Songs
 		* Discovered Songs (during the year)
 		* Top Artists
 		* Top Genres
 		* Top Countries
 		* Suggested Genres (you may like) (ListenBrainz)
-		  (0ffline mode may be set to only use queries)
+		  (Offline mode may be set to only use queries)
 		* Suggested Artists (you make like) (ListenBrainz)
-		  (0ffline mode may be set to only use queries)
+		  (Offline mode may be set to only use queries)
 
 	- Year and Entire listening history reports may differ since
 	the latter does not use time-related stats (from Enhanced
@@ -101,7 +101,7 @@ Additional Tips:
 	(which should be similar to the error rate of the analysis tool).
 	By default is set to 30% (i.e. 30% random tracks with high BMP will
 	be halved), which is a conservative estimation for tools like
-	Essentia or foo_bpm. You can find the right propertion by yourself
+	Essentia or foo_bpm. You can find the right proportion by yourself
 	in your	library by selecting X random tracks -and different genres-
 	with high BPM and checking how many of them have doubled values
 	(the proportion should be uniform across the entire library).
@@ -149,7 +149,7 @@ Optional:
 	- ListenBrainz token: It's not a requisite to get
 	playlists suggestions, since it will use the public API,
 	but it will be less probably to reach rate limits with it.
-	Aditionally, the script may retrieve all listening history
+	Additionally, the script may retrieve all listening history
 	from the server and try to match listens with tracks from
 	library (only by MBID), these will be deduplicated and used
 	in addition to local playcount stats. To get a token visit:
