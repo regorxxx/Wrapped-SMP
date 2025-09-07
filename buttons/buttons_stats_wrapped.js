@@ -1,12 +1,12 @@
 ﻿'use strict';
-//20/06/25
+//07/09/25
 
 /*
 	Wrapped
 	Provides global library statistics for a given period of time, similar to Spotify's wrapped
  */
 
-/* global menu_panelProperties:readable */
+/* global barProperties:readable */
 include('..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, MK_SHIFT:readable, VK_SHIFT:readable, globTags:readable, isPlayCount:readable, isEnhPlayCount:readable, isPlayCount2003:readable, folders:readable */
 include('..\\helpers\\buttons_xxx.js');
@@ -184,7 +184,7 @@ addButton({
 		},
 		description: () => {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
-			const bInfo = typeof menu_panelProperties === 'undefined' || menu_panelProperties.bTooltipInfo[1];
+			const bInfo = typeof barProperties === 'undefined' || barProperties.bTooltipInfo[1];
 			let info = '';
 			info += 'Playback Statistics:\t' + (isPlayCount ? '\u2713' : '\u2717');
 			info += '\nEnh. Playback Statistics:\t' + (isEnhPlayCount ? '\u2713' : '\u2717');
