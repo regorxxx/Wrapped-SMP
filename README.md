@@ -73,7 +73,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Auto-device2](https://user-images.githubusercontent.com/83307074/125861102-9253716b-ded6-41d5-83b5-84664edeb17f.gif)
 
-## Requirements (only one host component required)[^details]
+## Requirements[^details] (only one host component required)
 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): JavaScript host component required to install this. Only x32. **(host component)**
 2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): JavaScript host component required to install this. Both x32 and x64. **(host component)**
 4. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See installation notes.
