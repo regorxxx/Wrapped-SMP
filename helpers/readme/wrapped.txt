@@ -120,7 +120,7 @@ Requirements:
 	Note stats will be available only for dates posterior to the
 	date the components were installed.
 
-	- LaTeX: Recommended LuaLaTeX via MiKTeX. Any version works.
+	- LaTeX: Recommended LuaLaTeX via MiKTeX.
 		* Win 10+: any version
 		https://miktex.org
 		* Win 7 / Wine (64 bit): 22.7 version
@@ -176,6 +176,8 @@ LaTeX compilation:
 ------------------
 The default installation uses LuaLaTeX via CMD:
 lualatex --enable-installer --interaction=nonstopmode --jobname=Wrapped_%4 --output-directory=%3 %1
+
+A portable install may also be used as long as the CMD command is adjusted.
 
 This command may be changed at the settings menu, in case other engine
 or format is preferred (any layout problems is your responsibility though).

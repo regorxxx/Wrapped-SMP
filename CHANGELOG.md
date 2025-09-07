@@ -44,6 +44,7 @@
 - Report: suggested similar genres are now filtered to minimize showing genres already known (by listening period) and also deduplicated (i.e. no alternative terms shown). Algorithm has also been finetuned to provide more relevant results. The list is also shuffled so in case there are more than 16 suggestions, random ones are picked instead of only those from first genres (this only applies to the report and not the playlist generation).
 - UI: unified script updates settings across all my scripts, look for 'Updates' submenu.
 - UI: modified layout of all menu entries, now split to make usage easier. Added configuration submenu and readme entries.
+- UI: show shortcuts on tooltip setting moved to global setting for the toolbar.
 - Readme: revised the entire readme with more detailed instructions, requisites, features and tips.
 - Helpers: updated helpers.
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
