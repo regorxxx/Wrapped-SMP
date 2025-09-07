@@ -73,9 +73,9 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 
 ![Auto-device2](https://user-images.githubusercontent.com/83307074/125861102-9253716b-ded6-41d5-83b5-84664edeb17f.gif)
 
-## Requirements[^details]
-1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon. Only x32.
-2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
+## Requirements (only one host component required)[^details]
+1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): JavaScript host component required to install this. Only x32. **(host component)**
+2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): JavaScript host component required to install this. Both x32 and x64. **(host component)**
 4. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See installation notes.
 5. [Playback Statistics](https://www.foobar2000.org/components/view/foo_playcount): Component required to retrieve playback statistics.
 6. [Enhanced Playback Statistics](https://www.foobar2000.org/components/view/foo_enhanced_playcount): Component required to retrieve playback statistics.
@@ -89,7 +89,7 @@ User listening statistics for [foobar2000](https://www.foobar2000.org), using [S
 5. [Pingo](https://css-ig.net/pingo): Binary used to optimize images used on report (will greatly reduce file size).
 
 ##  Installation
-See [_INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation).
+See [Wiki](https://github.com/regorxxx/Wrapped-SMP/wiki/Installation) or the [_INSTALLATION (txt)](https://github.com/regorxxx/Wrapped-SMP/blob/main/_INSTALLATION.txt).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
 ## Support
