@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.0.0](#200---2025-09-20)
 - [1.4.0](#140---2024-10-09)
 - [1.3.2](#132---2024-08-13)
 - [1.3.1](#131---2024-07-30)
@@ -11,6 +12,12 @@
 - [1.0.0](#100---2024-02-28)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [2.0.0] - 2025-09-20
 ### Added
 - Data: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags to check if a source needs to be auto-updated. i.e. '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%','%2003_LAST_PLAYED_AGO%' and '%2003_LAST_PLAYED_AGO2%'.
 - Listens: added ListenBrainz listens retrieval support, which are merged and deduplicated with local listens (from foo_enhanced_playcount, foo_playcount_2003 and foo_playcount). It also works on offline mode.
@@ -134,7 +141,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.4.0....v2.0.0
 [1.4.0]: https://github.com/regorxxx/World-Map-SMP/compare/v1.3.2....v1.4.0
 [1.3.2]: https://github.com/regorxxx/World-Map-SMP/compare/v1.3.1....v1.3.2
 [1.3.1]: https://github.com/regorxxx/World-Map-SMP/compare/v1.3.0....v1.3.1
