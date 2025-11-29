@@ -1,5 +1,5 @@
 'use strict';
-//01/08/25
+//29/11/25
 
 /* exported wrappedMenu */
 
@@ -91,7 +91,7 @@ function wrappedMenu({ bSimulate = false } = {}) {
 		const years = range(currentYear - 4, currentYear, 1).reverse();
 		const reportTypes = [
 			{ menu: 'PDF (LaTeX)', method: 'createPdfReport' },
-			{ menu: 'HTML (IE)', method: 'createHtmlIeReport' },
+			// { menu: 'HTML (IE)', method: 'createHtmlIeReport' },
 			{ menu: 'JSON', method: 'createJsonReport' }
 		];
 		[
@@ -165,6 +165,6 @@ function wrappedMenu({ bSimulate = false } = {}) {
 	menu.newSeparator();
 	menu.newEntry({ entryText: 'Settings...', func: () => this.onClick(MK_SHIFT) });
 	menu.newSeparator();
-	menu.newEntry({ entryText: 'Readme...', func: () => showButtonReadme('buttons_stats_wrapped.js') });
+	menu.newEntry({ entryText: 'Open readme...', func: () => showButtonReadme('buttons_stats_wrapped.js') });
 	return menu;
 }
