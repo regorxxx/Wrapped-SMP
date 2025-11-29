@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.0.4](#204---2025-11-29)
 - [2.0.3](#203---2025-11-27)
 - [2.0.2](#202---2025-10-14)
 - [2.0.1](#201---2025-09-29)
@@ -19,6 +20,13 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [2.0.4] - 2025-11-29
+### Added
+### Changed
+### Removed
+### Fixed
+- Crashes or invalid handling if world map library data file is not present or corrupted.
 
 ## [2.0.3] - 2025-11-27
 ### Added
@@ -168,7 +176,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v2.0.3...HEAD
+[Unreleased]: https://github.com/regorxxx/Wrapped-SMP/compare/v2.0.4...HEAD
+[2.0.4]: https://github.com/regorxxx/World-Map-SMP/compare/v2.0.3....v2.0.4
 [2.0.3]: https://github.com/regorxxx/World-Map-SMP/compare/v2.0.2....v2.0.3
 [2.0.2]: https://github.com/regorxxx/World-Map-SMP/compare/v2.0.1....v2.0.2
 [2.0.1]: https://github.com/regorxxx/World-Map-SMP/compare/v2.0.0....v2.0.1
