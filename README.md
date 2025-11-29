@@ -1,4 +1,4 @@
-# Wrapped-SMP
+<h1 align="center">Wrapped-SMP</h1>
 
 <h2 align="center">This script is now deprecated and integrated into <a href="https://github.com/regorxxx/Infinity-Tools-SMP">Infinity-Tools-SMP.</a>
 <br><ins>No further support or releases will be provided.</ins></h2>
